@@ -4,138 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Smoke Shaq Studio | Member Vault</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root { --gold: #d4af37; --dark: #0a0a0a; }
-        body { background-color: var(--dark); color: white; font-family: 'Inter', sans-serif; }
-        .gold-border { border: 1px solid var(--gold); }
-        .gold-text { color: var(--gold); }
-        .gold-bg { background-color: var(--gold); color: black; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
 </head>
-<body class="min-h-screen">
+<body>
 
-<!-- Navigation -->
-<nav class="p-6 flex justify-between items-center border-b border-zinc-800 sticky top-0 bg-black z-50">
-    <img src="logo.jpg.jpg" class="h-10">
-    <div class="flex items-center gap-6">
-        <div id="credit-display" class="hidden glass px-4 py-1 rounded-full text-sm font-bold gold-text border border-[#d4af37]">
-            CREDITS: <span id="user-credits">0</span>
+    <header>
+        <div class="logo-container">
+            <img src="logo.jpg.jpg" alt="AI Smoke Shaq Logo" class="logo">
         </div>
-        <button id="login-btn" onclick="userLogin()" class="gold-bg px-6 py-2 rounded font-bold text-sm">ACCESS VAULT</button>
-    </div>
-</nav>
-
-<!-- Studio Dashboard -->
-<main class="max-w-6xl mx-auto p-6 mt-10">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        
-        <!-- Sidebar Controls -->
-        <div class="md:col-span-1 space-y-4">
-            <h3 class="text-zinc-500 uppercase tracking-widest text-xs font-bold">Studio Tools</h3>
-            <button onclick="setTool('lip-sync')" class="w-full text-left p-4 rounded bg-zinc-900 hover:bg-zinc-800 border-l-4 border-[#d4af37]">👄 Lip Sync AI</button>
-            <button onclick="setTool('img2vid')" class="w-full text-left p-4 rounded bg-zinc-900 hover:bg-zinc-800 border-l-4 border-transparent">🎬 Image to Video</button>
-            <button onclick="setTool('img2img')" class="w-full text-left p-4 rounded bg-zinc-900 hover:bg-zinc-800 border-l-4 border-transparent">🎨 Gold/Diamond Filter</button>
-            
-            <div class="pt-10">
-                <h3 class="text-zinc-500 uppercase tracking-widest text-xs font-bold mb-4">Refill Credits</h3>
-                <a href="YOUR_STRIPE_LINK_1" class="block p-3 glass mb-2 text-center rounded hover:border-[#d4af37] transition">50 Credits - $10</a>
-                <a href="YOUR_STRIPE_LINK_2" class="block p-3 glass mb-2 text-center rounded border-[#d4af37] bg-[#d4af37]/10">200 Credits - $25</a>
+        <div class="user-status">
+            <button id="vaultBtn" onclick="toggleVault()">ACCESS VAULT</button>
+            <div id="creditDisplay" style="display:none;">
+                <span id="userEmail"></span> | <span id="userCredits">0</span> CREDITS
             </div>
         </div>
+    </header>
+
+    <main>
+        <!-- Sidebar Tools -->
+        <nav class="side-tools">
+            <div class="tool-category">STUDIO TOOLS</div>
+            <button class="tool-btn active" onclick="switchTool('lip-sync')">👄 Lip Sync AI</button>
+            <button class="tool-btn" onclick="switchTool('img-video')">🎬 Image to Video</button>
+            <button class="tool-btn" onclick="switchTool('face-swap')">🎭 Face Swap</button>
+            
+            <div class="tool-category" style="margin-top:30px;">REFILL CREDITS</div>
+            <a href="YOUR_STRIPE_LINK_10" class="refill-link">50 Credits - $10</a>
+            <a href="YOUR_STRIPE_LINK_25" class="refill-link">200 Credits - $25</a>
+            <a href="YOUR_STRIPE_LINK_50" class="refill-link highlight">500 Credits - $50</a>
+        </nav>
 
         <!-- Main Workspace -->
-        <div class="md:col-span-3 glass rounded-2xl p-8 relative overflow-hidden">
-            <div id="tool-header" class="mb-8">
-                <h2 id="active-tool-name" class="text-3xl font-bold mb-2">Lip Sync AI</h2>
-                <p id="active-tool-desc" class="text-zinc-400">Upload a photo and an audio file. We'll make them talk.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-zinc-500 uppercase">Step 1: Upload Face</label>
-                    <div class="h-48 border-2 border-dashed border-zinc-700 rounded-xl flex items-center justify-center cursor-pointer hover:border-[#d4af37]">
-                        <input type="file" id="image-input" class="hidden" accept="image/*">
-                        <span onclick="document.getElementById('image-input').click()">Click to Upload Image</span>
+        <section class="workspace">
+            <div id="tool-lip-sync" class="tool-interface">
+                <h2>Lip Sync AI</h2>
+                <p class="tool-desc">Upload a photo and an audio file. The AI will make them speak in sync.</p>
+                
+                <div class="upload-grid">
+                    <div class="upload-box" onclick="document.getElementById('inputImg').click()">
+                        <input type="file" id="inputImg" hidden accept="image/*">
+                        <span>Click to Upload Image</span>
+                    </div>
+                    <div class="upload-box" onclick="document.getElementById('inputAudio').click()">
+                        <input type="file" id="inputAudio" hidden accept="audio/*">
+                        <span>Click to Upload Audio</span>
                     </div>
                 </div>
-                <div id="audio-step" class="space-y-2">
-                    <label class="text-xs font-bold text-zinc-500 uppercase">Step 2: Upload Voice</label>
-                    <div class="h-48 border-2 border-dashed border-zinc-700 rounded-xl flex items-center justify-center cursor-pointer hover:border-[#d4af37]">
-                        <input type="file" id="audio-input" class="hidden" accept="audio/*">
-                        <span onclick="document.getElementById('audio-input').click()">Click to Upload Audio</span>
-                    </div>
-                </div>
-            </div>
 
-            <button onclick="generateMagic()" class="w-full mt-10 gold-bg py-5 rounded-xl font-black text-xl hover:scale-[1.02] transition transform">GENERATE PRODUCTION</button>
-            
-            <div id="status" class="mt-4 text-center hidden">
-                <div class="animate-pulse gold-text">🎬 Processing in the cloud... Please wait (30-60s)</div>
+                <button class="generate-btn" onclick="generateAI()">GENERATE PRODUCTION</button>
+                <div id="statusMessage"></div>
+                <div id="resultContainer"></div>
             </div>
+        </section>
+    </main>
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="overlay">
+        <div class="login-box">
+            <h3>Enter Vault Email</h3>
+            <p>Use the email you used for payment to access your credits.</p>
+            <input type="email" id="emailInput" placeholder="email@example.com">
+            <button onclick="login()">LOGIN</button>
         </div>
     </div>
-</main>
 
-<script>
-    let currentEmail = "";
-    let currentTool = "lip-sync";
+    <script>
+        let currentUser = localStorage.getItem('shaq_user');
 
-    async function userLogin() {
-        const email = prompt("Enter your email to access your credits:");
-        if (email) {
-            currentEmail = email;
-            document.getElementById('login-btn').innerText = email;
-            document.getElementById('credit-display').classList.remove('hidden');
-            checkCredits();
+        if (currentUser) {
+            updateCreditDisplay();
         }
-    }
 
-    async function checkCredits() {
-        // We'll call our API to get credits from Upstash
-        const res = await fetch(`/api/credits?email=${currentEmail}`);
-        const data = await res.json();
-        document.getElementById('user-credits').innerText = data.credits || 0;
-    }
-
-    function setTool(tool) {
-        currentTool = tool;
-        const name = document.getElementById('active-tool-name');
-        const desc = document.getElementById('active-tool-desc');
-        const audioStep = document.getElementById('audio-step');
-
-        if (tool === 'lip-sync') {
-            name.innerText = "Lip Sync AI";
-            desc.innerText = "Upload a photo and audio. We'll sync the lips perfectly.";
-            audioStep.classList.remove('hidden');
-        } else if (tool === 'img2vid') {
-            name.innerText = "Image to Video";
-            desc.innerText = "Animate a still photo into a cinematic 4-second clip.";
-            audioStep.classList.add('hidden');
+        function toggleVault() {
+            document.getElementById('loginOverlay').style.display = 'flex';
         }
-    }
 
-    async function generateMagic() {
-        if (!currentEmail) return alert("Please Access the Vault (Login) first!");
-        
-        document.getElementById('status').classList.remove('hidden');
-        
-        // This sends the data to your Replicate API bridge
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            body: JSON.stringify({
-                email: currentEmail,
-                tool: currentTool,
-                // In a real app, you'd upload files to S3 first. 
-                // For this demo, we're assuming file handling is set.
-            })
-        });
+        async function login() {
+            const email = document.getElementById('emailInput').value;
+            if (email) {
+                localStorage.setItem('shaq_user', email);
+                document.getElementById('loginOverlay').style.display = 'none';
+                updateCreditDisplay();
+            }
+        }
 
-        const result = await response.json();
-        if (result.error) alert(result.error);
-        else alert("Job Sent to Studio!");
-    }
-</script>
+        async function updateCreditDisplay() {
+            const email = localStorage.getItem('shaq_user');
+            const res = await fetch(`/api/credits?email=${email}`);
+            const data = await res.json();
+            
+            document.getElementById('vaultBtn').style.display = 'none';
+            document.getElementById('creditDisplay').style.display = 'block';
+            document.getElementById('userEmail').innerText = email;
+            document.getElementById('userCredits').innerText = data.credits;
+        }
+
+        async function generateAI() {
+            const email = localStorage.getItem('shaq_user');
+            if (!email) return alert("Please login to the vault first!");
+
+            const status = document.getElementById('statusMessage');
+            status.innerText = "Processing... this takes about 60 seconds.";
+
+            // In a real version, we'd upload the files to a CDN first. 
+            // For now, we are sending a request to the backend.
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: email,
+                    tool: 'lip-sync',
+                    image: 'https://aismokeshaqstudio.shop/logo.jpg.jpg', // Placeholder
+                    audio: 'URL_TO_AUDIO' 
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) {
+                status.innerText = "Error: " + data.error;
+            } else {
+                status.innerText = "Generation Started! Check back in 1 minute.";
+            }
+        }
+    </script>
 </body>
 </html>
