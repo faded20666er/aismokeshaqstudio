@@ -1,0 +1,165 @@
+/* General Styling */
+:root {
+    --gold: #d4af37;
+    --dark-gold: #aa8a2e;
+    --black: #0a0a0a;
+    --glass: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--black);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    overflow-x: hidden;
+}
+
+.gold-text { color: var(--gold); }
+
+/* Navigation */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 5%;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(10px);
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+.main-logo {
+    height: 60px;
+    border-radius: 5px;
+    border: 1px solid var(--gold);
+}
+
+nav ul { display: flex; list-style: none; }
+nav ul li { margin-left: 20px; }
+nav ul li a { color: white; text-decoration: none; font-weight: bold; transition: 0.3s; }
+nav ul li a:hover { color: var(--gold); }
+
+/* Hero Section */
+.hero {
+    height: 80vh;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-bottom: 3px solid var(--gold);
+}
+
+.hero h1 { font-size: 4rem; font-weight: 900; letter-spacing: 2px; }
+.hero p { font-size: 1.5rem; margin-bottom: 20px; opacity: 0.9; }
+
+.cta-button {
+    background: var(--gold);
+    color: black;
+    padding: 15px 30px;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 50px;
+    transition: 0.3s;
+    text-transform: uppercase;
+}
+
+.cta-button:hover {
+    background: white;
+    transform: scale(1.05);
+}
+
+/* Gallery */
+.gallery {
+    padding: 100px 5%;
+    background-image: url('diamindbackground.png');
+    background-size: cover;
+}
+
+.section-title {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+}
+
+.team-img {
+    width: 100%;
+    max-width: 900px;
+    display: block;
+    margin: 0 auto;
+    border-radius: 20px;
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+    border: 2px solid var(--gold);
+}
+
+/* Affiliate Grid */
+.affiliate-section {
+    padding: 100px 5%;
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+.affiliate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 50px;
+}
+
+.aff-card {
+    background: var(--glass);
+    padding: 40px;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(5px);
+    transition: 0.3s;
+}
+
+.aff-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-10px);
+}
+
+.gold-border {
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 15px var(--gold);
+}
+
+.aff-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: bold;
+    border: 1px solid var(--gold);
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+
+.aff-link:hover {
+    background: var(--gold);
+    color: black;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 50px;
+    background: #000;
+}
+
+.gold-trim {
+    height: 5px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin-top: 20px;
+}
