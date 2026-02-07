@@ -3,154 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Smoke Shaq Studio | Production Dashboard</title>
+    <title>AI Smoke Shaq Studio | Production</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #D4AF37; --black: #0a0a0a; }
+        :root { --gold: #D4AF37; --dark: #050505; }
         body {
-            background-color: var(--black);
+            background-color: var(--dark);
             background-image: url('AISmokeShaqStudio/golddustbackdrop.jpg');
             background-size: cover;
             background-attachment: fixed;
             color: white;
             font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
         }
-        .gold-text { color: var(--gold); font-family: 'Cinzel', serif; text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
-        .studio-card { background: rgba(15, 15, 15, 0.9); border: 1px solid var(--gold); backdrop-filter: blur(10px); }
-        .nav-btn { border-bottom: 2px solid transparent; transition: 0.3s; opacity: 0.6; }
-        .nav-btn.active { border-bottom: 2px solid var(--gold); color: var(--gold); opacity: 1; }
+        .gold-glow { text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); }
+        .studio-card {
+            background: rgba(10, 10, 10, 0.85);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .nav-btn {
+            padding: 12px 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 11px;
+            transition: 0.3s;
+            border-bottom: 2px solid transparent;
+            opacity: 0.5;
+        }
+        .nav-btn.active { opacity: 1; border-color: var(--gold); color: var(--gold); }
         .tool-panel { display: none; }
         .tool-panel.active { display: block; }
-        #sparkles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+        input, textarea {
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(212, 175, 55, 0.2) !important;
+            color: white !important;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        #sparkles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .content-layer { position: relative; z-index: 10; }
     </style>
 </head>
-<body class="min-h-screen">
+<body>
     <canvas id="sparkles"></canvas>
 
-    <nav class="border-b border-yellow-900/30 bg-black/80 backdrop-blur-md p-4 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <img src="AISmokeShaqStudio/logo.jpg.jpg" class="h-12 w-12 rounded-full border border-gold">
-                <h1 class="gold-text text-xl font-bold tracking-widest">AI SMOKE SHAQ STUDIO</h1>
-            </div>
-            <div class="flex items-center gap-6">
-                <div class="bg-yellow-900/20 px-4 py-1 border border-yellow-700/50 rounded-full">
-                    <span class="text-xs uppercase text-gray-400">Credits:</span>
-                    <span id="creditCount" class="text-gold font-bold ml-2">...</span>
+    <div class="content-layer">
+        <!-- Header -->
+        <nav class="border-b border-yellow-900/30 bg-black/60 backdrop-blur-md p-4">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <img src="AISmokeShaqStudio/logo.jpg.jpg" class="h-10 w-10 rounded-full border border-gold">
+                    <h1 style="font-family: 'Cinzel';" class="text-gold tracking-widest text-lg lg:text-xl">AI SMOKE SHAQ STUDIO</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="bg-black/50 border border-gold/30 px-4 py-1 rounded-full text-xs">
+                        <span class="text-gray-400 uppercase">Credits:</span>
+                        <span id="creditCount" class="text-gold font-bold ml-1">...</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
 
-    <main class="max-w-6xl mx-auto p-6">
-        <div class="flex gap-8 mb-8 border-b border-white/10">
-            <button onclick="switchTool('face-swap')" id="btn-face-swap" class="nav-btn active pb-4 text-sm uppercase">Face Swap</button>
-            <button onclick="switchTool('img-to-video')" id="btn-img-to-video" class="nav-btn pb-4 text-sm uppercase">Image to Video</button>
-            <button onclick="switchTool('lip-sync')" id="btn-lip-sync" class="nav-btn pb-4 text-sm uppercase">Lip Sync AI</button>
-        </div>
-
-        <div class="grid lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-1 space-y-6">
-                <div class="studio-card rounded-xl p-6">
-                    <h2 class="gold-text mb-4 text-lg uppercase">Input Assets</h2>
-                    
-                    <div id="panel-face-swap" class="tool-panel active space-y-4">
-                        <label class="text-xs text-gray-400 block uppercase">Target (The Scene)</label>
-                        <input type="file" id="fs-target" class="w-full bg-black/50 border border-white/10 p-2 text-xs">
-                        <label class="text-xs text-gray-400 block uppercase">Face (The Person)</label>
-                        <input type="file" id="fs-source" class="w-full bg-black/50 border border-white/10 p-2 text-xs">
-                    </div>
-
-                    <div id="panel-img-to-video" class="tool-panel space-y-4">
-                        <label class="text-xs text-gray-400 block uppercase">Base Image</label>
-                        <input type="file" id="v-image" class="w-full bg-black/50 border border-white/10 p-2 text-xs">
-                        <label class="text-xs text-gray-400 block uppercase">Prompt</label>
-                        <textarea id="v-prompt" placeholder="Cinematic motion..." class="w-full bg-black/50 border border-white/10 p-2 text-xs h-20 text-white"></textarea>
-                    </div>
-
-                    <div id="panel-lip-sync" class="tool-panel space-y-4">
-                        <label class="text-xs text-gray-400 block uppercase">Face Video/Img</label>
-                        <input type="file" id="ls-face" class="w-full bg-black/50 border border-white/10 p-2 text-xs">
-                        <label class="text-xs text-gray-400 block uppercase">Audio MP3</label>
-                        <input type="file" id="ls-audio" class="w-full bg-black/50 border border-white/10 p-2 text-xs">
-                    </div>
-
-                    <button onclick="handleGenerate()" id="genBtn" class="w-full mt-6 bg-gradient-to-r from-yellow-700 to-yellow-500 text-black font-bold py-3 rounded uppercase hover:brightness-110 transition">
-                        Start Production
-                    </button>
-                </div>
+        <main class="max-w-6xl mx-auto p-4 lg:p-8">
+            <!-- Tool Switcher -->
+            <div class="flex justify-center gap-4 lg:gap-10 mb-8 border-b border-white/10">
+                <button onclick="switchTool('face-swap')" id="btn-face-swap" class="nav-btn active">Face Swap</button>
+                <button onclick="switchTool('img-to-video')" id="btn-img-to-video" class="nav-btn">Image to Video</button>
+                <button onclick="switchTool('lip-sync')" id="btn-lip-sync" class="nav-btn">Lip Sync</button>
             </div>
 
-            <div class="lg:col-span-2">
-                <div id="displayArea" class="studio-card rounded-xl h-full min-h-[500px] flex flex-col items-center justify-center p-8 relative">
-                    <div id="loader" class="hidden absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center">
-                        <div class="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
-                        <p class="gold-text mt-4 animate-pulse">Rendering...</p>
+            <div class="grid lg:grid-cols-12 gap-8">
+                <!-- Controls -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="studio-card p-6">
+                        <h3 class="text-gold text-sm font-bold uppercase mb-6 tracking-widest">Production Inputs</h3>
+                        
+                        <!-- Panels -->
+                        <div id="panel-face-swap" class="tool-panel active space-y-4">
+                            <div>
+                                <label class="text-[10px] uppercase text-gray-400">Target Scene Image</label>
+                                <input type="file" id="fs-target" class="w-full text-xs mt-1">
+                            </div>
+                            <div>
+                                <label class="text-[10px] uppercase text-gray-400">New Face Image</label>
+                                <input type="file" id="fs-source" class="w-full text-xs mt-1">
+                            </div>
+                        </div>
+
+                        <div id="panel-img-to-video" class="tool-panel space-y-4">
+                            <div>
+                                <label class="text-[10px] uppercase text-gray-400">Source Image</label>
+                                <input type="file" id="v-image" class="w-full text-xs mt-1">
+                            </div>
+                            <div>
+                                <label class="text-[10px] uppercase text-gray-400">Motion Description</label>
+                                <textarea id="v-prompt" class="w-full text-xs mt-1 h-20" placeholder="e.g. realistic cinematic movement, hair blowing..."></textarea>
+                            </div>
+                        </div>
+
+                        <div id="panel-lip-sync" class="tool-panel space-y-4">
+                            <div>
+                                <label class="text-[10px] uppercase text-gray-400">Face Video/Photo</label>
+                                <input type="file" id="ls-face" class="w-full text-xs mt-1">
+                            </div>
+                            <div>
+                                <label class="text-[10px] uppercase text-gray-400">Audio Voice File</label>
+                                <input type="file" id="ls-audio" class="w-full text-xs mt-1">
+                            </div>
+                        </div>
+
+                        <button onclick="generate()" id="genBtn" class="w-full mt-8 bg-gradient-to-b from-yellow-400 to-yellow-700 text-black font-black py-4 rounded uppercase tracking-tighter hover:scale-105 transition-all">
+                            Run AI Generation
+                        </button>
                     </div>
-                    <div id="resultContent" class="w-full h-full flex items-center justify-center text-center">
-                        <div>
-                            <img src="AISmokeShaqStudio/1.png" class="max-h-64 opacity-20 mx-auto mb-4">
-                            <p class="text-gray-500 uppercase tracking-widest">Select assets and click Generate</p>
+
+                    <!-- Credits Add -->
+                    <div class="studio-card p-4 border-yellow-900/20">
+                        <p class="text-[10px] text-gray-500 uppercase mb-3">Refill Studio Credits</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button class="text-[10px] border border-gold/20 py-2 hover:bg-gold/10">10 Credits - $10</button>
+                            <button class="text-[10px] border border-gold/20 py-2 hover:bg-gold/10">50 Credits - $40</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Area -->
+                <div class="lg:col-span-8">
+                    <div class="studio-card min-h-[550px] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+                        <div id="loader" class="hidden absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center">
+                            <div class="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+                            <p class="text-gold mt-4 font-bold tracking-widest animate-pulse">RENDERING ASSETS...</p>
+                        </div>
+
+                        <div id="previewDefault" class="text-center opacity-30">
+                            <img src="AISmokeShaqStudio/1.png" class="max-h-64 mx-auto mb-6 grayscale">
+                            <p class="uppercase tracking-[0.3em] text-sm">Studio Idle</p>
+                        </div>
+
+                        <div id="resultDisplay" class="hidden w-full h-full flex items-center justify-center">
+                            <!-- Result will appear here -->
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script>
-        let currentTool = 'face-swap';
         const userEmail = "faded206@yahoo.com";
+        let currentTool = 'face-swap';
 
-        function switchTool(t) {
-            currentTool = t;
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${t}`));
-            document.querySelectorAll('.tool-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${t}`));
+        function switchTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${tool}`));
+            document.querySelectorAll('.tool-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tool}`));
         }
 
-        // Helper to convert file to Base64
         const toBase64 = file => new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
+            reader.onerror = e => reject(e);
         });
 
-        async function fetchCredits() {
-            const r = await fetch(`/api/credits?email=${userEmail}`);
-            const d = await r.json();
-            document.getElementById('creditCount').innerText = d.credits || 0;
+        async function updateCredits() {
+            try {
+                const res = await fetch(`/api/credits?email=${userEmail}`);
+                const data = await res.json();
+                document.getElementById('creditCount').innerText = data.credits || 0;
+            } catch(e) { document.getElementById('creditCount').innerText = "Err"; }
         }
 
-        async function handleGenerate() {
+        async function generate() {
+            const btn = document.getElementById('genBtn');
             const loader = document.getElementById('loader');
-            const resultContent = document.getElementById('resultContent');
+            const resultDiv = document.getElementById('resultDisplay');
+            const defaultDiv = document.getElementById('previewDefault');
+
             loader.classList.remove('hidden');
+            btn.disabled = true;
 
             try {
                 let payload = { email: userEmail, tool: currentTool };
 
-                // Get specific data based on tool
-                if (currentTool === 'face-swap') {
-                    const target = document.getElementById('fs-target').files[0];
-                    const source = document.getElementById('fs-source').files[0];
-                    if(!target || !source) throw new Error("Please upload both images");
-                    payload.image = await toBase64(target);
-                    payload.second_image = await toBase64(source);
-                } 
-                else if (currentTool === 'img-to-video') {
-                    const img = document.getElementById('v-image').files[0];
-                    if(!img) throw new Error("Please upload an image");
-                    payload.image = await toBase64(img);
+                if(currentTool === 'face-swap') {
+                    const t = document.getElementById('fs-target').files[0];
+                    const s = document.getElementById('fs-source').files[0];
+                    if(!t || !s) throw new Error("Need both images");
+                    payload.image = await toBase64(t);
+                    payload.second_image = await toBase64(s);
+                } else if(currentTool === 'img-to-video') {
+                    const i = document.getElementById('v-image').files[0];
+                    if(!i) throw new Error("Need an image");
+                    payload.image = await toBase64(i);
                     payload.prompt = document.getElementById('v-prompt').value;
-                }
-                else if (currentTool === 'lip-sync') {
-                    const face = document.getElementById('ls-face').files[0];
-                    const audio = document.getElementById('ls-audio').files[0];
-                    if(!face || !audio) throw new Error("Please upload both face and audio");
-                    payload.image = await toBase64(face);
-                    payload.audio = await toBase64(audio);
+                } else {
+                    const f = document.getElementById('ls-face').files[0];
+                    const a = document.getElementById('ls-audio').files[0];
+                    if(!f || !a) throw new Error("Need video/image and audio");
+                    payload.image = await toBase64(f);
+                    payload.audio = await toBase64(a);
                 }
 
                 const res = await fetch('/api/generate', {
@@ -160,25 +217,45 @@
                 });
 
                 const data = await res.json();
-                if (data.output) {
-                    if (currentTool === 'face-swap') {
-                        resultContent.innerHTML = `<img src="${data.output}" class="max-w-full border border-gold">`;
+                if(data.output) {
+                    defaultDiv.classList.add('hidden');
+                    resultDiv.classList.remove('hidden');
+                    if(currentTool === 'face-swap') {
+                        resultDiv.innerHTML = `<img src="${data.output}" class="max-w-full rounded shadow-2xl border border-gold">`;
                     } else {
-                        resultContent.innerHTML = `<video src="${data.output}" controls autoplay class="max-w-full border border-gold"></video>`;
+                        resultDiv.innerHTML = `<video src="${data.output}" controls autoplay class="max-w-full rounded shadow-2xl border border-gold"></video>`;
                     }
                 } else {
-                    alert("Error: " + (data.error || "Generation failed"));
+                    alert("Studio Error: " + (data.error || "Check your credits"));
                 }
-            } catch (err) {
-                alert(err.message);
+
+            } catch(e) {
+                alert(e.message);
             } finally {
                 loader.classList.add('hidden');
-                fetchCredits();
+                btn.disabled = false;
+                updateCredits();
             }
         }
 
-        // Sparkle animation logic omitted for brevity but keep your canvas init here
-        fetchCredits();
+        // Simple Sparkle Effect
+        const canvas = document.getElementById('sparkles');
+        const ctx = canvas.getContext('2d');
+        let pts = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
+        for(let i=0; i<50; i++) pts.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2, v: Math.random()*0.5});
+        function anim() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(212, 175, 55, 0.3)";
+            pts.forEach(p => {
+                p.y -= p.v; if(p.y<0) p.y=canvas.height;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(anim);
+        }
+        anim();
+        updateCredits();
     </script>
 </body>
 </html>
