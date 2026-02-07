@@ -1,8 +1,7 @@
 {
   "name": "ai-smoke-shaq-studio",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "dependencies": {
-    "replicate": "^0.26.0",
     "@upstash/redis": "^1.28.4"
   }
 }
