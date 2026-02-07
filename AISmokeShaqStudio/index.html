@@ -176,41 +176,7 @@ function setStatus(msg) {
     document.getElementById('statusText').textContent = msg;
 }
 
-// POLL FOR RESULT
-async function pollResult(predictionId) {
-    setStatus('GPU rendering... checking status...');
 
-    const check = async () => {
-        try {
-            const r = await fetch('/api/status?id=' + predictionId);
-            const text = await r.text();
-            let data;
-            try { data = JSON.parse(text); } catch(e) {
-                setStatus('Server error during polling');
-                document.getElementById('btnGen').disabled = false;
-                return;
-            }
-
-            if (data.status === 'succeeded') {
-                showOutput(data.output);
-                setStatus('Render complete!');
-                document.getElementById('btnGen').disabled = false;
-                syncCredits();
-            } else if (data.status === 'failed') {
-                alert('Render failed: ' + (data.error || 'Unknown GPU error'));
-                setStatus('Failed');
-                document.getElementById('btnGen').disabled = false;
-            } else {
-                setStatus('Status: ' + data.status + '... polling again in 4s');
-                setTimeout(check, 4000);
-            }
-        } catch(e) {
-            setStatus('Network error, retrying...');
-            setTimeout(check, 5000);
-        }
-    };
-    check();
-}
 
 // SHOW OUTPUT
 function showOutput(output) {
@@ -325,4 +291,5 @@ syncCredits();
 </script>
 </body>
 </html>
+
 
