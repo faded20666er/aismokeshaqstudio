@@ -3,209 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Smoke Shaq Studio | Production</title>
+    <title>AI Smoke Shaq Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #D4AF37; --panel-bg: rgba(10, 10, 10, 0.9); }
         body {
-            background: #050505; /* Fallback color */
-            background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('AISmokeShaqStudio/golddustbackdrop.jpg');
-            background-size: cover;
-            background-attachment: fixed;
-            color: white;
-            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #d4af37;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
         }
-        .gold-text { color: var(--gold); font-family: 'Cinzel', serif; }
-        .studio-card {
-            background: var(--panel-bg);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            backdrop-filter: blur(15px);
-            border-radius: 8px;
+        .studio-border { border: 1px solid rgba(212, 175, 55, 0.3); }
+        .studio-card { background: rgba(20, 20, 20, 0.95); border-radius: 8px; }
+        .btn-gold { 
+            background: linear-gradient(to bottom, #d4af37, #8a6d3b);
+            color: black;
+            font-weight: bold;
+            text-transform: uppercase;
         }
-        .nav-btn {
-            border-bottom: 2px solid transparent;
-            opacity: 0.5;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .nav-btn.active {
-            opacity: 1;
-            border-color: var(--gold);
-            color: var(--gold);
-        }
+        .nav-link { cursor: pointer; opacity: 0.6; font-size: 12px; letter-spacing: 1px; }
+        .nav-link.active { opacity: 1; border-bottom: 2px solid #d4af37; color: white; }
         .tool-panel { display: none; }
         .tool-panel.active { display: block; }
-        input[type="file"] {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            width: 100%;
-            padding: 8px;
-            font-size: 12px;
-            border-radius: 4px;
-        }
     </style>
 </head>
-<body class="p-0 m-0">
-
-    <!-- Header -->
-    <nav class="bg-black/90 border-b border-yellow-900/50 p-4 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <img src="AISmokeShaqStudio/logo.jpg.jpg" class="h-10 w-10 rounded-full border border-gold">
-                <h1 class="gold-text text-xl tracking-widest uppercase">Smoke Shaq Studio</h1>
-            </div>
-            <div class="bg-yellow-900/20 border border-gold/30 px-4 py-1 rounded-full">
-                <span class="text-[10px] text-gray-400 uppercase">Credits:</span>
-                <span id="creditCount" class="text-gold font-bold ml-1 text-sm">...</span>
-            </div>
+<body>
+    <nav class="p-4 border-b border-yellow-900/30 flex justify-between items-center bg-black">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-gold rounded-full border border-yellow-600"></div>
+            <span class="font-bold tracking-tighter text-xl">SMOKE SHAQ STUDIO</span>
+        </div>
+        <div class="text-xs bg-yellow-900/20 px-3 py-1 rounded-full border border-yellow-700/50">
+            CREDITS: <span id="creditCount">...</span>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-6 lg:p-10">
-        <!-- Tabs -->
-        <div class="flex gap-8 mb-10 justify-center">
-            <button onclick="switchTool('face-swap')" id="btn-face-swap" class="nav-btn active pb-2 uppercase text-xs tracking-widest">Face Swap</button>
-            <button onclick="switchTool('img-to-video')" id="btn-img-to-video" class="nav-btn pb-2 uppercase text-xs tracking-widest">Image to Video</button>
-            <button onclick="switchTool('lip-sync')" id="btn-lip-sync" class="nav-btn pb-2 uppercase text-xs tracking-widest">Lip Sync</button>
+    <div class="max-w-6xl mx-auto p-6">
+        <div class="flex gap-6 mb-8 justify-center border-b border-white/10 pb-2">
+            <div onclick="setTool('face-swap')" id="tab-face-swap" class="nav-link active">FACE SWAP</div>
+            <div onclick="setTool('img-to-video')" id="tab-img-to-video" class="nav-link">IMAGE TO VIDEO</div>
+            <div onclick="setTool('lip-sync')" id="tab-lip-sync" class="nav-link">LIP SYNC</div>
         </div>
 
-        <div class="grid lg:grid-cols-12 gap-8">
-            <!-- Sidebar Controls -->
-            <div class="lg:col-span-4 space-y-6">
-                <div class="studio-card p-6">
-                    <h2 class="gold-text text-sm mb-6 uppercase tracking-widest">Rendering Tools</h2>
-                    
-                    <div id="panel-face-swap" class="tool-panel active space-y-4">
-                        <label class="text-[10px] text-gray-400 uppercase">Target Scene</label>
-                        <input type="file" id="fs-target">
-                        <label class="text-[10px] text-gray-400 uppercase">New Face</label>
-                        <input type="file" id="fs-source">
-                    </div>
-
-                    <div id="panel-img-to-video" class="tool-panel space-y-4">
-                        <label class="text-[10px] text-gray-400 uppercase">Source Image</label>
-                        <input type="file" id="v-image">
-                        <textarea id="v-prompt" class="w-full bg-black/50 border border-gold/20 p-2 text-xs rounded text-white h-24" placeholder="Describe the motion..."></textarea>
-                    </div>
-
-                    <div id="panel-lip-sync" class="tool-panel space-y-4">
-                        <label class="text-[10px] text-gray-400 uppercase">Face Asset</label>
-                        <input type="file" id="ls-face">
-                        <label class="text-[10px] text-gray-400 uppercase">Audio Track</label>
-                        <input type="file" id="ls-audio">
-                    </div>
-
-                    <button onclick="handleGenerate()" id="genBtn" class="w-full mt-8 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black font-bold py-4 rounded uppercase tracking-widest hover:brightness-125 transition-all active:scale-95">
-                        Start Production
-                    </button>
+        <div class="grid lg:grid-cols-3 gap-8">
+            <div class="studio-card studio-border p-6 h-fit">
+                <h3 class="text-xs font-bold mb-4">PRODUCTION SETTINGS</h3>
+                
+                <div id="panel-face-swap" class="tool-panel active space-y-4">
+                    <input type="file" id="fs1" class="w-full text-xs">
+                    <input type="file" id="fs2" class="w-full text-xs">
                 </div>
+                <div id="panel-img-to-video" class="tool-panel space-y-4">
+                    <input type="file" id="iv1" class="w-full text-xs">
+                    <input type="text" id="iv-p" placeholder="Describe motion" class="w-full bg-black border border-white/20 p-2 text-xs">
+                </div>
+                <div id="panel-lip-sync" class="tool-panel space-y-4">
+                    <input type="file" id="ls1" class="w-full text-xs">
+                    <input type="file" id="ls2" class="w-full text-xs">
+                </div>
+
+                <button onclick="runGen()" id="mainBtn" class="w-full btn-gold py-4 mt-6 rounded shadow-lg">Run Production</button>
             </div>
 
-            <!-- Main Display Area -->
-            <div class="lg:col-span-8">
-                <div class="studio-card min-h-[500px] flex items-center justify-center p-4 relative overflow-hidden bg-black/40">
-                    <div id="loader" class="hidden absolute inset-0 bg-black/80 z-50 flex flex-col items-center justify-center">
-                        <div class="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-                        <p class="gold-text text-xs tracking-[0.3em] animate-pulse">GENERATING CONTENT</p>
-                    </div>
-
-                    <div id="idleDisplay" class="text-center opacity-20">
-                        <img src="AISmokeShaqStudio/1.png" class="max-h-60 mx-auto mb-6 grayscale brightness-50">
-                        <p class="uppercase tracking-[0.4em] text-xs">Waiting for Input...</p>
-                    </div>
-
-                    <div id="resultOutput" class="hidden w-full h-full flex items-center justify-center"></div>
+            <div class="lg:col-span-2 studio-card studio-border min-h-[400px] flex items-center justify-center relative bg-black/50">
+                <div id="loading" class="hidden absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-10">
+                    <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-[10px] mt-2 animate-pulse">PROCESSING...</p>
+                </div>
+                <div id="result" class="p-4">
+                    <p class="text-white/20 uppercase text-xs tracking-[0.5em]">Studio Standby</p>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
     <script>
-        const userEmail = "faded206@yahoo.com";
-        let currentTool = 'face-swap';
+        const email = "faded206@yahoo.com";
+        let tool = 'face-swap';
 
-        function switchTool(tool) {
-            currentTool = tool;
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${tool}`));
-            document.querySelectorAll('.tool-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tool}`));
+        function setTool(t) {
+            tool = t;
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('tab-'+t).classList.add('active');
+            document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-'+t).classList.add('active');
         }
 
-        const toBase64 = f => new Promise((res, rej) => {
-            const r = new FileReader();
-            r.readAsDataURL(f);
-            r.onload = () => res(r.result);
-            r.onerror = e => rej(e);
-        });
-
-        async function getCredits() {
+        async function fetchCredits() {
             try {
-                const r = await fetch(`/api/credits?email=${userEmail}`);
-                const d = await r.json();
+                const res = await fetch(`/api/credits?email=${email}`);
+                const d = await res.json();
                 document.getElementById('creditCount').innerText = d.credits || 0;
-            } catch(e) { document.getElementById('creditCount').innerText = "Err"; }
+            } catch(e) { document.getElementById('creditCount').innerText = "0"; }
         }
 
-        async function handleGenerate() {
-            const btn = document.getElementById('genBtn');
-            const loader = document.getElementById('loader');
-            const idle = document.getElementById('idleDisplay');
-            const output = document.getElementById('resultOutput');
-
-            loader.classList.remove('hidden');
-            btn.disabled = true;
-
+        async function runGen() {
+            const load = document.getElementById('loading');
+            const resDiv = document.getElementById('result');
+            load.classList.remove('hidden');
+            
             try {
-                let body = { email: userEmail, tool: currentTool };
-                
-                if(currentTool === 'face-swap') {
-                    const t = document.getElementById('fs-target').files[0];
-                    const s = document.getElementById('fs-source').files[0];
-                    if(!t || !s) throw new Error("Missing images");
-                    body.image = await toBase64(t);
-                    body.second_image = await toBase64(s);
-                } else if(currentTool === 'img-to-video') {
-                    const i = document.getElementById('v-image').files[0];
-                    if(!i) throw new Error("Missing image");
-                    body.image = await toBase64(i);
-                    body.prompt = document.getElementById('v-prompt').value;
-                } else {
-                    const f = document.getElementById('ls-face').files[0];
-                    const a = document.getElementById('ls-audio').files[0];
-                    if(!f || !a) throw new Error("Missing face/audio");
-                    body.image = await toBase64(f);
-                    body.audio = await toBase64(a);
-                }
-
-                const res = await fetch('/api/generate', {
+                const response = await fetch('/api/generate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email, tool })
                 });
-
-                const data = await res.json();
+                const data = await response.json();
                 if(data.output) {
-                    idle.classList.add('hidden');
-                    output.classList.remove('hidden');
-                    if(currentTool === 'face-swap') {
-                        output.innerHTML = `<img src="${data.output}" class="max-w-full border border-gold shadow-2xl">`;
-                    } else {
-                        output.innerHTML = `<video src="${data.output}" controls autoplay class="max-w-full border border-gold shadow-2xl"></video>`;
-                    }
+                    resDiv.innerHTML = `<img src="${data.output}" class="max-w-full border border-gold">`;
                 } else {
-                    alert("Studio Error: " + data.error);
+                    alert(data.error);
                 }
             } catch(e) {
-                alert(e.message);
+                alert("Connection Error");
             } finally {
-                loader.classList.add('hidden');
-                btn.disabled = false;
-                getCredits();
+                load.classList.add('hidden');
+                fetchCredits();
             }
         }
-
-        getCredits();
+        fetchCredits();
     </script>
 </body>
 </html>
