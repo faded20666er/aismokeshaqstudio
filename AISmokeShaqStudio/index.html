@@ -215,13 +215,22 @@ async function generate() {
         alert('Crash: ' + e.message);
         btn.disabled = false;
         setStatus('Crashed');
-    
+    }
 }
+
+function setStatus(msg) {
+    const el = document.getElementById('status');
+    if (el) el.textContent = msg;
+}
+
+function syncCredits() {
+    const el = document.getElementById('credits');
+    if (el) el.textContent = '∞'; // temporary placeholder
 }
 
 syncCredits();
 </script>
 </body>
 </html>
-o
+
 
