@@ -3,124 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Smoke Shaq Studio</title>
+    <title>AI Smoke Shaq Studio | PRO PRODUCTION SEQUENCER</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            background-color: #0a0a0a;
-            color: #d4af37;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
+        :root { --gold: #D4AF37; --purple: #4c1d95; --diamond: rgba(255,255,255,0.05); }
+        body { 
+            background: #000 url('golddustbackdrop.jpg') center/cover no-repeat fixed;
+            color: white; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
+            display: flex; flex-direction: column;
         }
-        .studio-border { border: 1px solid rgba(212, 175, 55, 0.3); }
-        .studio-card { background: rgba(20, 20, 20, 0.95); border-radius: 8px; }
-        .btn-gold { 
-            background: linear-gradient(to bottom, #d4af37, #8a6d3b);
-            color: black;
-            font-weight: bold;
-            text-transform: uppercase;
+        .glass { background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.2); }
+        .gold-glow { text-shadow: 0 0 15px rgba(212,175,55,0.6); color: var(--gold); }
+        .diamond-overlay { background-image: url('diamindbackgroud.jpeg'); background-blend-mode: overlay; background-size: 200px; }
+        
+        /* Tooltip Logic for Model Descriptions */
+        .model-option { position: relative; cursor: help; }
+        .model-option:hover .description { display: block; }
+        .description { 
+            display: none; position: absolute; left: 105%; top: 0; width: 220px; 
+            background: black; border: 1px solid var(--gold); padding: 10px; 
+            z-index: 100; font-size: 10px; color: #ccc; border-radius: 4px;
+            box-shadow: 0 0 20px rgba(0,0,0,1);
         }
-        .nav-link { cursor: pointer; opacity: 0.6; font-size: 12px; letter-spacing: 1px; }
-        .nav-link.active { opacity: 1; border-bottom: 2px solid #d4af37; color: white; }
-        .tool-panel { display: none; }
-        .tool-panel.active { display: block; }
+
+        /* Sequencer Timeline Style */
+        #timeline { height: 220px; background: rgba(10,10,10,0.95); border-top: 2px solid #222; overflow-x: auto; white-space: nowrap; padding: 20px; }
+        .scene-block { 
+            display: inline-block; width: 200px; vertical-align: top; margin-right: 15px;
+            border: 1px solid #333; background: rgba(20,20,20,0.8); border-radius: 6px;
+        }
+        .track-label { font-size: 8px; font-weight: 900; color: var(--gold); padding: 4px 8px; background: rgba(0,0,0,0.5); border-bottom: 1px solid #333; }
+        .visual-slot { height: 100px; background: #111; position: relative; overflow: hidden; }
+        .audio-slot { height: 40px; background: var(--purple); opacity: 0.6; position: relative; border-top: 1px solid #444; }
+        
+        .btn-execute { 
+            background: linear-gradient(135deg, #8a6d3b, #D4AF37, #f1e5ac); color: black; 
+            font-weight: 900; transform: skewX(-5deg); transition: 0.2s;
+        }
+        .btn-execute:hover { transform: skewX(-5deg) scale(1.05); box-shadow: 0 0 20px var(--gold); }
     </style>
 </head>
 <body>
-    <nav class="p-4 border-b border-yellow-900/30 flex justify-between items-center bg-black">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-gold rounded-full border border-yellow-600"></div>
-            <span class="font-bold tracking-tighter text-xl">SMOKE SHAQ STUDIO</span>
+
+    <!-- NAV BAR -->
+    <nav class="h-20 glass flex items-center justify-between px-8 border-b border-gold/20 shadow-2xl">
+        <div class="flex items-center gap-4">
+            <img src="logo.jpg.jpg" class="h-12 w-12 rounded-full border border-gold" alt="Logo">
+            <div>
+                <h1 class="text-xl font-black italic gold-glow tracking-tighter uppercase">Smoke Shaq Studio</h1>
+                <p class="text-[9px] uppercase tracking-[0.4em] opacity-50">PRO AI SEQUENCER v4.0</p>
+            </div>
         </div>
-        <div class="text-xs bg-yellow-900/20 px-3 py-1 rounded-full border border-yellow-700/50">
-            CREDITS: <span id="creditCount">...</span>
+        <div class="flex items-center gap-10">
+            <div class="text-right">
+                <p class="text-[9px] opacity-40 uppercase">Vault Balance</p>
+                <p class="font-black text-xl gold-glow"><span id="crDisplay">---</span> <i class="fa-solid fa-gem text-xs"></i></p>
+            </div>
+            <img src="banner.png.png" class="h-10 opacity-70" alt="Banner">
         </div>
     </nav>
 
-    <div class="max-w-6xl mx-auto p-6">
-        <div class="flex gap-6 mb-8 justify-center border-b border-white/10 pb-2">
-            <div onclick="setTool('face-swap')" id="tab-face-swap" class="nav-link active">FACE SWAP</div>
-            <div onclick="setTool('img-to-video')" id="tab-img-to-video" class="nav-link">IMAGE TO VIDEO</div>
-            <div onclick="setTool('lip-sync')" id="tab-lip-sync" class="nav-link">LIP SYNC</div>
-        </div>
+    <div class="flex-1 grid grid-cols-12 overflow-hidden">
+        
+        <!-- SIDEBAR: ASSET INPUTS -->
+        <aside class="col-span-3 glass p-6 overflow-y-auto diamond-overlay border-r border-white/5">
+            <div class="space-y-6">
+                <!-- TOOL SELECTION -->
+                <div>
+                    <label class="text-[10px] font-black gold-glow uppercase mb-3 block">Engine Selection</label>
+                    <div class="space-y-2">
+                        <div onclick="setTool('face-swap')" id="t-fs" class="model-option p-3 bg-white/5 border border-white/10 rounded hover:border-gold">
+                            <span class="text-xs font-bold">FACE SWAP HD</span>
+                            <div class="description"><b>LUCATACO FACESWAP:</b> Industry-standard identity replacement. Best for keeping character consistency across skits.</div>
+                        </div>
+                        <div onclick="setTool('img-to-video')" id="t-iv" class="model-option p-3 bg-white/5 border border-white/10 rounded hover:border-gold">
+                            <span class="text-xs font-bold">CINEMATIC MOTION</span>
+                            <div class="description"><b>STABILITY SVD-XT:</b> Produces 4K quality camera pans and character movement from a single image.</div>
+                        </div>
+                        <div onclick="setTool('lip-sync')" id="t-ls" class="model-option p-3 bg-white/5 border border-white/10 rounded hover:border-gold">
+                            <span class="text-xs font-bold">LIP SYNC PRO</span>
+                            <div class="description"><b>WAV2LIP HD:</b> Perfectly synchronizes mouth movements to any audio track. Necessary for dialogue-heavy comedy.</div>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="grid lg:grid-cols-3 gap-8">
-            <div class="studio-card studio-border p-6 h-fit">
-                <h3 class="text-xs font-bold mb-4">PRODUCTION SETTINGS</h3>
+                <!-- INPUT SLOTS -->
+                <div id="inputs" class="space-y-4 pt-4 border-t border-white/10">
+                    <div id="ui-face-swap" class="space-y-4">
+                        <div><label class="text-[10px] opacity-50 block uppercase">Base Scene Image</label><input type="file" id="f1" class="w-full bg-black text-[10px] p-2 rounded border border-white/10 mt-1"></div>
+                        <div><label class="text-[10px] opacity-50 block uppercase">Character Face</label><input type="file" id="f2" class="w-full bg-black text-[10px] p-2 rounded border border-white/10 mt-1"></div>
+                    </div>
+                    <div id="ui-img-to-video" class="hidden space-y-4">
+                        <div><label class="text-[10px] opacity-50 block uppercase">Source Image</label><input type="file" id="v1" class="w-full bg-black text-[10px] p-2 rounded border border-white/10 mt-1"></div>
+                    </div>
+                    <div id="ui-lip-sync" class="hidden space-y-4">
+                        <div><label class="text-[10px] opacity-50 block uppercase">Character Visual</label><input type="file" id="l1" class="w-full bg-black text-[10px] p-2 rounded border border-white/10 mt-1"></div>
+                        <div><label class="text-[10px] opacity-50 block uppercase">Dialogue Audio</label><input type="file" id="l2" class="w-full bg-black text-[10px] p-2 rounded border border-white/10 mt-1"></div>
+                        <div class="pt-2"><p class="text-[9px] text-purple-400 italic font-bold uppercase">Pre-built Voices Available: Shaq, Doris, Dre</p></div>
+                    </div>
+                </div>
+
+                <button onclick="renderAsset()" id="renderBtn" class="w-full btn-execute py-4 mt-4 rounded uppercase text-xs">Run Production</button>
+            </div>
+        </aside>
+
+        <!-- MAIN PRODUCTION STAGE -->
+        <section class="col-span-9 relative flex flex-col bg-black/40">
+            <div id="stage-loader" class="hidden absolute inset-0 bg-black/95 z-50 flex flex-col items-center justify-center">
+                <div class="w-20 h-20 border-2 border-gold border-t-transparent animate-spin rounded-full mb-6"></div>
+                <h2 class="gold-glow font-black text-2xl tracking-[0.5em] animate-pulse">PRODUCING...</h2>
+                <p id="statusTxt" class="text-[10px] opacity-40 mt-2 uppercase">GPU Cluster Active - Processing Scene</p>
+            </div>
+
+            <div id="canvas" class="flex-1 flex flex-col items-center justify-center p-12 overflow-hidden">
+                <img src="diamindbackgroud.jpeg" class="w-48 opacity-10 grayscale absolute">
+                <div id="previewOutput" class="z-10 text-center">
+                    <h3 class="text-4xl font-black italic opacity-10 tracking-widest">PRODUCTION STAGE</h3>
+                    <p class="text-[10px] opacity-30 mt-4 max-w-sm uppercase">Waiting for input assets. Your high-quality render will appear here for review before timeline placement.</p>
+                </div>
+            </div>
+
+            <!-- THE SEQUENCER TIMELINE -->
+            <div id="timeline">
+                <div class="flex items-center gap-4 mb-4">
+                    <h4 class="text-[10px] font-black gold-glow uppercase tracking-[0.3em]">Cinematic Sequencer</h4>
+                    <div class="h-[1px] flex-1 bg-white/10"></div>
+                </div>
                 
-                <div id="panel-face-swap" class="tool-panel active space-y-4">
-                    <input type="file" id="fs1" class="w-full text-xs">
-                    <input type="file" id="fs2" class="w-full text-xs">
-                </div>
-                <div id="panel-img-to-video" class="tool-panel space-y-4">
-                    <input type="file" id="iv1" class="w-full text-xs">
-                    <input type="text" id="iv-p" placeholder="Describe motion" class="w-full bg-black border border-white/20 p-2 text-xs">
-                </div>
-                <div id="panel-lip-sync" class="tool-panel space-y-4">
-                    <input type="file" id="ls1" class="w-full text-xs">
-                    <input type="file" id="ls2" class="w-full text-xs">
-                </div>
-
-                <button onclick="runGen()" id="mainBtn" class="w-full btn-gold py-4 mt-6 rounded shadow-lg">Run Production</button>
-            </div>
-
-            <div class="lg:col-span-2 studio-card studio-border min-h-[400px] flex items-center justify-center relative bg-black/50">
-                <div id="loading" class="hidden absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-10">
-                    <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
-                    <p class="text-[10px] mt-2 animate-pulse">PROCESSING...</p>
-                </div>
-                <div id="result" class="p-4">
-                    <p class="text-white/20 uppercase text-xs tracking-[0.5em]">Studio Standby</p>
+                <div id="track-container" class="flex gap-4">
+                    <!-- Scenes will be injected here -->
+                    <div class="scene-block opacity-20 border-dashed">
+                        <div class="track-label italic text-gray-500 uppercase">Scene 01</div>
+                        <div class="visual-slot flex items-center justify-center text-[10px]">EMPTY SLOT</div>
+                        <div class="audio-slot flex items-center justify-center text-[9px]">NO DIALOGUE</div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 
     <script>
-        const email = "faded206@yahoo.com";
-        let tool = 'face-swap';
+        const userEmail = "faded206@yahoo.com";
+        let currentTool = 'face-swap';
 
         function setTool(t) {
-            tool = t;
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('tab-'+t).classList.add('active');
-            document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById('panel-'+t).classList.add('active');
+            currentTool = t;
+            ['fs','iv','ls'].forEach(i => document.getElementById('t-'+i).classList.remove('border-gold','bg-white/10'));
+            document.getElementById('t-'+(t==='face-swap'?'fs':t==='img-to-video'?'iv':'ls')).classList.add('border-gold','bg-white/10');
+            ['face-swap','img-to-video','lip-sync'].forEach(i => document.getElementById('ui-'+i).classList.add('hidden'));
+            document.getElementById('ui-'+t).classList.remove('hidden');
         }
 
-        async function fetchCredits() {
+        const toBase64 = file => new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+        });
+
+        async function syncCredits() {
             try {
-                const res = await fetch(`/api/credits?email=${email}`);
-                const d = await res.json();
-                document.getElementById('creditCount').innerText = d.credits || 0;
-            } catch(e) { document.getElementById('creditCount').innerText = "0"; }
+                const r = await fetch(`/api/credits?email=${userEmail}`);
+                const d = await r.json();
+                document.getElementById('crDisplay').innerText = d.credits;
+            } catch(e) { document.getElementById('crDisplay').innerText = "???"; }
         }
 
-        async function runGen() {
-            const load = document.getElementById('loading');
-            const resDiv = document.getElementById('result');
-            load.classList.remove('hidden');
+        async function renderAsset() {
+            const loader = document.getElementById('stage-loader');
+            const preview = document.getElementById('previewOutput');
+            const track = document.getElementById('track-container');
             
+            loader.classList.remove('hidden');
+
             try {
-                const response = await fetch('/api/generate', {
+                let payload = { email: userEmail, tool: currentTool };
+                
+                if(currentTool === 'face-swap') {
+                    payload.image = await toBase64(document.getElementById('f1').files[0]);
+                    payload.second_image = await toBase64(document.getElementById('f2').files[0]);
+                } else if(currentTool === 'img-to-video') {
+                    payload.image = await toBase64(document.getElementById('v1').files[0]);
+                } else {
+                    payload.image = await toBase64(document.getElementById('l1').files[0]);
+                    payload.audio = await toBase64(document.getElementById('l2').files[0]);
+                }
+
+                const res = await fetch('/api/generate', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ email, tool })
+                    body: JSON.stringify(payload)
                 });
-                const data = await response.json();
+
+                const data = await res.json();
                 if(data.output) {
-                    resDiv.innerHTML = `<img src="${data.output}" class="max-w-full border border-gold">`;
+                    const url = Array.isArray(data.output) ? data.output[0] : data.output;
+                    const isVid = url.includes('.mp4') || currentTool !== 'face-swap';
+                    
+                    // Update Preview
+                    preview.innerHTML = isVid ? `<video src="${url}" controls autoplay loop class="max-h-[400px] border border-gold shadow-2xl"></video>` : `<img src="${url}" class="max-h-[400px] border border-gold shadow-2xl">`;
+                    preview.innerHTML += `<div class="mt-4 flex gap-4 justify-center"><a href="${url}" download class="text-[10px] gold-glow font-bold border border-gold px-4 py-1 rounded">DOWNLOAD HD</a></div>`;
+
+                    // Push to Sequencer Timeline
+                    const scene = document.createElement('div');
+                    scene.className = "scene-block";
+                    scene.innerHTML = `
+                        <div class="track-label">SCENE ${track.children.length}</div>
+                        <div class="visual-slot">${isVid ? `<video src="${url}" autoplay muted loop class="w-full h-full object-cover"></video>` : `<img src="${url}" class="w-full h-full object-cover">`}</div>
+                        <div class="audio-slot flex items-center px-2 text-[9px] font-bold italic truncate">
+                            <i class="fa-solid fa-volume-high mr-2"></i> ${currentTool === 'lip-sync' ? 'DIALOGUE MAPPED' : 'SILENT MOTION'}
+                        </div>
+                    `;
+                    track.prepend(scene);
+
                 } else {
-                    alert(data.error);
+                    alert("Production Halted: " + (data.error || "Format Mismatch"));
                 }
             } catch(e) {
-                alert("Connection Error");
+                alert("Studio System Error: " + e.message);
             } finally {
-                load.classList.add('hidden');
-                fetchCredits();
+                loader.classList.add('hidden');
+                syncCredits();
             }
         }
-        fetchCredits();
+
+        syncCredits();
+        setTool('face-swap');
     </script>
 </body>
 </html>
