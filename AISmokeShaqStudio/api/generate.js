@@ -8,22 +8,29 @@ export default async function handler(req, res) {
     const { email, tool, image, second_image, audio, prompt } = req.body;
     
     try {
-        // 1. Check Credits
-        const credits = await redis.get(`credits_${email}`);
-        if (!credits || credits < 1) {
-            return res.status(402).json({ error: 'Insufficient credits' });
+        // 1. Get current credits, default to 0 if null
+        const currentCredits = await redis.get(`credits_${email}`);
+        const creditCount = parseInt(currentCredits) || 0;
+
+        if (creditCount < 1) {
+            return res.status(402).json({ error: 'Insufficient credits. Please refill.' });
         }
 
-        // 2. Call Replicate (Placeholder for actual AI call)
-        // We will add the specific Replicate model IDs once the credits are showing 100
-        
-        // 3. Deduct Credit
-        await redis.set(`credits_${email}`, parseInt(credits) - 1);
+        // 2. Placeholder for Replicate AI Logic
+        // This is where the magic happens. For now, we return a success message.
+        const mockOutput = "https://replicate.delivery/pbxt/example.png";
 
-        // Dummy response for testing the UI
-        return res.status(200).json({ output: "https://replicate.delivery/pbxt/example.png" });
+        // 3. Deduct 1 credit safely
+        const newTotal = creditCount - 1;
+        await redis.set(`credits_${email}`, newTotal.toString());
+
+        return res.status(200).json({ 
+            output: mockOutput,
+            remaining: newTotal
+        });
 
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        console.error("Redis Error:", error);
+        return res.status(500).json({ error: "Database communication error." });
     }
 }
