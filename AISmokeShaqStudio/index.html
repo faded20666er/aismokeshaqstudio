@@ -135,84 +135,7 @@ document.getElementById('i2i-strength').addEventListener('input', e => {
 });
 
 // IMAGE COMPRESSOR (keeps files under Vercel's 4.5MB limit)
-function compressImage(file) {
-    return new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => {
-            const c = document.createElement('canvas');
-            let w = img.width, h = img.height;
-            const max = 1024;
-            if (w > max || h > max) {
-                if (w > h) { h = Math.round(h * max / w); w = max; }
-                else { w = Math.round(w * max / h); h = max; }
-            }
-            c.width = w; c.height = h;
-            c.getContext('2d').drawImage(img, 0, 0, w, h);
-            resolve(c.toDataURL('image/jpeg', 0.85));
-        };
-        img.src = URL.createObjectURL(file);
-    });
-}
-
-function fileToB64(file) {
-    return new Promise(resolve => {
-        const r = new FileReader();
-        r.onload = () => resolve(r.result);
-        r.readAsDataURL(file);
-    });
-}
-
-// CREDITS
-async function syncCredits() {
-    try {
-        const r = await fetch('/api/credits?email=' + email);
-        const d = await r.json();
-        document.getElementById('credits').textContent = d.credits ?? 0;
-    } catch(e) {}
-}
-
-// STATUS UI
-function setStatus(msg) {
-    document.getElementById('statusText').textContent = msg;
-}
-
-
-
-// SHOW OUTPUT
-function showOutput(output) {
-    const url = Array.isArray(output) ? output[0] : output;
-    const el = document.getElementById('result');
-    const ph = document.getElementById('placeholder');
-    ph.classList.add('hidden');
-    el.classList.remove('hidden');
-
-    const isVideo = url && (url.includes('.mp4') || url.includes('.webm'));
-
-    if (isVideo) {
-        el.innerHTML = `<video src="${url}" controls autoplay loop></video>`;
-    } else {
-        el.innerHTML = `<img src="${url}">`;
-    }
-    el.innerHTML += `<br><a href="${url}" target="_blank" download class="btn-go px-6 py-2 rounded inline-block text-[10px] mt-3 uppercase tracking-wider">Download</a>`;
-
-    // Add to timeline
-    const thumb = document.createElement('div');
-    thumb.className = 'timeline-item shrink-0 w-20 h-16 overflow-hidden';
-    if (isVideo) {
-        thumb.innerHTML = `<video src="${url}" class="w-full h-full object-cover" muted></video>`;
-    } else {
-        thumb.innerHTML = `<img src="${url}" class="w-full h-full object-cover">`;
-    }
-    thumb.onclick = () => showOutput(output);
-    document.getElementById('timeline').prepend(thumb);
-}
-
-// MAIN GENERATE
-async function generate() {
-    const btn = document.getElementById('btnGen');
-    btn.disabled = true;
-    setStatus('Preparing...');
-
+ 
     try {
         let payload = { email, tool: activeTab };
 
@@ -260,19 +183,21 @@ async function generate() {
             return;
         }
 
-       if (data.output) {
+  if (data.output) {
     setStatus('Image generated!');
-    showImage(data.output[0]);   // however you display images
+    showOutput(data.output);
     btn.disabled = false;
     return;
 }
 
 if (data.image) {
     setStatus('Image generated!');
-    showImage(data.image[0]);
+    showOutput(data.image);
     btn.disabled = false;
     return;
 }
+
+
 
 setStatus('Unexpected response from server');
 btn.disabled = false;
@@ -291,5 +216,6 @@ syncCredits();
 </script>
 </body>
 </html>
+
 
 
