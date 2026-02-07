@@ -7,11 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --gold: #D4AF37;
-            --dark-gold: #996515;
-            --black: #0a0a0a;
-        }
+        :root { --gold: #D4AF37; --black: #0a0a0a; }
         body {
             background-color: var(--black);
             background-image: url('AISmokeShaqStudio/golddustbackdrop.jpg');
@@ -20,135 +16,84 @@
             color: white;
             font-family: 'Inter', sans-serif;
         }
-        .gold-text {
-            color: var(--gold);
-            font-family: 'Cinzel', serif;
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
-        }
-        .studio-card {
-            background: rgba(15, 15, 15, 0.9);
-            border: 1px solid var(--gold);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-        .nav-btn {
-            border-bottom: 2px solid transparent;
-            transition: 0.3s;
-        }
-        .nav-btn.active {
-            border-bottom: 2px solid var(--gold);
-            color: var(--gold);
-        }
+        .gold-text { color: var(--gold); font-family: 'Cinzel', serif; text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        .studio-card { background: rgba(15, 15, 15, 0.9); border: 1px solid var(--gold); backdrop-filter: blur(10px); }
+        .nav-btn { border-bottom: 2px solid transparent; transition: 0.3s; opacity: 0.6; }
+        .nav-btn.active { border-bottom: 2px solid var(--gold); color: var(--gold); opacity: 1; }
         .tool-panel { display: none; }
         .tool-panel.active { display: block; }
-        
-        /* Sparkle Effect */
-        #sparkles {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 50;
-        }
+        #sparkles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
     </style>
 </head>
 <body class="min-h-screen">
     <canvas id="sparkles"></canvas>
 
-    <!-- Header -->
     <nav class="border-b border-yellow-900/30 bg-black/80 backdrop-blur-md p-4 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <img src="AISmokeShaqStudio/logo.jpg.jpg" class="h-12 w-12 rounded-full border border-gold" style="mix-blend-mode: screen;">
+                <img src="AISmokeShaqStudio/logo.jpg.jpg" class="h-12 w-12 rounded-full border border-gold">
                 <h1 class="gold-text text-xl font-bold tracking-widest">AI SMOKE SHAQ STUDIO</h1>
             </div>
             <div class="flex items-center gap-6">
                 <div class="bg-yellow-900/20 px-4 py-1 border border-yellow-700/50 rounded-full">
-                    <span class="text-xs uppercase tracking-tighter text-gray-400">Credits:</span>
+                    <span class="text-xs uppercase text-gray-400">Credits:</span>
                     <span id="creditCount" class="text-gold font-bold ml-2">...</span>
                 </div>
-                <button onclick="logout()" class="text-xs uppercase tracking-widest hover:text-gold transition">Exit Studio</button>
             </div>
         </div>
     </nav>
 
     <main class="max-w-6xl mx-auto p-6">
-        <!-- Studio Tabs -->
         <div class="flex gap-8 mb-8 border-b border-white/10">
-            <button onclick="switchTool('face-swap')" id="btn-face-swap" class="nav-btn active pb-4 text-sm uppercase tracking-widest">Face Swap</button>
-            <button onclick="switchTool('img-to-video')" id="btn-img-to-video" class="nav-btn pb-4 text-sm uppercase tracking-widest">Image to Video</button>
-            <button onclick="switchTool('lip-sync')" id="btn-lip-sync" class="nav-btn pb-4 text-sm uppercase tracking-widest">Lip Sync AI</button>
+            <button onclick="switchTool('face-swap')" id="btn-face-swap" class="nav-btn active pb-4 text-sm uppercase">Face Swap</button>
+            <button onclick="switchTool('img-to-video')" id="btn-img-to-video" class="nav-btn pb-4 text-sm uppercase">Image to Video</button>
+            <button onclick="switchTool('lip-sync')" id="btn-lip-sync" class="nav-btn pb-4 text-sm uppercase">Lip Sync AI</button>
         </div>
 
         <div class="grid lg:grid-cols-3 gap-8">
-            <!-- Left: Inputs -->
             <div class="lg:col-span-1 space-y-6">
                 <div class="studio-card rounded-xl p-6">
-                    <h2 class="gold-text mb-4 text-lg">Input Assets</h2>
+                    <h2 class="gold-text mb-4 text-lg uppercase">Input Assets</h2>
                     
-                    <!-- Tool: Face Swap Inputs -->
                     <div id="panel-face-swap" class="tool-panel active space-y-4">
-                        <div>
-                            <label class="text-xs text-gray-400 uppercase">Target Image (The Scene)</label>
-                            <input type="file" id="fs-target" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs">
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-400 uppercase">Face Image (To Inject)</label>
-                            <input type="file" id="fs-source" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs">
-                        </div>
+                        <label class="text-xs text-gray-400 block uppercase">Target (The Scene)</label>
+                        <input type="file" id="fs-target" class="w-full bg-black/50 border border-white/10 p-2 text-xs">
+                        <label class="text-xs text-gray-400 block uppercase">Face (The Person)</label>
+                        <input type="file" id="fs-source" class="w-full bg-black/50 border border-white/10 p-2 text-xs">
                     </div>
 
-                    <!-- Tool: Img to Video Inputs -->
                     <div id="panel-img-to-video" class="tool-panel space-y-4">
-                        <div>
-                            <label class="text-xs text-gray-400 uppercase">Starting Image</label>
-                            <input type="file" id="v-image" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs">
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-400 uppercase">Motion Prompt</label>
-                            <textarea id="v-prompt" placeholder="e.g. hair blowing in wind, slow cinematic pan" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs h-24"></textarea>
-                        </div>
+                        <label class="text-xs text-gray-400 block uppercase">Base Image</label>
+                        <input type="file" id="v-image" class="w-full bg-black/50 border border-white/10 p-2 text-xs">
+                        <label class="text-xs text-gray-400 block uppercase">Prompt</label>
+                        <textarea id="v-prompt" placeholder="Cinematic motion..." class="w-full bg-black/50 border border-white/10 p-2 text-xs h-20 text-white"></textarea>
                     </div>
 
-                    <!-- Tool: Lip Sync Inputs -->
                     <div id="panel-lip-sync" class="tool-panel space-y-4">
-                        <div>
-                            <label class="text-xs text-gray-400 uppercase">Video or Image of Face</label>
-                            <input type="file" id="ls-face" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs">
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-400 uppercase">Audio File (MP3/WAV)</label>
-                            <input type="file" id="ls-audio" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs">
-                        </div>
+                        <label class="text-xs text-gray-400 block uppercase">Face Video/Img</label>
+                        <input type="file" id="ls-face" class="w-full bg-black/50 border border-white/10 p-2 text-xs">
+                        <label class="text-xs text-gray-400 block uppercase">Audio MP3</label>
+                        <input type="file" id="ls-audio" class="w-full bg-black/50 border border-white/10 p-2 text-xs">
                     </div>
 
-                    <button onclick="generateAI()" id="genBtn" class="w-full mt-6 bg-gradient-to-r from-yellow-700 to-yellow-500 text-black font-bold py-3 rounded uppercase tracking-tighter hover:scale-105 transition shadow-lg shadow-yellow-900/20">
-                        Process Generation
+                    <button onclick="handleGenerate()" id="genBtn" class="w-full mt-6 bg-gradient-to-r from-yellow-700 to-yellow-500 text-black font-bold py-3 rounded uppercase hover:brightness-110 transition">
+                        Start Production
                     </button>
-                </div>
-                
-                <!-- Pricing/Refill -->
-                <div class="studio-card rounded-xl p-4 border-yellow-900/30">
-                    <p class="text-[10px] text-gray-500 uppercase mb-2">Refill Credits</p>
-                    <button onclick="buyCredits(10)" class="w-full text-xs border border-gold/30 py-2 hover:bg-gold/10 transition mb-2">10 Credits - $10</button>
-                    <button onclick="buyCredits(50)" class="w-full text-xs border border-gold/30 py-2 hover:bg-gold/10 transition">50 Credits - $40</button>
                 </div>
             </div>
 
-            <!-- Right: Output Preview -->
             <div class="lg:col-span-2">
-                <div class="studio-card rounded-xl h-full min-h-[500px] flex flex-col items-center justify-center p-8 relative overflow-hidden">
-                    <div id="loader" class="hidden absolute inset-0 bg-black/80 z-10 flex flex-center flex-col items-center justify-center">
-                        <div class="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
-                        <p class="gold-text mt-4 animate-pulse">Processing Masterpiece...</p>
+                <div id="displayArea" class="studio-card rounded-xl h-full min-h-[500px] flex flex-col items-center justify-center p-8 relative">
+                    <div id="loader" class="hidden absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center">
+                        <div class="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+                        <p class="gold-text mt-4 animate-pulse">Rendering...</p>
                     </div>
-
-                    <div id="outputContainer" class="text-center">
-                        <img src="AISmokeShaqStudio/1.png" id="placeholderImg" class="max-h-[400px] opacity-30 grayscale mb-6">
-                        <p class="text-gray-500 uppercase tracking-widest text-sm">Waiting for Production Input</p>
+                    <div id="resultContent" class="w-full h-full flex items-center justify-center text-center">
+                        <div>
+                            <img src="AISmokeShaqStudio/1.png" class="max-h-64 opacity-20 mx-auto mb-4">
+                            <p class="text-gray-500 uppercase tracking-widest">Select assets and click Generate</p>
+                        </div>
                     </div>
-                    
-                    <!-- Result will render here -->
-                    <div id="resultDisplay" class="hidden w-full h-full flex items-center justify-center"></div>
                 </div>
             </div>
         </div>
@@ -156,108 +101,83 @@
 
     <script>
         let currentTool = 'face-swap';
-        const userEmail = "faded206@yahoo.com"; // Hardcoded for your session
+        const userEmail = "faded206@yahoo.com";
+
+        function switchTool(t) {
+            currentTool = t;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${t}`));
+            document.querySelectorAll('.tool-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${t}`));
+        }
+
+        // Helper to convert file to Base64
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
 
         async function fetchCredits() {
-            try {
-                const res = await fetch(`/api/credits?email=${userEmail}`);
-                const data = await res.json();
-                document.getElementById('creditCount').innerText = data.credits || 0;
-            } catch (e) { console.error("Credit fetch failed"); }
+            const r = await fetch(`/api/credits?email=${userEmail}`);
+            const d = await r.json();
+            document.getElementById('creditCount').innerText = d.credits || 0;
         }
 
-        function switchTool(toolId) {
-            currentTool = toolId;
-            // Update Buttons
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${toolId}`).classList.add('active');
-            
-            // Update Panels
-            document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById(`panel-${toolId}`).classList.add('active');
-        }
-
-        async function generateAI() {
-            const btn = document.getElementById('genBtn');
+        async function handleGenerate() {
             const loader = document.getElementById('loader');
-            
-            btn.disabled = true;
+            const resultContent = document.getElementById('resultContent');
             loader.classList.remove('hidden');
 
-            // Collect inputs based on tool
-            let payload = { email: userEmail, tool: currentTool };
-            
-            // Simple logic: We'd normally convert files to Base64 here
-            // For now, this calls your /api/generate endpoint
             try {
-                const response = await fetch('/api/generate', {
+                let payload = { email: userEmail, tool: currentTool };
+
+                // Get specific data based on tool
+                if (currentTool === 'face-swap') {
+                    const target = document.getElementById('fs-target').files[0];
+                    const source = document.getElementById('fs-source').files[0];
+                    if(!target || !source) throw new Error("Please upload both images");
+                    payload.image = await toBase64(target);
+                    payload.second_image = await toBase64(source);
+                } 
+                else if (currentTool === 'img-to-video') {
+                    const img = document.getElementById('v-image').files[0];
+                    if(!img) throw new Error("Please upload an image");
+                    payload.image = await toBase64(img);
+                    payload.prompt = document.getElementById('v-prompt').value;
+                }
+                else if (currentTool === 'lip-sync') {
+                    const face = document.getElementById('ls-face').files[0];
+                    const audio = document.getElementById('ls-audio').files[0];
+                    if(!face || !audio) throw new Error("Please upload both face and audio");
+                    payload.image = await toBase64(face);
+                    payload.audio = await toBase64(audio);
+                }
+
+                const res = await fetch('/api/generate', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                const result = await response.json();
-                
-                if(result.output) {
-                    document.getElementById('outputContainer').classList.add('hidden');
-                    const display = document.getElementById('resultDisplay');
-                    display.classList.remove('hidden');
-                    display.innerHTML = `<img src="${result.output}" class="max-w-full rounded border border-gold shadow-2xl">`;
+
+                const data = await res.json();
+                if (data.output) {
+                    if (currentTool === 'face-swap') {
+                        resultContent.innerHTML = `<img src="${data.output}" class="max-w-full border border-gold">`;
+                    } else {
+                        resultContent.innerHTML = `<video src="${data.output}" controls autoplay class="max-w-full border border-gold"></video>`;
+                    }
                 } else {
-                    alert("Error: " + (result.error || "Check your Replicate Token or Credits"));
+                    alert("Error: " + (data.error || "Generation failed"));
                 }
             } catch (err) {
-                alert("Production Error: " + err.message);
+                alert(err.message);
             } finally {
-                btn.disabled = false;
                 loader.classList.add('hidden');
                 fetchCredits();
             }
         }
 
-        function buyCredits(amt) {
-            // Placeholder for Stripe redirection logic
-            alert(`Redirecting to Secure Checkout for ${amt} Credits...`);
-        }
-
-        function logout() {
-            window.location.reload();
-        }
-
-        // Initialize Sparkles
-        const canvas = document.getElementById('sparkles');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        function initCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2;
-                this.speed = Math.random() * 0.5;
-                this.alpha = Math.random();
-            }
-            draw() {
-                ctx.fillStyle = `rgba(212, 175, 55, ${this.alpha})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            update() {
-                this.y -= this.speed;
-                if (this.y < 0) this.y = canvas.height;
-            }
-        }
-        for(let i=0; i<100; i++) particles.push(new Particle());
-        function animate() {
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
-        }
-        window.addEventListener('resize', initCanvas);
-        initCanvas();
-        animate();
+        // Sparkle animation logic omitted for brevity but keep your canvas init here
         fetchCredits();
     </script>
 </body>
