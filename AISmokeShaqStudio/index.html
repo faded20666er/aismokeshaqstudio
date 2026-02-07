@@ -6,103 +6,94 @@
     <title>AI Smoke Shaq Studio | PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { 
-            background: #000 url('golddustbackdrop.jpg') center/cover no-repeat fixed; 
-            color: #fff; font-family: 'Inter', sans-serif;
-        }
-        .glass { background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.3); }
+        body { background: #000 url('golddustbackdrop.jpg') center/cover no-repeat fixed; color: #fff; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
+        .glass { background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.3); }
         .gold-text { color: #D4AF37; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
         .diamond-panel { background-image: url('diamindbackgroud.jpeg'); background-blend-mode: overlay; background-color: rgba(0,0,0,0.9); }
-        .studio-input { background: #111; border: 1px solid #333; padding: 12px; border-radius: 8px; width: 100%; font-size: 13px; color: gold; }
-        .btn-main { background: linear-gradient(to right, #8a6d3b, #D4AF37); color: #000; font-weight: 900; transition: 0.3s; }
-        .btn-main:hover { transform: scale(1.02); box-shadow: 0 0 20px #D4AF37; }
-        .tab-btn { padding: 10px; cursor: pointer; border-bottom: 2px solid transparent; opacity: 0.5; }
+        .studio-input { background: #111; border: 1px solid #444; padding: 10px; border-radius: 6px; width: 100%; font-size: 12px; color: #D4AF37; }
+        .btn-execute { background: linear-gradient(to right, #8a6d3b, #D4AF37); color: #000; font-weight: 900; transition: 0.3s; }
+        .btn-execute:hover { transform: scale(1.02); box-shadow: 0 0 20px #D4AF37; }
+        .tab-btn { padding: 12px; cursor: pointer; border-bottom: 2px solid transparent; opacity: 0.4; font-size: 11px; font-weight: 900; }
         .tab-btn.active { opacity: 1; border-color: #D4AF37; color: #D4AF37; }
     </style>
 </head>
-<body class="p-4">
+<body class="flex flex-col">
 
-    <header class="max-w-7xl mx-auto flex justify-between items-center glass p-4 rounded-xl mb-6">
+    <header class="h-20 glass flex justify-between items-center px-8 border-b border-gold/20">
         <div class="flex items-center gap-4">
-            <img src="logo.jpg.jpg" class="h-16 w-16 rounded-full border-2 border-gold shadow-lg">
+            <img src="logo.jpg.jpg" class="h-12 w-12 rounded-full border border-gold shadow-lg">
             <div>
-                <h1 class="text-2xl font-black italic gold-text tracking-tighter uppercase">Smoke Shaq Studio</h1>
-                <p class="text-[9px] tracking-[0.4em] opacity-60 uppercase">High-End AI Production Suite</p>
+                <h1 class="text-xl font-black italic gold-text uppercase">Smoke Shaq Studio</h1>
+                <p class="text-[8px] tracking-[0.4em] opacity-50 uppercase">Cinematic AI Engine</p>
             </div>
         </div>
-        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-8">
             <div class="text-right">
-                <p class="text-[10px] opacity-40 uppercase">Vault Credits</p>
-                <p id="crCount" class="text-xl font-bold gold-text">---</p>
+                <p class="text-[9px] opacity-40 uppercase">Credits</p>
+                <p id="crCount" class="text-lg font-bold gold-text">---</p>
             </div>
-            <img src="banner.png.png" class="h-12 opacity-80" alt="Studio Banner">
+            <img src="banner.png.png" class="h-10 opacity-70">
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto grid lg:grid-cols-4 gap-6 h-[70vh]">
-        
-        <!-- CONTROL PANEL -->
-        <aside class="lg:col-span-1 glass p-6 rounded-2xl diamond-panel flex flex-col gap-6">
-            <div class="flex border-b border-white/10">
-                <div onclick="setTab('img-to-img')" id="t-i2i" class="tab-btn active text-[10px] font-bold">IMG2IMG</div>
-                <div onclick="setTab('img-to-video')" id="t-i2v" class="tab-btn text-[10px] font-bold">VIDEO</div>
-                <div onclick="setTab('lip-sync')" id="t-ls" class="tab-btn text-[10px] font-bold">LIP SYNC</div>
+    <main class="flex-1 grid grid-cols-12 overflow-hidden">
+        <!-- CONTROLS -->
+        <aside class="col-span-3 glass p-6 diamond-panel border-r border-white/5 flex flex-col gap-6 overflow-y-auto">
+            <div class="flex justify-between border-b border-white/10">
+                <div onclick="setTab('img-to-img')" id="t-i2i" class="tab-btn active">IMG2IMG</div>
+                <div onclick="setTab('img-to-video')" id="t-i2v" class="tab-btn">VIDEO</div>
+                <div onclick="setTab('lip-sync')" id="t-ls" class="tab-btn">LIP SYNC</div>
             </div>
 
-            <div class="space-y-4">
-                <!-- Image to Image Dropdown -->
-                <div id="ui-img-to-img">
-                    <label class="text-[10px] uppercase opacity-50 block mb-2">Model Selection</label>
-                    <select id="i2i-model" class="studio-input mb-4">
-                        <option value="stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1d715dfb1d335ff2253988859e517f6b47a0">SDXL High-Def (Realism)</option>
-                        <option value="lucataco/realistic-vision-v5.1:60037f480436854191370774df22ec9621da3b6a97184742a083f23f85894b98">Realistic Vision (Fast)</option>
-                    </select>
-                    <label class="text-[10px] uppercase opacity-50 block mb-2">Source Image</label>
-                    <input type="file" id="i2i-file" class="studio-input mb-4">
-                    <label class="text-[10px] uppercase opacity-50 block mb-2">Prompt (What should happen?)</label>
-                    <textarea id="i2i-prompt" class="studio-input h-24" placeholder="e.g. Turn this into a gold-plated statue, cinematic lighting..."></textarea>
-                </div>
-
-                <!-- Video Dropdown -->
-                <div id="ui-img-to-video" class="hidden">
-                    <label class="text-[10px] uppercase opacity-50 block mb-2">Engine</label>
-                    <select id="i2v-model" class="studio-input mb-4">
-                        <option value="stability-ai/stable-video-diffusion:ac7327c20fcb0cb7759481f1e957bf2cc56710f5afc8d28291ade20002939309">SVD-XT (Camera Motion)</option>
-                    </select>
-                    <input type="file" id="i2v-file" class="studio-input">
-                </div>
-
-                <!-- Lip Sync Dropdown -->
-                <div id="ui-lip-sync" class="hidden">
-                    <label class="text-[10px] uppercase opacity-50 block mb-2">Pre-built Voices</label>
-                    <select id="ls-voice" class="studio-input mb-4">
-                        <option value="custom">Upload Own Audio</option>
-                        <option value="dre">Dre (Deep Male)</option>
-                        <option value="doris">Doris (Sexy Female)</option>
-                    </select>
-                    <label class="text-[10px] uppercase opacity-50 block mb-2">Character Image</label>
-                    <input type="file" id="ls-file" class="studio-input mb-4">
-                    <label class="text-[10px] uppercase opacity-50 block mb-2">Audio File</label>
-                    <input type="file" id="ls-audio" class="studio-input">
-                </div>
+            <div id="ui-img-to-img" class="space-y-4">
+                <label class="text-[10px] uppercase opacity-40">Model</label>
+                <select id="i2i-model" class="studio-input">
+                    <option value="stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1d715dfb1d335ff2253988859e517f6b47a0">SDXL 1.0 High-Def</option>
+                    <option value="lucataco/realistic-vision-v5.1:60037f480436854191370774df22ec9621da3b6a97184742a083f23f85894b98">Realistic Vision v5</option>
+                </select>
+                <label class="text-[10px] uppercase opacity-40">Source Image</label>
+                <input type="file" id="i2i-file" class="studio-input">
+                <label class="text-[10px] uppercase opacity-40">Prompt / Dialogue</label>
+                <textarea id="i2i-prompt" class="studio-input h-24" placeholder="Describe the transformation..."></textarea>
             </div>
 
-            <button onclick="generate()" id="btnGen" class="w-full btn-main py-4 rounded-xl text-xs uppercase tracking-widest mt-auto">Execute Production</button>
+            <div id="ui-img-to-video" class="hidden space-y-4">
+                <label class="text-[10px] uppercase opacity-40">Engine</label>
+                <select id="i2v-model" class="studio-input">
+                    <option value="stability-ai/stable-video-diffusion:ac7327c20fcb0cb7759481f1e957bf2cc56710f5afc8d28291ade20002939309">SVD-XT (Camera Motion)</option>
+                </select>
+                <label class="text-[10px] uppercase opacity-40">Initial Frame</label>
+                <input type="file" id="i2v-file" class="studio-input">
+            </div>
+
+            <div id="ui-lip-sync" class="hidden space-y-4">
+                <label class="text-[10px] uppercase opacity-40">Voice Select</label>
+                <select id="ls-voice" class="studio-input">
+                    <option value="custom">Manual Upload</option>
+                    <option value="dre">Dre (Deep Male)</option>
+                    <option value="doris">Doris (Sexy Female)</option>
+                </select>
+                <label class="text-[10px] uppercase opacity-40">Character Headshot</label>
+                <input type="file" id="ls-file" class="studio-input">
+                <label class="text-[10px] uppercase opacity-40">Audio Track</label>
+                <input type="file" id="ls-audio" class="studio-input">
+            </div>
+
+            <button onclick="generate()" id="btnGen" class="w-full btn-execute py-4 rounded-lg text-xs uppercase italic mt-auto">Execute Render</button>
         </aside>
 
-        <!-- PREVIEW STAGE -->
-        <section class="lg:col-span-3 glass rounded-2xl relative overflow-hidden flex flex-col items-center justify-center p-10">
+        <!-- STAGE -->
+        <section class="col-span-9 relative flex items-center justify-center p-12 bg-black/40">
             <div id="loader" class="hidden absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center">
-                <div class="w-16 h-16 border-4 border-gold border-t-transparent animate-spin rounded-full"></div>
-                <p class="mt-4 gold-text font-black tracking-widest animate-pulse">RENDERING...</p>
+                <div class="w-12 h-12 border-2 border-gold border-t-transparent animate-spin rounded-full mb-4"></div>
+                <p class="gold-text font-black tracking-widest text-xs animate-pulse">PROCESSING GPU CLUSTER...</p>
             </div>
             
             <div id="output" class="text-center">
-                <img src="logo.jpg.jpg" class="w-32 opacity-10 mx-auto mb-6 grayscale">
-                <h3 class="text-3xl font-black italic opacity-10 tracking-[1em]">STANDBY</h3>
+                <img src="logo.jpg.jpg" class="w-32 opacity-10 mx-auto grayscale mb-4">
+                <h3 class="text-2xl font-black italic opacity-5 tracking-[1em]">READY</h3>
             </div>
         </section>
-
     </main>
 
     <script>
@@ -117,12 +108,19 @@
             document.getElementById('ui-'+t).classList.remove('hidden');
         }
 
-        const toB64 = f => new Promise(r => { const reader = new FileReader(); reader.readAsDataURL(f); reader.onload = () => r(reader.result); });
+        const toB64 = f => new Promise(r => { 
+            if(!f) r(null);
+            const reader = new FileReader(); 
+            reader.readAsDataURL(f); 
+            reader.onload = () => r(reader.result); 
+        });
 
         async function syncCredits() {
-            const res = await fetch(`/api/credits?email=${email}`);
-            const data = await res.json();
-            document.getElementById('crCount').innerText = data.credits || 0;
+            try {
+                const res = await fetch(`/api/credits?email=${email}`);
+                const data = await res.json();
+                document.getElementById('crCount').innerText = data.credits || 0;
+            } catch(e) { console.log("Credit sync pending..."); }
         }
 
         async function generate() {
@@ -150,18 +148,30 @@
                     body: JSON.stringify(payload)
                 });
 
-                const data = await res.json();
+                // BULLETPROOF JSON CHECK
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch(e) {
+                    throw new Error("Server sent back an error page instead of data. Check Vercel Logs.");
+                }
+
                 if(data.output) {
                     const url = Array.isArray(data.output) ? data.output[0] : data.output;
                     out.innerHTML = url.includes('.mp4') 
-                        ? `<video src="${url}" controls autoplay loop class="max-h-full rounded-lg border-2 border-gold"></video>`
-                        : `<img src="${url}" class="max-h-full rounded-lg border-2 border-gold">`;
-                    out.innerHTML += `<br><a href="${url}" download class="btn-main px-6 py-2 rounded mt-4 inline-block text-[10px]">DOWNLOAD RENDER</a>`;
+                        ? `<video src="${url}" controls autoplay loop class="max-h-full rounded border-2 border-gold shadow-2xl"></video>`
+                        : `<img src="${url}" class="max-h-full rounded border-2 border-gold shadow-2xl">`;
+                    out.innerHTML += `<br><a href="${url}" download class="btn-execute px-6 py-2 rounded mt-4 inline-block text-[10px]">SAVE RENDER</a>`;
                 } else {
-                    alert("Error: " + data.error);
+                    alert("GPU Message: " + data.error);
                 }
-            } catch(e) { alert("Studio Crash: " + e.message); }
-            finally { loader.classList.add('hidden'); syncCredits(); }
+            } catch(e) { 
+                alert("Studio Error: " + e.message); 
+            } finally { 
+                loader.classList.add('hidden'); 
+                syncCredits(); 
+            }
         }
 
         syncCredits();
