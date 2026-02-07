@@ -1,10 +1,15 @@
-import { kv } from "@vercel/kv";
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
 
 export default async function handler(req, res) {
     const { email } = req.query;
-    if (!email) return res.status(400).json({ credits: 0 });
+    if (!email) return res.status(400).json({ error: 'Email required' });
     
-    // Fetch credits from the KV database we just linked
-    const credits = await kv.get(`credits_${email.toLowerCase()}`) || 0;
-    res.status(200).json({ credits });
+    try {
+        const credits = await redis.get(`credits_${email}`);
+        return res.status(200).json({ credits: credits || 0 });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
 }
