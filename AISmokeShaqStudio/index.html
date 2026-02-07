@@ -3,190 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Smoke Shaq Studio | PRO PRODUCTION SEQUENCER</title>
+    <title>AI Smoke Shaq Studio | PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --gold: #D4AF37; --purple: #4c1d95; --diamond: rgba(255,255,255,0.05); }
         body { 
-            background: #000 url('golddustbackdrop.jpg') center/cover no-repeat fixed;
-            color: white; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
-            display: flex; flex-direction: column;
+            background: #000 url('golddustbackdrop.jpg') center/cover no-repeat fixed; 
+            color: #fff; font-family: 'Inter', sans-serif;
         }
-        .glass { background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.2); }
-        .gold-glow { text-shadow: 0 0 15px rgba(212,175,55,0.6); color: var(--gold); }
-        .diamond-overlay { background-image: url('diamindbackgroud.jpeg'); background-blend-mode: overlay; background-size: 200px; }
-        
-        /* Tooltip Logic for Model Descriptions */
-        .model-option { position: relative; cursor: help; }
-        .model-option:hover .description { display: block; }
-        .description { 
-            display: none; position: absolute; left: 105%; top: 0; width: 220px; 
-            background: black; border: 1px solid var(--gold); padding: 10px; 
-            z-index: 100; font-size: 10px; color: #ccc; border-radius: 4px;
-            box-shadow: 0 0 20px rgba(0,0,0,1);
-        }
-
-        /* Sequencer Timeline Style */
-        #timeline { height: 220px; background: rgba(10,10,10,0.95); border-top: 2px solid #222; overflow-x: auto; white-space: nowrap; padding: 20px; }
-        .scene-block { 
-            display: inline-block; width: 200px; vertical-align: top; margin-right: 15px;
-            border: 1px solid #333; background: rgba(20,20,20,0.8); border-radius: 6px;
-        }
-        .track-label { font-size: 8px; font-weight: 900; color: var(--gold); padding: 4px 8px; background: rgba(0,0,0,0.5); border-bottom: 1px solid #333; }
-        .visual-slot { height: 100px; background: #111; position: relative; overflow: hidden; }
-        .audio-slot { height: 40px; background: var(--purple); opacity: 0.6; position: relative; border-top: 1px solid #444; }
-        
-        .btn-execute { 
-            background: linear-gradient(135deg, #8a6d3b, #D4AF37, #f1e5ac); color: black; 
-            font-weight: 900; transform: skewX(-5deg); transition: 0.2s;
-        }
-        .btn-execute:hover { transform: skewX(-5deg) scale(1.05); box-shadow: 0 0 20px var(--gold); }
+        .glass { background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.3); }
+        .gold-text { color: #D4AF37; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
+        .diamond-panel { background-image: url('diamindbackgroud.jpeg'); background-blend-mode: overlay; background-color: rgba(0,0,0,0.9); }
+        .studio-input { background: #111; border: 1px solid #333; padding: 12px; border-radius: 8px; width: 100%; font-size: 13px; color: gold; }
+        .btn-main { background: linear-gradient(to right, #8a6d3b, #D4AF37); color: #000; font-weight: 900; transition: 0.3s; }
+        .btn-main:hover { transform: scale(1.02); box-shadow: 0 0 20px #D4AF37; }
+        .tab-btn { padding: 10px; cursor: pointer; border-bottom: 2px solid transparent; opacity: 0.5; }
+        .tab-btn.active { opacity: 1; border-color: #D4AF37; color: #D4AF37; }
     </style>
 </head>
-<body>
+<body class="p-4">
 
-    <!-- NAV BAR -->
-    <nav class="h-20 glass flex items-center justify-between px-8 border-b border-gold/20 shadow-2xl">
+    <header class="max-w-7xl mx-auto flex justify-between items-center glass p-4 rounded-xl mb-6">
         <div class="flex items-center gap-4">
-            <img src="logo.jpg.jpg" class="h-12 w-12 rounded-full border border-gold" alt="Logo">
+            <img src="logo.jpg.jpg" class="h-16 w-16 rounded-full border-2 border-gold shadow-lg">
             <div>
-                <h1 class="text-xl font-black italic gold-glow tracking-tighter uppercase">Smoke Shaq Studio</h1>
-                <p class="text-[9px] uppercase tracking-[0.4em] opacity-50">PRO AI SEQUENCER v4.0</p>
+                <h1 class="text-2xl font-black italic gold-text tracking-tighter uppercase">Smoke Shaq Studio</h1>
+                <p class="text-[9px] tracking-[0.4em] opacity-60 uppercase">High-End AI Production Suite</p>
             </div>
         </div>
-        <div class="flex items-center gap-10">
+        <div class="flex items-center gap-6">
             <div class="text-right">
-                <p class="text-[9px] opacity-40 uppercase">Vault Balance</p>
-                <p class="font-black text-xl gold-glow"><span id="crDisplay">---</span> <i class="fa-solid fa-gem text-xs"></i></p>
+                <p class="text-[10px] opacity-40 uppercase">Vault Credits</p>
+                <p id="crCount" class="text-xl font-bold gold-text">---</p>
             </div>
-            <img src="banner.png.png" class="h-10 opacity-70" alt="Banner">
+            <img src="banner.png.png" class="h-12 opacity-80" alt="Studio Banner">
         </div>
-    </nav>
+    </header>
 
-    <div class="flex-1 grid grid-cols-12 overflow-hidden">
+    <main class="max-w-7xl mx-auto grid lg:grid-cols-4 gap-6 h-[70vh]">
         
-        <!-- SIDEBAR: ASSET INPUTS -->
-        <aside class="col-span-3 glass p-6 overflow-y-auto diamond-overlay border-r border-white/5">
-            <div class="space-y-6">
-                <!-- TOOL SELECTION -->
-                <div>
-                    <label class="text-[10px] font-black gold-glow uppercase mb-3 block">Engine Selection</label>
-                    <div class="space-y-2">
-                        <div onclick="setTool('face-swap')" id="t-fs" class="model-option p-3 bg-white/5 border border-white/10 rounded hover:border-gold">
-                            <span class="text-xs font-bold">FACE SWAP HD</span>
-                            <div class="description"><b>LUCATACO FACESWAP:</b> Industry-standard identity replacement. Best for keeping character consistency across skits.</div>
-                        </div>
-                        <div onclick="setTool('img-to-video')" id="t-iv" class="model-option p-3 bg-white/5 border border-white/10 rounded hover:border-gold">
-                            <span class="text-xs font-bold">CINEMATIC MOTION</span>
-                            <div class="description"><b>STABILITY SVD-XT:</b> Produces 4K quality camera pans and character movement from a single image.</div>
-                        </div>
-                        <div onclick="setTool('lip-sync')" id="t-ls" class="model-option p-3 bg-white/5 border border-white/10 rounded hover:border-gold">
-                            <span class="text-xs font-bold">LIP SYNC PRO</span>
-                            <div class="description"><b>WAV2LIP HD:</b> Perfectly synchronizes mouth movements to any audio track. Necessary for dialogue-heavy comedy.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- INPUT SLOTS -->
-                <div id="inputs" class="space-y-4 pt-4 border-t border-white/10">
-                    <div id="ui-face-swap" class="space-y-4">
-                        <div><label class="text-[10px] opacity-50 block uppercase">Base Scene Image</label><input type="file" id="f1" class="w-full bg-black text-[10px] p-2 rounded border border-white/10 mt-1"></div>
-                        <div><label class="text-[10px] opacity-50 block uppercase">Character Face</label><input type="file" id="f2" class="w-full bg-black text-[10px] p-2 rounded border border-white/10 mt-1"></div>
-                    </div>
-                    <div id="ui-img-to-video" class="hidden space-y-4">
-                        <div><label class="text-[10px] opacity-50 block uppercase">Source Image</label><input type="file" id="v1" class="w-full bg-black text-[10px] p-2 rounded border border-white/10 mt-1"></div>
-                    </div>
-                    <div id="ui-lip-sync" class="hidden space-y-4">
-                        <div><label class="text-[10px] opacity-50 block uppercase">Character Visual</label><input type="file" id="l1" class="w-full bg-black text-[10px] p-2 rounded border border-white/10 mt-1"></div>
-                        <div><label class="text-[10px] opacity-50 block uppercase">Dialogue Audio</label><input type="file" id="l2" class="w-full bg-black text-[10px] p-2 rounded border border-white/10 mt-1"></div>
-                        <div class="pt-2"><p class="text-[9px] text-purple-400 italic font-bold uppercase">Pre-built Voices Available: Shaq, Doris, Dre</p></div>
-                    </div>
-                </div>
-
-                <button onclick="renderAsset()" id="renderBtn" class="w-full btn-execute py-4 mt-4 rounded uppercase text-xs">Run Production</button>
+        <!-- CONTROL PANEL -->
+        <aside class="lg:col-span-1 glass p-6 rounded-2xl diamond-panel flex flex-col gap-6">
+            <div class="flex border-b border-white/10">
+                <div onclick="setTab('img-to-img')" id="t-i2i" class="tab-btn active text-[10px] font-bold">IMG2IMG</div>
+                <div onclick="setTab('img-to-video')" id="t-i2v" class="tab-btn text-[10px] font-bold">VIDEO</div>
+                <div onclick="setTab('lip-sync')" id="t-ls" class="tab-btn text-[10px] font-bold">LIP SYNC</div>
             </div>
+
+            <div class="space-y-4">
+                <!-- Image to Image Dropdown -->
+                <div id="ui-img-to-img">
+                    <label class="text-[10px] uppercase opacity-50 block mb-2">Model Selection</label>
+                    <select id="i2i-model" class="studio-input mb-4">
+                        <option value="stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1d715dfb1d335ff2253988859e517f6b47a0">SDXL High-Def (Realism)</option>
+                        <option value="lucataco/realistic-vision-v5.1:60037f480436854191370774df22ec9621da3b6a97184742a083f23f85894b98">Realistic Vision (Fast)</option>
+                    </select>
+                    <label class="text-[10px] uppercase opacity-50 block mb-2">Source Image</label>
+                    <input type="file" id="i2i-file" class="studio-input mb-4">
+                    <label class="text-[10px] uppercase opacity-50 block mb-2">Prompt (What should happen?)</label>
+                    <textarea id="i2i-prompt" class="studio-input h-24" placeholder="e.g. Turn this into a gold-plated statue, cinematic lighting..."></textarea>
+                </div>
+
+                <!-- Video Dropdown -->
+                <div id="ui-img-to-video" class="hidden">
+                    <label class="text-[10px] uppercase opacity-50 block mb-2">Engine</label>
+                    <select id="i2v-model" class="studio-input mb-4">
+                        <option value="stability-ai/stable-video-diffusion:ac7327c20fcb0cb7759481f1e957bf2cc56710f5afc8d28291ade20002939309">SVD-XT (Camera Motion)</option>
+                    </select>
+                    <input type="file" id="i2v-file" class="studio-input">
+                </div>
+
+                <!-- Lip Sync Dropdown -->
+                <div id="ui-lip-sync" class="hidden">
+                    <label class="text-[10px] uppercase opacity-50 block mb-2">Pre-built Voices</label>
+                    <select id="ls-voice" class="studio-input mb-4">
+                        <option value="custom">Upload Own Audio</option>
+                        <option value="dre">Dre (Deep Male)</option>
+                        <option value="doris">Doris (Sexy Female)</option>
+                    </select>
+                    <label class="text-[10px] uppercase opacity-50 block mb-2">Character Image</label>
+                    <input type="file" id="ls-file" class="studio-input mb-4">
+                    <label class="text-[10px] uppercase opacity-50 block mb-2">Audio File</label>
+                    <input type="file" id="ls-audio" class="studio-input">
+                </div>
+            </div>
+
+            <button onclick="generate()" id="btnGen" class="w-full btn-main py-4 rounded-xl text-xs uppercase tracking-widest mt-auto">Execute Production</button>
         </aside>
 
-        <!-- MAIN PRODUCTION STAGE -->
-        <section class="col-span-9 relative flex flex-col bg-black/40">
-            <div id="stage-loader" class="hidden absolute inset-0 bg-black/95 z-50 flex flex-col items-center justify-center">
-                <div class="w-20 h-20 border-2 border-gold border-t-transparent animate-spin rounded-full mb-6"></div>
-                <h2 class="gold-glow font-black text-2xl tracking-[0.5em] animate-pulse">PRODUCING...</h2>
-                <p id="statusTxt" class="text-[10px] opacity-40 mt-2 uppercase">GPU Cluster Active - Processing Scene</p>
+        <!-- PREVIEW STAGE -->
+        <section class="lg:col-span-3 glass rounded-2xl relative overflow-hidden flex flex-col items-center justify-center p-10">
+            <div id="loader" class="hidden absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center">
+                <div class="w-16 h-16 border-4 border-gold border-t-transparent animate-spin rounded-full"></div>
+                <p class="mt-4 gold-text font-black tracking-widest animate-pulse">RENDERING...</p>
             </div>
-
-            <div id="canvas" class="flex-1 flex flex-col items-center justify-center p-12 overflow-hidden">
-                <img src="diamindbackgroud.jpeg" class="w-48 opacity-10 grayscale absolute">
-                <div id="previewOutput" class="z-10 text-center">
-                    <h3 class="text-4xl font-black italic opacity-10 tracking-widest">PRODUCTION STAGE</h3>
-                    <p class="text-[10px] opacity-30 mt-4 max-w-sm uppercase">Waiting for input assets. Your high-quality render will appear here for review before timeline placement.</p>
-                </div>
-            </div>
-
-            <!-- THE SEQUENCER TIMELINE -->
-            <div id="timeline">
-                <div class="flex items-center gap-4 mb-4">
-                    <h4 class="text-[10px] font-black gold-glow uppercase tracking-[0.3em]">Cinematic Sequencer</h4>
-                    <div class="h-[1px] flex-1 bg-white/10"></div>
-                </div>
-                
-                <div id="track-container" class="flex gap-4">
-                    <!-- Scenes will be injected here -->
-                    <div class="scene-block opacity-20 border-dashed">
-                        <div class="track-label italic text-gray-500 uppercase">Scene 01</div>
-                        <div class="visual-slot flex items-center justify-center text-[10px]">EMPTY SLOT</div>
-                        <div class="audio-slot flex items-center justify-center text-[9px]">NO DIALOGUE</div>
-                    </div>
-                </div>
+            
+            <div id="output" class="text-center">
+                <img src="logo.jpg.jpg" class="w-32 opacity-10 mx-auto mb-6 grayscale">
+                <h3 class="text-3xl font-black italic opacity-10 tracking-[1em]">STANDBY</h3>
             </div>
         </section>
-    </div>
+
+    </main>
 
     <script>
-        const userEmail = "faded206@yahoo.com";
-        let currentTool = 'face-swap';
+        const email = "faded206@yahoo.com";
+        let activeTab = 'img-to-img';
 
-        function setTool(t) {
-            currentTool = t;
-            ['fs','iv','ls'].forEach(i => document.getElementById('t-'+i).classList.remove('border-gold','bg-white/10'));
-            document.getElementById('t-'+(t==='face-swap'?'fs':t==='img-to-video'?'iv':'ls')).classList.add('border-gold','bg-white/10');
-            ['face-swap','img-to-video','lip-sync'].forEach(i => document.getElementById('ui-'+i).classList.add('hidden'));
+        function setTab(t) {
+            activeTab = t;
+            ['i2i','i2v','ls'].forEach(id => document.getElementById('t-'+id).classList.remove('active'));
+            document.getElementById('t-'+(t==='img-to-img'?'i2i':t==='img-to-video'?'i2v':'ls')).classList.add('active');
+            ['ui-img-to-img','ui-img-to-video','ui-lip-sync'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById('ui-'+t).classList.remove('hidden');
         }
 
-        const toBase64 = file => new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-        });
+        const toB64 = f => new Promise(r => { const reader = new FileReader(); reader.readAsDataURL(f); reader.onload = () => r(reader.result); });
 
         async function syncCredits() {
-            try {
-                const r = await fetch(`/api/credits?email=${userEmail}`);
-                const d = await r.json();
-                document.getElementById('crDisplay').innerText = d.credits;
-            } catch(e) { document.getElementById('crDisplay').innerText = "???"; }
+            const res = await fetch(`/api/credits?email=${email}`);
+            const data = await res.json();
+            document.getElementById('crCount').innerText = data.credits || 0;
         }
 
-        async function renderAsset() {
-            const loader = document.getElementById('stage-loader');
-            const preview = document.getElementById('previewOutput');
-            const track = document.getElementById('track-container');
-            
+        async function generate() {
+            const loader = document.getElementById('loader');
+            const out = document.getElementById('output');
             loader.classList.remove('hidden');
 
             try {
-                let payload = { email: userEmail, tool: currentTool };
-                
-                if(currentTool === 'face-swap') {
-                    payload.image = await toBase64(document.getElementById('f1').files[0]);
-                    payload.second_image = await toBase64(document.getElementById('f2').files[0]);
-                } else if(currentTool === 'img-to-video') {
-                    payload.image = await toBase64(document.getElementById('v1').files[0]);
+                let payload = { email, tool: activeTab };
+                if(activeTab === 'img-to-img') {
+                    payload.image = await toB64(document.getElementById('i2i-file').files[0]);
+                    payload.prompt = document.getElementById('i2i-prompt').value;
+                    payload.model_id = document.getElementById('i2i-model').value;
+                } else if(activeTab === 'img-to-video') {
+                    payload.image = await toB64(document.getElementById('i2v-file').files[0]);
+                    payload.model_id = document.getElementById('i2v-model').value;
                 } else {
-                    payload.image = await toBase64(document.getElementById('l1').files[0]);
-                    payload.audio = await toBase64(document.getElementById('l2').files[0]);
+                    payload.image = await toB64(document.getElementById('ls-file').files[0]);
+                    payload.audio = await toB64(document.getElementById('ls-audio').files[0]);
                 }
 
                 const res = await fetch('/api/generate', {
@@ -198,37 +153,18 @@
                 const data = await res.json();
                 if(data.output) {
                     const url = Array.isArray(data.output) ? data.output[0] : data.output;
-                    const isVid = url.includes('.mp4') || currentTool !== 'face-swap';
-                    
-                    // Update Preview
-                    preview.innerHTML = isVid ? `<video src="${url}" controls autoplay loop class="max-h-[400px] border border-gold shadow-2xl"></video>` : `<img src="${url}" class="max-h-[400px] border border-gold shadow-2xl">`;
-                    preview.innerHTML += `<div class="mt-4 flex gap-4 justify-center"><a href="${url}" download class="text-[10px] gold-glow font-bold border border-gold px-4 py-1 rounded">DOWNLOAD HD</a></div>`;
-
-                    // Push to Sequencer Timeline
-                    const scene = document.createElement('div');
-                    scene.className = "scene-block";
-                    scene.innerHTML = `
-                        <div class="track-label">SCENE ${track.children.length}</div>
-                        <div class="visual-slot">${isVid ? `<video src="${url}" autoplay muted loop class="w-full h-full object-cover"></video>` : `<img src="${url}" class="w-full h-full object-cover">`}</div>
-                        <div class="audio-slot flex items-center px-2 text-[9px] font-bold italic truncate">
-                            <i class="fa-solid fa-volume-high mr-2"></i> ${currentTool === 'lip-sync' ? 'DIALOGUE MAPPED' : 'SILENT MOTION'}
-                        </div>
-                    `;
-                    track.prepend(scene);
-
+                    out.innerHTML = url.includes('.mp4') 
+                        ? `<video src="${url}" controls autoplay loop class="max-h-full rounded-lg border-2 border-gold"></video>`
+                        : `<img src="${url}" class="max-h-full rounded-lg border-2 border-gold">`;
+                    out.innerHTML += `<br><a href="${url}" download class="btn-main px-6 py-2 rounded mt-4 inline-block text-[10px]">DOWNLOAD RENDER</a>`;
                 } else {
-                    alert("Production Halted: " + (data.error || "Format Mismatch"));
+                    alert("Error: " + data.error);
                 }
-            } catch(e) {
-                alert("Studio System Error: " + e.message);
-            } finally {
-                loader.classList.add('hidden');
-                syncCredits();
-            }
+            } catch(e) { alert("Studio Crash: " + e.message); }
+            finally { loader.classList.add('hidden'); syncCredits(); }
         }
 
         syncCredits();
-        setTool('face-swap');
     </script>
 </body>
 </html>
