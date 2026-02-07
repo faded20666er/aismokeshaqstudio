@@ -3,129 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Smoke Shaq Studio | Member Vault</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
+    <title>AI Smoke Shaq Studio | Production Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --dark-gold: #996515;
+            --black: #0a0a0a;
+        }
+        body {
+            background-color: var(--black);
+            background-image: url('AISmokeShaqStudio/golddustbackdrop.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+        .gold-text {
+            color: var(--gold);
+            font-family: 'Cinzel', serif;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+        .studio-card {
+            background: rgba(15, 15, 15, 0.9);
+            border: 1px solid var(--gold);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .nav-btn {
+            border-bottom: 2px solid transparent;
+            transition: 0.3s;
+        }
+        .nav-btn.active {
+            border-bottom: 2px solid var(--gold);
+            color: var(--gold);
+        }
+        .tool-panel { display: none; }
+        .tool-panel.active { display: block; }
+        
+        /* Sparkle Effect */
+        #sparkles {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen">
+    <canvas id="sparkles"></canvas>
 
-    <header>
-        <div class="logo-container">
-            <img src="logo.jpg.jpg" alt="AI Smoke Shaq Logo" class="logo">
-        </div>
-        <div class="user-status">
-            <button id="vaultBtn" onclick="toggleVault()">ACCESS VAULT</button>
-            <div id="creditDisplay" style="display:none;">
-                <span id="userEmail"></span> | <span id="userCredits">0</span> CREDITS
+    <!-- Header -->
+    <nav class="border-b border-yellow-900/30 bg-black/80 backdrop-blur-md p-4 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <img src="AISmokeShaqStudio/logo.jpg.jpg" class="h-12 w-12 rounded-full border border-gold" style="mix-blend-mode: screen;">
+                <h1 class="gold-text text-xl font-bold tracking-widest">AI SMOKE SHAQ STUDIO</h1>
             </div>
-        </div>
-    </header>
-
-    <main>
-        <!-- Sidebar Tools -->
-        <nav class="side-tools">
-            <div class="tool-category">STUDIO TOOLS</div>
-            <button class="tool-btn active" onclick="switchTool('lip-sync')">👄 Lip Sync AI</button>
-            <button class="tool-btn" onclick="switchTool('img-video')">🎬 Image to Video</button>
-            <button class="tool-btn" onclick="switchTool('face-swap')">🎭 Face Swap</button>
-            
-            <div class="tool-category" style="margin-top:30px;">REFILL CREDITS</div>
-            <a href="YOUR_STRIPE_LINK_10" class="refill-link">50 Credits - $10</a>
-            <a href="YOUR_STRIPE_LINK_25" class="refill-link">200 Credits - $25</a>
-            <a href="YOUR_STRIPE_LINK_50" class="refill-link highlight">500 Credits - $50</a>
-        </nav>
-
-        <!-- Main Workspace -->
-        <section class="workspace">
-            <div id="tool-lip-sync" class="tool-interface">
-                <h2>Lip Sync AI</h2>
-                <p class="tool-desc">Upload a photo and an audio file. The AI will make them speak in sync.</p>
-                
-                <div class="upload-grid">
-                    <div class="upload-box" onclick="document.getElementById('inputImg').click()">
-                        <input type="file" id="inputImg" hidden accept="image/*">
-                        <span>Click to Upload Image</span>
-                    </div>
-                    <div class="upload-box" onclick="document.getElementById('inputAudio').click()">
-                        <input type="file" id="inputAudio" hidden accept="audio/*">
-                        <span>Click to Upload Audio</span>
-                    </div>
+            <div class="flex items-center gap-6">
+                <div class="bg-yellow-900/20 px-4 py-1 border border-yellow-700/50 rounded-full">
+                    <span class="text-xs uppercase tracking-tighter text-gray-400">Credits:</span>
+                    <span id="creditCount" class="text-gold font-bold ml-2">...</span>
                 </div>
-
-                <button class="generate-btn" onclick="generateAI()">GENERATE PRODUCTION</button>
-                <div id="statusMessage"></div>
-                <div id="resultContainer"></div>
+                <button onclick="logout()" class="text-xs uppercase tracking-widest hover:text-gold transition">Exit Studio</button>
             </div>
-        </section>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6">
+        <!-- Studio Tabs -->
+        <div class="flex gap-8 mb-8 border-b border-white/10">
+            <button onclick="switchTool('face-swap')" id="btn-face-swap" class="nav-btn active pb-4 text-sm uppercase tracking-widest">Face Swap</button>
+            <button onclick="switchTool('img-to-video')" id="btn-img-to-video" class="nav-btn pb-4 text-sm uppercase tracking-widest">Image to Video</button>
+            <button onclick="switchTool('lip-sync')" id="btn-lip-sync" class="nav-btn pb-4 text-sm uppercase tracking-widest">Lip Sync AI</button>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Left: Inputs -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="studio-card rounded-xl p-6">
+                    <h2 class="gold-text mb-4 text-lg">Input Assets</h2>
+                    
+                    <!-- Tool: Face Swap Inputs -->
+                    <div id="panel-face-swap" class="tool-panel active space-y-4">
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase">Target Image (The Scene)</label>
+                            <input type="file" id="fs-target" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase">Face Image (To Inject)</label>
+                            <input type="file" id="fs-source" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Tool: Img to Video Inputs -->
+                    <div id="panel-img-to-video" class="tool-panel space-y-4">
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase">Starting Image</label>
+                            <input type="file" id="v-image" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase">Motion Prompt</label>
+                            <textarea id="v-prompt" placeholder="e.g. hair blowing in wind, slow cinematic pan" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs h-24"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Tool: Lip Sync Inputs -->
+                    <div id="panel-lip-sync" class="tool-panel space-y-4">
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase">Video or Image of Face</label>
+                            <input type="file" id="ls-face" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 uppercase">Audio File (MP3/WAV)</label>
+                            <input type="file" id="ls-audio" class="w-full mt-1 bg-black/50 border border-white/10 p-2 text-xs">
+                        </div>
+                    </div>
+
+                    <button onclick="generateAI()" id="genBtn" class="w-full mt-6 bg-gradient-to-r from-yellow-700 to-yellow-500 text-black font-bold py-3 rounded uppercase tracking-tighter hover:scale-105 transition shadow-lg shadow-yellow-900/20">
+                        Process Generation
+                    </button>
+                </div>
+                
+                <!-- Pricing/Refill -->
+                <div class="studio-card rounded-xl p-4 border-yellow-900/30">
+                    <p class="text-[10px] text-gray-500 uppercase mb-2">Refill Credits</p>
+                    <button onclick="buyCredits(10)" class="w-full text-xs border border-gold/30 py-2 hover:bg-gold/10 transition mb-2">10 Credits - $10</button>
+                    <button onclick="buyCredits(50)" class="w-full text-xs border border-gold/30 py-2 hover:bg-gold/10 transition">50 Credits - $40</button>
+                </div>
+            </div>
+
+            <!-- Right: Output Preview -->
+            <div class="lg:col-span-2">
+                <div class="studio-card rounded-xl h-full min-h-[500px] flex flex-col items-center justify-center p-8 relative overflow-hidden">
+                    <div id="loader" class="hidden absolute inset-0 bg-black/80 z-10 flex flex-center flex-col items-center justify-center">
+                        <div class="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+                        <p class="gold-text mt-4 animate-pulse">Processing Masterpiece...</p>
+                    </div>
+
+                    <div id="outputContainer" class="text-center">
+                        <img src="AISmokeShaqStudio/1.png" id="placeholderImg" class="max-h-[400px] opacity-30 grayscale mb-6">
+                        <p class="text-gray-500 uppercase tracking-widest text-sm">Waiting for Production Input</p>
+                    </div>
+                    
+                    <!-- Result will render here -->
+                    <div id="resultDisplay" class="hidden w-full h-full flex items-center justify-center"></div>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <!-- Login Overlay -->
-    <div id="loginOverlay" class="overlay">
-        <div class="login-box">
-            <h3>Enter Vault Email</h3>
-            <p>Use the email you used for payment to access your credits.</p>
-            <input type="email" id="emailInput" placeholder="email@example.com">
-            <button onclick="login()">LOGIN</button>
-        </div>
-    </div>
-
     <script>
-        let currentUser = localStorage.getItem('shaq_user');
+        let currentTool = 'face-swap';
+        const userEmail = "faded206@yahoo.com"; // Hardcoded for your session
 
-        if (currentUser) {
-            updateCreditDisplay();
+        async function fetchCredits() {
+            try {
+                const res = await fetch(`/api/credits?email=${userEmail}`);
+                const data = await res.json();
+                document.getElementById('creditCount').innerText = data.credits || 0;
+            } catch (e) { console.error("Credit fetch failed"); }
         }
 
-        function toggleVault() {
-            document.getElementById('loginOverlay').style.display = 'flex';
-        }
-
-        async function login() {
-            const email = document.getElementById('emailInput').value;
-            if (email) {
-                localStorage.setItem('shaq_user', email);
-                document.getElementById('loginOverlay').style.display = 'none';
-                updateCreditDisplay();
-            }
-        }
-
-        async function updateCreditDisplay() {
-            const email = localStorage.getItem('shaq_user');
-            const res = await fetch(`/api/credits?email=${email}`);
-            const data = await res.json();
+        function switchTool(toolId) {
+            currentTool = toolId;
+            // Update Buttons
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${toolId}`).classList.add('active');
             
-            document.getElementById('vaultBtn').style.display = 'none';
-            document.getElementById('creditDisplay').style.display = 'block';
-            document.getElementById('userEmail').innerText = email;
-            document.getElementById('userCredits').innerText = data.credits;
+            // Update Panels
+            document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(`panel-${toolId}`).classList.add('active');
         }
 
         async function generateAI() {
-            const email = localStorage.getItem('shaq_user');
-            if (!email) return alert("Please login to the vault first!");
+            const btn = document.getElementById('genBtn');
+            const loader = document.getElementById('loader');
+            
+            btn.disabled = true;
+            loader.classList.remove('hidden');
 
-            const status = document.getElementById('statusMessage');
-            status.innerText = "Processing... this takes about 60 seconds.";
-
-            // In a real version, we'd upload the files to a CDN first. 
-            // For now, we are sending a request to the backend.
-            const response = await fetch('/api/generate', {
-                method: 'POST',
-                body: JSON.stringify({
-                    email: email,
-                    tool: 'lip-sync',
-                    image: 'https://aismokeshaqstudio.shop/logo.jpg.jpg', // Placeholder
-                    audio: 'URL_TO_AUDIO' 
-                })
-            });
-
-            const data = await response.json();
-            if (data.error) {
-                status.innerText = "Error: " + data.error;
-            } else {
-                status.innerText = "Generation Started! Check back in 1 minute.";
+            // Collect inputs based on tool
+            let payload = { email: userEmail, tool: currentTool };
+            
+            // Simple logic: We'd normally convert files to Base64 here
+            // For now, this calls your /api/generate endpoint
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if(result.output) {
+                    document.getElementById('outputContainer').classList.add('hidden');
+                    const display = document.getElementById('resultDisplay');
+                    display.classList.remove('hidden');
+                    display.innerHTML = `<img src="${result.output}" class="max-w-full rounded border border-gold shadow-2xl">`;
+                } else {
+                    alert("Error: " + (result.error || "Check your Replicate Token or Credits"));
+                }
+            } catch (err) {
+                alert("Production Error: " + err.message);
+            } finally {
+                btn.disabled = false;
+                loader.classList.add('hidden');
+                fetchCredits();
             }
         }
+
+        function buyCredits(amt) {
+            // Placeholder for Stripe redirection logic
+            alert(`Redirecting to Secure Checkout for ${amt} Credits...`);
+        }
+
+        function logout() {
+            window.location.reload();
+        }
+
+        // Initialize Sparkles
+        const canvas = document.getElementById('sparkles');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2;
+                this.speed = Math.random() * 0.5;
+                this.alpha = Math.random();
+            }
+            draw() {
+                ctx.fillStyle = `rgba(212, 175, 55, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y < 0) this.y = canvas.height;
+            }
+        }
+        for(let i=0; i<100; i++) particles.push(new Particle());
+        function animate() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        animate();
+        fetchCredits();
     </script>
 </body>
 </html>
