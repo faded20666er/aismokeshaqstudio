@@ -294,12 +294,24 @@ async function generate() {
             return;
         }
 
-        if (data.id) {
-            setStatus('Prediction created: ' + data.id + ' — polling...');
-            pollResult(data.id);
-        } else {
-            alert('No prediction ID returned');
-            btn.disabled = false;
+       if (data.output) {
+    setStatus('Image generated!');
+    showImage(data.output[0]);   // however you display images
+    btn.disabled = false;
+    return;
+}
+
+if (data.image) {
+    setStatus('Image generated!');
+    showImage(data.image[0]);
+    btn.disabled = false;
+    return;
+}
+
+setStatus('Unexpected response from server');
+btn.disabled = false;
+
+
         }
 
     } catch(e) {
@@ -313,3 +325,4 @@ syncCredits();
 </script>
 </body>
 </html>
+
