@@ -1,7 +1,8 @@
 {
-  "type": "module",
+  "name": "ai-smoke-shaq-studio",
+  "version": "1.0.0",
   "dependencies": {
-    "@vercel/kv": "latest",
-    "replicate": "latest"
+    "@upstash/redis": "^1.28.4",
+    "node-fetch": "^2.7.0"
   }
 }
