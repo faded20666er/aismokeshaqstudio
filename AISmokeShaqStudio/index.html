@@ -3,178 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Smoke Shaq Studio | PRO</title>
+    <title>AI Smoke Shaq Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #000 url('golddustbackdrop.jpg') center/cover no-repeat fixed; color: #fff; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
-        .glass { background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); border: 1px solid rgba(212,175,55,0.3); }
-        .gold-text { color: #D4AF37; text-shadow: 0 0 10px rgba(212,175,55,0.5); }
-        .diamond-panel { background-image: url('diamindbackgroud.jpeg'); background-blend-mode: overlay; background-color: rgba(0,0,0,0.9); }
-        .studio-input { background: #111; border: 1px solid #444; padding: 10px; border-radius: 6px; width: 100%; font-size: 12px; color: #D4AF37; }
-        .btn-execute { background: linear-gradient(to right, #8a6d3b, #D4AF37); color: #000; font-weight: 900; transition: 0.3s; }
-        .btn-execute:hover { transform: scale(1.02); box-shadow: 0 0 20px #D4AF37; }
-        .tab-btn { padding: 12px; cursor: pointer; border-bottom: 2px solid transparent; opacity: 0.4; font-size: 11px; font-weight: 900; }
-        .tab-btn.active { opacity: 1; border-color: #D4AF37; color: #D4AF37; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #000 url('golddustbackdrop.jpg') center/cover fixed; color:#fff; font-family: 'Segoe UI', sans-serif; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+        .glass { background:rgba(0,0,0,0.88); backdrop-filter:blur(12px); border:1px solid rgba(212,175,55,0.25); }
+        .gold { color:#D4AF37; }
+        .glow { text-shadow:0 0 12px rgba(212,175,55,0.6); }
+        .diamond { background-image:url('diamindbackgroud.jpeg'); background-size:cover; background-blend-mode:overlay; background-color:rgba(0,0,0,0.92); }
+        .inp { background:#0a0a0a; border:1px solid #333; padding:10px; border-radius:6px; width:100%; font-size:12px; color:#D4AF37; outline:none; }
+        .inp:focus { border-color:#D4AF37; }
+        .btn-go { background:linear-gradient(135deg,#8a6d3b,#D4AF37,#8a6d3b); color:#000; font-weight:900; border:none; cursor:pointer; transition:0.2s; }
+        .btn-go:hover { box-shadow:0 0 30px #D4AF37; transform:scale(1.01); }
+        .btn-go:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+        .tab { padding:10px 0; cursor:pointer; border-bottom:2px solid transparent; opacity:0.35; font-size:10px; font-weight:900; letter-spacing:0.15em; transition:0.2s; }
+        .tab:hover { opacity:0.7; }
+        .tab.on { opacity:1; border-color:#D4AF37; color:#D4AF37; }
+        .timeline-item { background:#111; border:1px solid #222; border-radius:8px; padding:8px; cursor:pointer; transition:0.2s; }
+        .timeline-item:hover { border-color:#D4AF37; }
+        #stage video, #stage img { max-width:100%; max-height:100%; border-radius:8px; border:2px solid #D4AF37; box-shadow:0 0 40px rgba(212,175,55,0.2); }
     </style>
 </head>
-<body class="flex flex-col">
+<body>
 
-    <header class="h-20 glass flex justify-between items-center px-8 border-b border-gold/20">
-        <div class="flex items-center gap-4">
-            <img src="logo.jpg.jpg" class="h-12 w-12 rounded-full border border-gold shadow-lg">
-            <div>
-                <h1 class="text-xl font-black italic gold-text uppercase">Smoke Shaq Studio</h1>
-                <p class="text-[8px] tracking-[0.4em] opacity-50 uppercase">Cinematic AI Engine</p>
+<!-- HEADER -->
+<header class="h-16 glass flex items-center justify-between px-6 shrink-0 border-b border-yellow-900/30">
+    <div class="flex items-center gap-3">
+        <img src="logo.jpg.jpg" class="h-10 w-10 rounded-full border border-yellow-700">
+        <div>
+            <h1 class="text-lg font-black italic gold glow tracking-tight">SMOKE SHAQ STUDIO</h1>
+            <p class="text-[7px] tracking-[0.5em] opacity-40 uppercase">Cinematic AI Production Engine</p>
+        </div>
+    </div>
+    <div class="flex items-center gap-6">
+        <div class="text-right">
+            <p class="text-[8px] opacity-30 uppercase tracking-wider">Credits</p>
+            <p id="credits" class="text-base font-black gold glow">---</p>
+        </div>
+        <img src="banner.png.png" class="h-8 opacity-60">
+    </div>
+</header>
+
+<!-- MAIN -->
+<main class="flex-1 flex overflow-hidden">
+
+    <!-- LEFT: CONTROLS -->
+    <aside class="w-80 shrink-0 glass diamond border-r border-yellow-900/20 flex flex-col">
+        <!-- TABS -->
+        <div class="flex justify-around px-4 pt-4 border-b border-white/5 pb-2">
+            <div class="tab on" onclick="setTab('img-to-img')" id="tab-i2i">IMG → IMG</div>
+            <div class="tab" onclick="setTab('img-to-video')" id="tab-i2v">IMG → VID</div>
+            <div class="tab" onclick="setTab('lip-sync')" id="tab-ls">LIP SYNC</div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-5 space-y-5">
+
+            <!-- IMG2IMG PANEL -->
+            <div id="panel-img-to-img">
+                <label class="text-[9px] uppercase opacity-30 block mb-1">Source Image (JPG/PNG only)</label>
+                <input type="file" accept="image/*" id="i2i-file" class="inp">
+                <label class="text-[9px] uppercase opacity-30 block mb-1 mt-4">Prompt / Direction</label>
+                <textarea id="i2i-prompt" class="inp h-28" placeholder="e.g. Low rider blue candy paint, gold rims, cinematic sunset in Seattle..."></textarea>
+                <label class="text-[9px] uppercase opacity-30 block mb-1 mt-4">Prompt Strength</label>
+                <input type="range" id="i2i-strength" min="0.1" max="1" step="0.05" value="0.75" class="w-full accent-yellow-600">
+                <p class="text-[9px] opacity-30 text-right"><span id="str-val">0.75</span> (higher = more creative)</p>
+            </div>
+
+            <!-- IMG2VID PANEL -->
+            <div id="panel-img-to-video" class="hidden">
+                <label class="text-[9px] uppercase opacity-30 block mb-1">Starting Frame (JPG/PNG)</label>
+                <input type="file" accept="image/*" id="i2v-file" class="inp">
+                <p class="text-[9px] opacity-20 mt-3">Generates a short cinematic video clip from your image using Stable Video Diffusion.</p>
+            </div>
+
+            <!-- LIP SYNC PANEL -->
+            <div id="panel-lip-sync" class="hidden">
+                <label class="text-[9px] uppercase opacity-30 block mb-1">Character Face (JPG/PNG)</label>
+                <input type="file" accept="image/*" id="ls-file" class="inp">
+                <label class="text-[9px] uppercase opacity-30 block mb-1 mt-4">Audio Track (MP3/WAV)</label>
+                <input type="file" accept="audio/*" id="ls-audio" class="inp">
+                <p class="text-[9px] opacity-20 mt-3">Syncs the character's lips to your audio track using Wav2Lip.</p>
             </div>
         </div>
-        <div class="flex items-center gap-8">
-            <div class="text-right">
-                <p class="text-[9px] opacity-40 uppercase">Credits</p>
-                <p id="crCount" class="text-lg font-bold gold-text">---</p>
-            </div>
-            <img src="banner.png.png" class="h-10 opacity-70">
+
+        <div class="p-4">
+            <button onclick="generate()" id="btnGen" class="w-full btn-go py-4 rounded-lg text-xs uppercase tracking-widest">
+                Execute Render
+            </button>
+            <p id="statusText" class="text-[9px] text-center opacity-30 mt-2"></p>
         </div>
-    </header>
+    </aside>
 
-    <main class="flex-1 grid grid-cols-12 overflow-hidden">
-        <!-- CONTROLS -->
-        <aside class="col-span-3 glass p-6 diamond-panel border-r border-white/5 flex flex-col gap-6 overflow-y-auto">
-            <div class="flex justify-between border-b border-white/10">
-                <div onclick="setTab('img-to-img')" id="t-i2i" class="tab-btn active">IMG2IMG</div>
-                <div onclick="setTab('img-to-video')" id="t-i2v" class="tab-btn">VIDEO</div>
-                <div onclick="setTab('lip-sync')" id="t-ls" class="tab-btn">LIP SYNC</div>
+    <!-- CENTER: STAGE -->
+    <section class="flex-1 flex flex-col">
+        <div id="stage" class="flex-1 flex items-center justify-center p-8 relative bg-black/30">
+            <div id="placeholder" class="text-center">
+                <img src="logo.jpg.jpg" class="w-28 mx-auto opacity-[0.06] grayscale mb-4">
+                <p class="text-xl font-black italic opacity-[0.04] tracking-[0.8em]">STANDBY</p>
             </div>
+            <div id="result" class="hidden"></div>
+        </div>
 
-            <div id="ui-img-to-img" class="space-y-4">
-                <label class="text-[10px] uppercase opacity-40">Model</label>
-                <select id="i2i-model" class="studio-input">
-                    <option value="stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1d715dfb1d335ff2253988859e517f6b47a0">SDXL 1.0 High-Def</option>
-                    <option value="lucataco/realistic-vision-v5.1:60037f480436854191370774df22ec9621da3b6a97184742a083f23f85894b98">Realistic Vision v5</option>
-                </select>
-                <label class="text-[10px] uppercase opacity-40">Source Image</label>
-                <input type="file" id="i2i-file" class="studio-input">
-                <label class="text-[10px] uppercase opacity-40">Prompt / Dialogue</label>
-                <textarea id="i2i-prompt" class="studio-input h-24" placeholder="Describe the transformation..."></textarea>
-            </div>
+        <!-- TIMELINE -->
+        <div class="h-28 glass border-t border-yellow-900/20 p-3 overflow-x-auto">
+            <p class="text-[8px] uppercase tracking-widest opacity-20 mb-2">Timeline / History</p>
+            <div id="timeline" class="flex gap-3 h-16"></div>
+        </div>
+    </section>
 
-            <div id="ui-img-to-video" class="hidden space-y-4">
-                <label class="text-[10px] uppercase opacity-40">Engine</label>
-                <select id="i2v-model" class="studio-input">
-                    <option value="stability-ai/stable-video-diffusion:ac7327c20fcb0cb7759481f1e957bf2cc56710f5afc8d28291ade20002939309">SVD-XT (Camera Motion)</option>
-                </select>
-                <label class="text-[10px] uppercase opacity-40">Initial Frame</label>
-                <input type="file" id="i2v-file" class="studio-input">
-            </div>
+</main>
 
-            <div id="ui-lip-sync" class="hidden space-y-4">
-                <label class="text-[10px] uppercase opacity-40">Voice Select</label>
-                <select id="ls-voice" class="studio-input">
-                    <option value="custom">Manual Upload</option>
-                    <option value="dre">Dre (Deep Male)</option>
-                    <option value="doris">Doris (Sexy Female)</option>
-                </select>
-                <label class="text-[10px] uppercase opacity-40">Character Headshot</label>
-                <input type="file" id="ls-file" class="studio-input">
-                <label class="text-[10px] uppercase opacity-40">Audio Track</label>
-                <input type="file" id="ls-audio" class="studio-input">
-            </div>
+<script>
+const email = "faded206@yahoo.com";
+let activeTab = 'img-to-img';
+let history = [];
 
-            <button onclick="generate()" id="btnGen" class="w-full btn-execute py-4 rounded-lg text-xs uppercase italic mt-auto">Execute Render</button>
-        </aside>
+// TABS
+function setTab(t) {
+    activeTab = t;
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('on'));
+    document.getElementById('tab-' + (t==='img-to-img'?'i2i':t==='img-to-video'?'i2v':'ls')).classList.add('on');
+    ['img-to-img','img-to-video','lip-sync'].forEach(p => {
+        document.getElementById('panel-'+p).classList.toggle('hidden', p !== t);
+    });
+}
 
-        <!-- STAGE -->
-        <section class="col-span-9 relative flex items-center justify-center p-12 bg-black/40">
-            <div id="loader" class="hidden absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center">
-                <div class="w-12 h-12 border-2 border-gold border-t-transparent animate-spin rounded-full mb-4"></div>
-                <p class="gold-text font-black tracking-widest text-xs animate-pulse">PROCESSING GPU CLUSTER...</p>
-            </div>
-            
-            <div id="output" class="text-center">
-                <img src="logo.jpg.jpg" class="w-32 opacity-10 mx-auto grayscale mb-4">
-                <h3 class="text-2xl font-black italic opacity-5 tracking-[1em]">READY</h3>
-            </div>
-        </section>
-    </main>
+// STRENGTH SLIDER
+document.getElementById('i2i-strength').addEventListener('input', e => {
+    document.getElementById('str-val').textContent = e.target.value;
+});
 
-    <script>
-        const email = "faded206@yahoo.com";
-        let activeTab = 'img-to-img';
+// IMAGE COMPRESSOR (keeps files under Vercel's 4.5MB limit)
+function compressImage(file) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            const max = 1024;
+            if (w > max || h > max) {
+                if (w > h) { h = Math.round(h * max / w); w = max; }
+                else { w = Math.round(w * max / h); h = max; }
+            }
+            c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(c.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = URL.createObjectURL(file);
+    });
+}
 
-        function setTab(t) {
-            activeTab = t;
-            ['i2i','i2v','ls'].forEach(id => document.getElementById('t-'+id).classList.remove('active'));
-            document.getElementById('t-'+(t==='img-to-img'?'i2i':t==='img-to-video'?'i2v':'ls')).classList.add('active');
-            ['ui-img-to-img','ui-img-to-video','ui-lip-sync'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            document.getElementById('ui-'+t).classList.remove('hidden');
+function fileToB64(file) {
+    return new Promise(resolve => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.readAsDataURL(file);
+    });
+}
+
+// CREDITS
+async function syncCredits() {
+    try {
+        const r = await fetch('/api/credits?email=' + email);
+        const d = await r.json();
+        document.getElementById('credits').textContent = d.credits ?? 0;
+    } catch(e) {}
+}
+
+// STATUS UI
+function setStatus(msg) {
+    document.getElementById('statusText').textContent = msg;
+}
+
+// POLL FOR RESULT
+async function pollResult(predictionId) {
+    setStatus('GPU rendering... checking status...');
+
+    const check = async () => {
+        try {
+            const r = await fetch('/api/status?id=' + predictionId);
+            const text = await r.text();
+            let data;
+            try { data = JSON.parse(text); } catch(e) {
+                setStatus('Server error during polling');
+                document.getElementById('btnGen').disabled = false;
+                return;
+            }
+
+            if (data.status === 'succeeded') {
+                showOutput(data.output);
+                setStatus('Render complete!');
+                document.getElementById('btnGen').disabled = false;
+                syncCredits();
+            } else if (data.status === 'failed') {
+                alert('Render failed: ' + (data.error || 'Unknown GPU error'));
+                setStatus('Failed');
+                document.getElementById('btnGen').disabled = false;
+            } else {
+                setStatus('Status: ' + data.status + '... polling again in 4s');
+                setTimeout(check, 4000);
+            }
+        } catch(e) {
+            setStatus('Network error, retrying...');
+            setTimeout(check, 5000);
+        }
+    };
+    check();
+}
+
+// SHOW OUTPUT
+function showOutput(output) {
+    const url = Array.isArray(output) ? output[0] : output;
+    const el = document.getElementById('result');
+    const ph = document.getElementById('placeholder');
+    ph.classList.add('hidden');
+    el.classList.remove('hidden');
+
+    const isVideo = url && (url.includes('.mp4') || url.includes('.webm'));
+
+    if (isVideo) {
+        el.innerHTML = `<video src="${url}" controls autoplay loop></video>`;
+    } else {
+        el.innerHTML = `<img src="${url}">`;
+    }
+    el.innerHTML += `<br><a href="${url}" target="_blank" download class="btn-go px-6 py-2 rounded inline-block text-[10px] mt-3 uppercase tracking-wider">Download</a>`;
+
+    // Add to timeline
+    const thumb = document.createElement('div');
+    thumb.className = 'timeline-item shrink-0 w-20 h-16 overflow-hidden';
+    if (isVideo) {
+        thumb.innerHTML = `<video src="${url}" class="w-full h-full object-cover" muted></video>`;
+    } else {
+        thumb.innerHTML = `<img src="${url}" class="w-full h-full object-cover">`;
+    }
+    thumb.onclick = () => showOutput(output);
+    document.getElementById('timeline').prepend(thumb);
+}
+
+// MAIN GENERATE
+async function generate() {
+    const btn = document.getElementById('btnGen');
+    btn.disabled = true;
+    setStatus('Preparing...');
+
+    try {
+        let payload = { email, tool: activeTab };
+
+        if (activeTab === 'img-to-img') {
+            const file = document.getElementById('i2i-file').files[0];
+            if (!file) { alert('Please select a source image.'); btn.disabled = false; return; }
+            if (!file.type.startsWith('image/')) { alert('IMG2IMG requires an IMAGE file (JPG/PNG), not a video.'); btn.disabled = false; return; }
+            payload.image = await compressImage(file);
+            payload.prompt = document.getElementById('i2i-prompt').value;
+            payload.prompt_strength = parseFloat(document.getElementById('i2i-strength').value);
+        } else if (activeTab === 'img-to-video') {
+            const file = document.getElementById('i2v-file').files[0];
+            if (!file) { alert('Please select a source image.'); btn.disabled = false; return; }
+            if (!file.type.startsWith('image/')) { alert('IMG2VID requires an IMAGE file.'); btn.disabled = false; return; }
+            payload.image = await compressImage(file);
+        } else if (activeTab === 'lip-sync') {
+            const faceFile = document.getElementById('ls-file').files[0];
+            const audioFile = document.getElementById('ls-audio').files[0];
+            if (!faceFile || !audioFile) { alert('Lip sync needs both a face image AND an audio file.'); btn.disabled = false; return; }
+            payload.image = await compressImage(faceFile);
+            payload.audio = await fileToB64(audioFile);
         }
 
-        const toB64 = f => new Promise(r => { 
-            if(!f) r(null);
-            const reader = new FileReader(); 
-            reader.readAsDataURL(f); 
-            reader.onload = () => r(reader.result); 
+        setStatus('Sending to GPU cluster...');
+
+        const res = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
 
-        async function syncCredits() {
-            try {
-                const res = await fetch(`/api/credits?email=${email}`);
-                const data = await res.json();
-                document.getElementById('crCount').innerText = data.credits || 0;
-            } catch(e) { console.log("Credit sync pending..."); }
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch(e) {
+            alert('Server returned invalid response. Check Vercel function logs.');
+            btn.disabled = false;
+            setStatus('Server error');
+            return;
         }
 
-        async function generate() {
-            const loader = document.getElementById('loader');
-            const out = document.getElementById('output');
-            loader.classList.remove('hidden');
-
-            try {
-                let payload = { email, tool: activeTab };
-                if(activeTab === 'img-to-img') {
-                    payload.image = await toB64(document.getElementById('i2i-file').files[0]);
-                    payload.prompt = document.getElementById('i2i-prompt').value;
-                    payload.model_id = document.getElementById('i2i-model').value;
-                } else if(activeTab === 'img-to-video') {
-                    payload.image = await toB64(document.getElementById('i2v-file').files[0]);
-                    payload.model_id = document.getElementById('i2v-model').value;
-                } else {
-                    payload.image = await toB64(document.getElementById('ls-file').files[0]);
-                    payload.audio = await toB64(document.getElementById('ls-audio').files[0]);
-                }
-
-                const res = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
-
-                // BULLETPROOF JSON CHECK
-                const text = await res.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch(e) {
-                    throw new Error("Server sent back an error page instead of data. Check Vercel Logs.");
-                }
-
-                if(data.output) {
-                    const url = Array.isArray(data.output) ? data.output[0] : data.output;
-                    out.innerHTML = url.includes('.mp4') 
-                        ? `<video src="${url}" controls autoplay loop class="max-h-full rounded border-2 border-gold shadow-2xl"></video>`
-                        : `<img src="${url}" class="max-h-full rounded border-2 border-gold shadow-2xl">`;
-                    out.innerHTML += `<br><a href="${url}" download class="btn-execute px-6 py-2 rounded mt-4 inline-block text-[10px]">SAVE RENDER</a>`;
-                } else {
-                    alert("GPU Message: " + data.error);
-                }
-            } catch(e) { 
-                alert("Studio Error: " + e.message); 
-            } finally { 
-                loader.classList.add('hidden'); 
-                syncCredits(); 
-            }
+        if (data.error) {
+            alert('Error: ' + data.error);
+            btn.disabled = false;
+            setStatus('Error');
+            return;
         }
 
-        syncCredits();
-    </script>
+        if (data.id) {
+            setStatus('Prediction created: ' + data.id + ' — polling...');
+            pollResult(data.id);
+        } else {
+            alert('No prediction ID returned');
+            btn.disabled = false;
+        }
+
+    } catch(e) {
+        alert('Crash: ' + e.message);
+        btn.disabled = false;
+        setStatus('Crashed');
+    }
+}
+
+syncCredits();
+</script>
 </body>
 </html>
