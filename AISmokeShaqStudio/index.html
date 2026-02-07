@@ -136,6 +136,11 @@ document.getElementById('i2i-strength').addEventListener('input', e => {
 
 // IMAGE COMPRESSOR (keeps files under Vercel's 4.5MB limit)
  
+ async function generate() {
+    const btn = document.getElementById('btnGen');
+    btn.disabled = true;
+    setStatus('Preparing...');
+
     try {
         let payload = { email, tool: activeTab };
 
@@ -158,6 +163,56 @@ document.getElementById('i2i-strength').addEventListener('input', e => {
             payload.image = await compressImage(faceFile);
             payload.audio = await fileToB64(audioFile);
         }
+
+        setStatus('Sending to GPU cluster...');
+
+        const res = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch(e) {
+            alert('Server returned invalid response. Check Vercel function logs.');
+            btn.disabled = false;
+            setStatus('Server error');
+            return;
+        }
+
+        if (data.error) {
+            alert('Error: ' + data.error);
+            btn.disabled = false;
+            setStatus('Error');
+            return;
+        }
+
+        if (data.output) {
+            setStatus('Image generated!');
+            showOutput(data.output);
+            btn.disabled = false;
+            return;
+        }
+
+        if (data.image) {
+            setStatus('Image generated!');
+            showOutput(data.image);
+            btn.disabled = false;
+            return;
+        }
+
+        setStatus('Unexpected response from server');
+        btn.disabled = false;
+
+    } catch(e) {
+        alert('Crash: ' + e.message);
+        btn.disabled = false;
+        setStatus('Crashed');
+    }
+}
+
+
 
         setStatus('Sending to GPU cluster...');
 
@@ -216,6 +271,7 @@ syncCredits();
 </script>
 </body>
 </html>
+
 
 
 
