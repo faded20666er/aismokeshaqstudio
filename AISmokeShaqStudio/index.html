@@ -23,6 +23,8 @@
         .timeline-item { background:#111; border:1px solid #222; border-radius:8px; padding:8px; cursor:pointer; transition:0.2s; }
         .timeline-item:hover { border-color:#D4AF37; }
         #stage video, #stage img { max-width:100%; max-height:100%; border-radius:8px; border:2px solid #D4AF37; box-shadow:0 0 40px rgba(212,175,55,0.2); }
+        .loading { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -39,14 +41,16 @@
     <div class="flex items-center gap-6">
         <div class="text-right">
             <p class="text-[8px] opacity-30 uppercase tracking-wider">Credits</p>
-            <p id="credits" class="text-base font-black gold glow">---</p>
+            <p id="credits" class="text-base font-black gold glow">∞</p>
         </div>
         <img src="banner.png.png" class="h-8 opacity-60">
     </div>
 </header>
-<div id="status"></div>
 
-
+<!-- STATUS BAR -->
+<div id="statusBar" class="h-8 glass flex items-center justify-center text-xs opacity-0 transition-opacity duration-300">
+    <span id="statusText"></span>
+</div>
 
 <!-- MAIN -->
 <main class="flex-1 flex overflow-hidden">
@@ -94,7 +98,6 @@
             <button onclick="generate()" id="btnGen" class="w-full btn-go py-4 rounded-lg text-xs uppercase tracking-widest">
                 Execute Render
             </button>
-            <p id="statusText" class="text-[9px] text-center opacity-30 mt-2"></p>
         </div>
     </aside>
 
@@ -138,7 +141,113 @@ document.getElementById('i2i-strength').addEventListener('input', e => {
 });
 
 // IMAGE COMPRESSOR (keeps files under Vercel's 4.5MB limit)
- 
+async function compressImage(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Max dimensions
+                const maxSize = 1024;
+                if (width > height && width > maxSize) {
+                    height = (height * maxSize) / width;
+                    width = maxSize;
+                } else if (height > maxSize) {
+                    width = (width * maxSize) / height;
+                    height = maxSize;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Convert to base64 with compression
+                canvas.toBlob((blob) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                }, 'image/jpeg', 0.8);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// Convert file to base64
+async function fileToB64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// Set status message
+function setStatus(msg) {
+    const bar = document.getElementById('statusBar');
+    const text = document.getElementById('statusText');
+    text.textContent = msg;
+    bar.style.opacity = msg ? '1' : '0';
+}
+
+// Show output in stage
+function showOutput(output) {
+    const placeholder = document.getElementById('placeholder');
+    const result = document.getElementById('result');
+
+    placeholder.classList.add('hidden');
+    result.classList.remove('hidden');
+
+    // Handle different output types
+    if (typeof output === 'string') {
+        if (output.endsWith('.mp4') || output.endsWith('.webm')) {
+            result.innerHTML = `<video src="${output}" controls autoplay loop></video>`;
+        } else {
+            result.innerHTML = `<img src="${output}" alt="Generated">`;
+        }
+    } else if (Array.isArray(output) && output.length > 0) {
+        // Handle array output (some models return arrays)
+        const firstOutput = output[0];
+        if (firstOutput.endsWith('.mp4') || firstOutput.endsWith('.webm')) {
+            result.innerHTML = `<video src="${firstOutput}" controls autoplay loop></video>`;
+        } else {
+            result.innerHTML = `<img src="${firstOutput}" alt="Generated">`;
+        }
+    }
+
+    // Add to timeline
+    addToTimeline(output);
+}
+
+// Add to timeline
+function addToTimeline(output) {
+    const timeline = document.getElementById('timeline');
+    const item = document.createElement('div');
+    item.className = 'timeline-item';
+
+    const url = Array.isArray(output) ? output[0] : output;
+    const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
+
+    item.innerHTML = isVideo 
+        ? `<video src="${url}" class="h-full w-full object-cover rounded"></video>`
+        : `<img src="${url}" class="h-full w-full object-cover rounded">`;
+
+    item.onclick = () => showOutput(url);
+    timeline.insertBefore(item, timeline.firstChild);
+
+    history.unshift(url);
+    if (history.length > 10) history.pop();
+}
+
+// Main generate function
 async function generate() {
     const btn = document.getElementById('btnGen');
     btn.disabled = true;
@@ -149,29 +258,50 @@ async function generate() {
 
         if (activeTab === 'img-to-img') {
             const file = document.getElementById('i2i-file').files[0];
-            if (!file) { alert('Please select a source image.'); btn.disabled = false; return; }
-            if (!file.type.startsWith('image/')) { alert('IMG2IMG requires an IMAGE file (JPG/PNG), not a video.'); btn.disabled = false; return; }
+            if (!file) { 
+                alert('Please select a source image.'); 
+                btn.disabled = false; 
+                setStatus('');
+                return; 
+            }
+            if (!file.type.startsWith('image/')) { 
+                alert('IMG2IMG requires an IMAGE file (JPG/PNG), not a video.'); 
+                btn.disabled = false; 
+                setStatus('');
+                return; 
+            }
             payload.image = await compressImage(file);
-            payload.prompt = document.getElementById('i2i-prompt').value;
+            payload.prompt = document.getElementById('i2i-prompt').value || 'high quality cinematic photo';
             payload.prompt_strength = parseFloat(document.getElementById('i2i-strength').value);
         } else if (activeTab === 'img-to-video') {
             const file = document.getElementById('i2v-file').files[0];
-            if (!file) { alert('Please select a source image.'); btn.disabled = false; return; }
-            if (!file.type.startsWith('image/')) { alert('IMG2VID requires an IMAGE file.'); btn.disabled = false; return; }
+            if (!file) { 
+                alert('Please select a source image.'); 
+                btn.disabled = false; 
+                setStatus('');
+                return; 
+            }
+            if (!file.type.startsWith('image/')) { 
+                alert('IMG2VID requires an IMAGE file.'); 
+                btn.disabled = false; 
+                setStatus('');
+                return; 
+            }
             payload.image = await compressImage(file);
         } else if (activeTab === 'lip-sync') {
             const faceFile = document.getElementById('ls-file').files[0];
             const audioFile = document.getElementById('ls-audio').files[0];
-            if (!faceFile || !audioFile) { alert('Lip sync needs both a face image AND an audio file.'); btn.disabled = false; return; }
+            if (!faceFile || !audioFile) { 
+                alert('Lip sync needs both a face image AND an audio file.'); 
+                btn.disabled = false; 
+                setStatus('');
+                return; 
+            }
             payload.image = await compressImage(faceFile);
             payload.audio = await fileToB64(audioFile);
         }
 
         setStatus('Sending to GPU cluster...');
-
-        // ---------------------------
-        // FETCH + OUTPUT HANDLING
-        // ---------------------------
 
         const res = await fetch('/api/generate', {
             method: 'POST',
@@ -184,7 +314,8 @@ async function generate() {
         try { 
             data = JSON.parse(text); 
         } catch(e) {
-            alert('Server returned invalid response. Check Vercel function logs.');
+            console.error('Parse error:', text);
+            alert('Server returned invalid response. Check console for details.');
             btn.disabled = false;
             setStatus('Server error');
             return;
@@ -193,49 +324,29 @@ async function generate() {
         if (data.error) {
             alert('Error: ' + data.error);
             btn.disabled = false;
-            setStatus('Error');
+            setStatus('Error: ' + data.error);
             return;
         }
 
         if (data.output) {
-            setStatus('Image generated!');
+            setStatus('Generation complete!');
             showOutput(data.output);
             btn.disabled = false;
-            return;
-        }
-
-        if (data.image) {
-            setStatus('Image generated!');
-            showOutput(data.image);
-            btn.disabled = false;
+            setTimeout(() => setStatus(''), 3000);
             return;
         }
 
         setStatus('Unexpected response from server');
+        console.error('Unexpected response:', data);
         btn.disabled = false;
 
     } catch(e) {
-        alert('Crash: ' + e.message);
+        console.error('Error:', e);
+        alert('Error: ' + e.message);
         btn.disabled = false;
-        setStatus('Crashed');
+        setStatus('Error: ' + e.message);
     }
 }
-
-function setStatus(msg) {
-    const el = document.getElementById('status');
-    if (el) el.textContent = msg;
-}
-
-function syncCredits() {
-    const el = document.getElementById('credits');
-    if (el) el.textContent = '∞'; // temporary placeholder
-}
-
-syncCredits();
 </script>
 </body>
 </html>
-
-
-
-
