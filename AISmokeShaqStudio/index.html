@@ -3,60 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMOKE SHAQ STUDIO | CINEMATIC AI</title>
+    <title>SMOKE SHAQ STUDIO | PREMIUM AI</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #0a0a0a; }
-        body { background: var(--black); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
-        .hero { height: 100vh; background: url('golddustbackdrop.png') center/cover; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .logo { width: 180px; filter: drop-shadow(0 0 15px var(--gold)); margin-bottom: 20px; }
-        .studio-panel { background: rgba(0,0,0,0.85); border: 1px solid var(--gold); padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; box-shadow: 0 0 40px rgba(212,175,55,0.2); }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .tab { cursor: pointer; color: #666; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-        .tab.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
-        textarea { width: 100%; background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px; border-radius: 5px; margin: 10px 0; height: 80px; resize: none; }
-        .render-btn { width: 100%; background: linear-gradient(45deg, var(--gold), #f9d976); border: none; padding: 15px; font-weight: bold; cursor: pointer; border-radius: 5px; text-transform: uppercase; margin-top: 15px; transition: 0.3s; }
-        .render-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--gold); }
-        #output-container { margin-top: 20px; min-height: 200px; border: 1px dashed #333; display: flex; align-items: center; justify-content: center; position: relative; }
-        #output-container img, #output-container video { max-width: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .loader { display: none; color: var(--gold); font-size: 0.9rem; letter-spacing: 2px; text-align: center; }
-        .status-msg { position: absolute; bottom: 10px; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; color: var(--gold); }
+        :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #050505; }
+        body { 
+            background: var(--black) url('diamindbackgroud.jpeg') fixed; 
+            background-size: cover;
+            color: white; font-family: 'Inter', sans-serif; margin: 0; 
+        }
+        .main-layout { display: flex; justify-content: space-between; padding: 20px; gap: 20px; }
+        
+        /* Monetization Banners */
+        .ad-sidebar { width: 160px; height: 600px; background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 10px; font-size: 0.7rem; color: var(--gold); }
+        
+        .studio-container { flex: 1; max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+        .logo { width: 220px; filter: drop-shadow(0 0 20px var(--gold)); margin-bottom: 20px; }
+        
+        .glass-panel { 
+            background: rgba(0,0,0,0.85); 
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--gold); 
+            padding: 30px; border-radius: 20px; 
+            width: 100%; box-shadow: 0 0 50px rgba(0,0,0,1), 0 0 20px rgba(212,175,55,0.1); 
+        }
+
+        .tabs { display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .tab { cursor: pointer; color: #777; font-weight: bold; font-size: 0.85rem; letter-spacing: 2px; transition: 0.3s; }
+        .tab.active { color: var(--gold); text-shadow: 0 0 10px var(--gold); border-bottom: 2px solid var(--gold); }
+        
+        /* Model Selection */
+        .dropdown-group { position: relative; margin-bottom: 20px; }
+        select { 
+            width: 100%; background: #111; border: 1px solid var(--gold); color: white; 
+            padding: 12px; border-radius: 8px; cursor: pointer; appearance: none;
+        }
+        .tooltip { font-size: 0.7rem; color: #888; margin-top: 5px; display: block; }
+
+        textarea { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 15px; border-radius: 8px; margin: 10px 0; height: 100px; box-sizing: border-box; }
+        
+        .render-btn { 
+            width: 100%; background: linear-gradient(135deg, #D4AF37 0%, #F9D976 50%, #D4AF37 100%); 
+            border: none; padding: 18px; font-weight: 900; cursor: pointer; border-radius: 8px; 
+            text-transform: uppercase; letter-spacing: 3px; color: #000; transition: 0.4s;
+        }
+        .render-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(212,175,55,0.4); }
+
+        #output-container { 
+            margin-top: 30px; width: 100%; min-height: 300px; border: 1px solid #222; 
+            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+            background: #000; overflow: hidden; position: relative;
+        }
+        #output-container img, #output-container video { width: 100%; height: auto; display: block; }
+
+        .loader { display: none; font-family: monospace; color: var(--gold); text-shadow: 0 0 5px var(--gold); }
+        .status-badge { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--gold); color: black; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+
+        /* Store Section */
+        .store-section { margin-top: 40px; text-align: center; width: 100%; }
+        .credit-card { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 20px; border-radius: 12px; display: inline-block; width: 200px; margin: 10px; }
+        .buy-btn { background: white; color: black; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div class="hero">
-        <img src="logo.jpg.jpg" class="logo" alt="Logo">
-        
-        <div class="studio-panel">
-            <div class="tabs">
-                <div class="tab active" onclick="setTool('img-to-img')">IMG → IMG</div>
-                <div class="tab" onclick="setTool('img-to-video')">IMG → VID</div>
-                <div class="tab" onclick="setTool('lip-sync')">LIP SYNC</div>
-            </div>
 
-            <div id="tool-inputs">
-                <label style="font-size: 0.7rem; color: #888;">SOURCE IMAGE (JPG/PNG)</label>
-                <input type="file" id="imageInput" accept="image/*" style="margin: 10px 0; color: #888;">
-                
-                <div id="audio-field" style="display:none;">
-                    <label style="font-size: 0.7rem; color: #888;">VOICE AUDIO (MP3/WAV)</label>
-                    <input type="file" id="audioInput" accept="audio/*" style="margin: 10px 0; color: #888;">
+    <div class="main-layout">
+        <!-- LEFT AD BANNER -->
+        <div class="ad-sidebar">
+            <p>PARTNER OFFER</p>
+            <div style="width:120px; height:240px; background:#111; margin:10px 0; border:1px dashed #444;">120x240 Banner</div>
+            <a href="#" style="color:var(--gold); text-decoration:none;">Join the VIP Studio →</a>
+        </div>
+
+        <div class="studio-container">
+            <img src="logo.jpg.jpg" class="logo">
+            
+            <div class="glass-panel">
+                <div class="tabs">
+                    <div class="tab active" onclick="setTool('img-to-img')">IMAGE STUDIO</div>
+                    <div class="tab" onclick="setTool('img-to-video')">VIDEO ENGINE</div>
+                    <div class="tab" onclick="setTool('lip-sync')">LIP SYNC</div>
                 </div>
 
-                <label style="font-size: 0.7rem; color: #888;">PROMPT / DIRECTION</label>
-                <textarea id="prompt" placeholder="Describe the cinematic change..."></textarea>
-                
-                <label style="font-size: 0.7rem; color: #888;">PROMPT STRENGTH</label>
-                <input type="range" id="strength" min="1" max="10" step="0.5" value="1.5" style="width:100%; accent-color: var(--gold);">
+                <div class="dropdown-group">
+                    <label style="font-size: 0.7rem; color: var(--gold); font-weight: bold;">SELECT AI ENGINE</label>
+                    <select id="modelSelector">
+                        <option value="flux-pro">FLUX 1.1 PRO (Ultra Detail / High Cost)</option>
+                        <option value="realistic">REALISTIC VISION (Human Photography)</option>
+                        <option value="img2img-pro">CINEMATIC TRANSFORMATION (Uses Source Image)</option>
+                        <option value="flux-schnell">FLUX FAST (Standard Quality)</option>
+                    </select>
+                    <span id="modelDesc" class="tooltip">Hover for model details: Best for photorealistic high-end commercial renders.</span>
+                </div>
+
+                <div id="inputs">
+                    <div id="img-upload-area">
+                        <label style="font-size: 0.7rem; color: #666;">UPLOAD SOURCE (Required for Video/Img2Img)</label>
+                        <input type="file" id="imageInput" accept="image/*" style="display:block; margin: 10px 0;">
+                    </div>
+                    
+                    <div id="audio-field" style="display:none;">
+                        <label style="font-size: 0.7rem; color: #666;">UPLOAD AUDIO (For Lip Sync)</label>
+                        <input type="file" id="audioInput" accept="audio/*" style="display:block; margin: 10px 0;">
+                    </div>
+
+                    <textarea id="prompt" placeholder="Prompt: Describe your masterpiece..."></textarea>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label style="font-size: 0.7rem; color: #666;">PROMPT STRENGTH</label>
+                        <input type="range" id="strength" min="1" max="10" step="0.5" value="1.5" style="width:70%; accent-color: var(--gold);">
+                    </div>
+                </div>
+
+                <button class="render-btn" onclick="startRender()">EXECUTE PRODUCTION</button>
+
+                <div id="output-container">
+                    <div id="loader" class="loader">ESTABLISHING NEURAL LINK...</div>
+                    <div id="displayArea"></div>
+                    <div id="statusBadge" class="status-badge" style="display:none;">READY</div>
+                </div>
             </div>
 
-            <button class="render-btn" onclick="startRender()">Execute Render</button>
-
-            <div id="output-container">
-                <div id="loader" class="loader">HITTING THE CLUSTER...</div>
-                <div id="displayArea"></div>
-                <div id="statusUpdate" class="status-msg" style="display:none;"></div>
+            <!-- MONETIZATION SECTION -->
+            <div class="store-section">
+                <h3 style="color:var(--gold); letter-spacing:3px;">PURCHASE STUDIO CREDITS</h3>
+                <div class="credit-card">
+                    <h4>100 CREDITS</h4>
+                    <p style="font-size:1.5rem;">$10</p>
+                    <button class="buy-btn" onclick="checkout(10)">BUY NOW</button>
+                </div>
+                <div class="credit-card">
+                    <h4>500 CREDITS</h4>
+                    <p style="font-size:1.5rem;">$40</p>
+                    <button class="buy-btn" onclick="checkout(40)">BEST VALUE</button>
+                </div>
             </div>
+        </div>
+
+        <!-- RIGHT AD BANNER -->
+        <div class="ad-sidebar">
+            <p>ADVERTISEMENT</p>
+            <div style="width:120px; height:240px; background:#111; margin:10px 0; border:1px dashed #444;">120x240 Banner</div>
+            <p style="font-size:0.6rem;">Your business here.<br>Contact for rates.</p>
         </div>
     </div>
 
@@ -71,35 +159,27 @@
         }
 
         async function toBase64(file) {
-            return new Promise((resolve, reject) => {
+            return new Promise((r, j) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
+                reader.onload = () => r(reader.result);
+                reader.onerror = e => j(e);
             });
         }
 
         async function startRender() {
-            const prompt = document.getElementById('prompt').value;
-            const imgFile = document.getElementById('imageInput').files[0];
-            const audioFile = document.getElementById('audioInput').files[0];
-            const strength = document.getElementById('strength').value;
-
-            if ((currentTool !== 'img-to-img' || prompt === '') && !imgFile && currentTool !== 'img-to-img') {
-                alert("Please select a source image.");
-                return;
-            }
-
             const loader = document.getElementById('loader');
+            const status = document.getElementById('statusBadge');
             const display = document.getElementById('displayArea');
-            const statusBox = document.getElementById('statusUpdate');
             
             loader.style.display = 'block';
+            status.style.display = 'block';
+            status.innerText = 'STARTING...';
             display.innerHTML = '';
-            statusBox.style.display = 'block';
-            statusBox.innerText = 'Initializing...';
 
             try {
+                const imgFile = document.getElementById('imageInput').files[0];
+                const audioFile = document.getElementById('audioInput').files[0];
                 const imgBase64 = imgFile ? await toBase64(imgFile) : null;
                 const audioBase64 = audioFile ? await toBase64(audioFile) : null;
 
@@ -108,69 +188,55 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         tool: currentTool,
-                        prompt: prompt,
+                        modelId: document.getElementById('modelSelector').value,
+                        prompt: document.getElementById('prompt').value,
                         image: imgBase64,
                         audio: audioBase64,
-                        prompt_strength: strength
+                        prompt_strength: document.getElementById('strength').value
                     })
                 });
 
                 const prediction = await response.json();
-
-                if (prediction.error) {
-                    throw new Error(prediction.error);
-                }
-
-                // Start Polling the status
-                pollStatus(prediction.id);
-
+                if (prediction.error) throw new Error(prediction.error);
+                
+                poll(prediction.id);
             } catch (err) {
-                alert("Error: " + err.message);
+                alert(err.message);
                 loader.style.display = 'none';
-                statusBox.style.display = 'none';
+                status.style.display = 'none';
             }
         }
 
-        async function pollStatus(id) {
-            const statusBox = document.getElementById('statusUpdate');
-            
-            const timer = setInterval(async () => {
-                try {
-                    const res = await fetch(`/api/status?id=${id}`);
-                    const data = await res.json();
-
-                    statusBox.innerText = `Status: ${data.status.toUpperCase()}...`;
-
-                    if (data.status === 'succeeded') {
-                        clearInterval(timer);
-                        showResult(data.output);
-                    } else if (data.status === 'failed' || data.status === 'canceled') {
-                        clearInterval(timer);
-                        alert("Generation Failed: " + (data.error || "Unknown error"));
-                        document.getElementById('loader').style.display = 'none';
-                        statusBox.style.display = 'none';
-                    }
-                } catch (e) {
-                    console.error("Polling error", e);
+        async function poll(id) {
+            const status = document.getElementById('statusBadge');
+            const interval = setInterval(async () => {
+                const res = await fetch(`/api/status?id=${id}`);
+                const data = await res.json();
+                status.innerText = data.status.toUpperCase();
+                
+                if (data.status === 'succeeded') {
+                    clearInterval(interval);
+                    renderOutput(data.output);
+                } else if (data.status === 'failed') {
+                    clearInterval(interval);
+                    alert("Render failed.");
                 }
-            }, 2500); // Check every 2.5 seconds
+            }, 3000);
         }
 
-        function showResult(output) {
+        function renderOutput(out) {
             const display = document.getElementById('displayArea');
-            const loader = document.getElementById('loader');
-            const statusBox = document.getElementById('statusUpdate');
-            
-            loader.style.display = 'none';
-            statusBox.style.display = 'none';
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('statusBadge').style.display = 'none';
+            const src = Array.isArray(out) ? out[0] : out;
+            display.innerHTML = src.includes('.mp4') 
+                ? `<video src="${src}" controls autoplay loop></video>`
+                : `<img src="${src}">`;
+        }
 
-            const result = Array.isArray(output) ? output[0] : output;
-
-            if (result.endsWith('.mp4') || result.includes('video')) {
-                display.innerHTML = `<video src="${result}" controls autoplay loop></video>`;
-            } else {
-                display.innerHTML = `<img src="${result}" alt="Generated Content">`;
-            }
+        function checkout(amt) {
+            alert(`Redirecting to Stripe for $${amt} payment...`);
+            // This will link to your Stripe checkout URL later
         }
     </script>
 </body>
