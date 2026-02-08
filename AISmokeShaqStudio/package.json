@@ -3,11 +3,10 @@
   "version": "2.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "dev": "echo 'Open index.html in browser'",
+    "build": "echo 'No build required for static site'"
   },
   "dependencies": {
-    "@vercel/kv": "^1.0.1"
+    "@upstash/redis": "^1.28.4"
   }
 }
