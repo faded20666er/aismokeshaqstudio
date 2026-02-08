@@ -13,11 +13,14 @@
         }
         .main-layout { display: flex; justify-content: space-between; padding: 20px; gap: 20px; }
         
-        .ad-sidebar { width: 160px; height: 600px; background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 10px; font-size: 0.7rem; color: var(--gold); }
+        /* AD SIDEBARS */
+        .ad-sidebar { width: 160px; min-height: 600px; background: rgba(0,0,0,0.6); border: 1px solid var(--gold); border-radius: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .ad-box { width: 100%; height: 250px; background: linear-gradient(45deg, #111, #222); border: 1px solid #333; margin: 15px 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .ad-link { color: var(--gold); text-decoration: none; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; border: 1px solid var(--gold); padding: 8px; width: 80%; transition: 0.3s; }
+        .ad-link:hover { background: var(--gold); color: black; }
+
+        .studio-container { flex: 1; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
         
-        .studio-container { flex: 1; max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
-        
-        /* FIXED LOGO CSS */
         .logo-container { width: 100%; display: flex; justify-content: center; margin-bottom: 20px; }
         .logo { max-width: 250px; max-height: 120px; object-fit: contain; filter: drop-shadow(0 0 15px var(--gold)); }
         
@@ -27,6 +30,7 @@
             border: 1px solid var(--gold); 
             padding: 30px; border-radius: 20px; 
             width: 100%; box-shadow: 0 0 50px rgba(0,0,0,1); 
+            box-sizing: border-box;
         }
 
         .tabs { display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 10px; }
@@ -37,7 +41,6 @@
             width: 100%; background: #111; border: 1px solid #333; color: white; 
             padding: 12px; border-radius: 8px; margin: 10px 0; box-sizing: border-box;
         }
-        select:focus, textarea:focus { border-color: var(--gold); outline: none; }
 
         .render-btn { 
             width: 100%; background: linear-gradient(135deg, #D4AF37 0%, #F9D976 50%, #D4AF37 100%); 
@@ -54,21 +57,28 @@
 
         .status-badge { position: absolute; bottom: 20px; background: var(--gold); color: black; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
 
-        .store-section { margin-top: 40px; text-align: center; width: 100%; padding-bottom: 50px; }
-        .credit-card { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 20px; border-radius: 12px; display: inline-block; width: 220px; margin: 10px; transition: 0.3s; }
-        .credit-card:hover { border-color: var(--gold); transform: translateY(-5px); }
-        .buy-btn { background: var(--gold); color: black; border: none; padding: 10px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; }
+        /* STORE SECTION */
+        .store-section { margin-top: 40px; text-align: center; width: 100%; }
+        .credit-card { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 20px; border-radius: 12px; display: inline-block; width: 220px; margin: 10px; transition: 0.3s; vertical-align: top; }
+        .credit-card:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        .buy-btn { background: var(--gold); color: black; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; text-decoration: none; display: block; }
         
+        /* WIDGET SECTION */
+        .widget-section { margin-top: 50px; width: 100%; background: rgba(0,0,0,0.8); border: 2px solid var(--gold); border-radius: 15px; padding: 20px; box-sizing: border-box; text-align: center; }
         .user-stats { margin-bottom: 10px; font-size: 0.8rem; color: var(--gold); font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="main-layout">
+        <!-- LEFT AFFILIATE SIDEBAR -->
         <div class="ad-sidebar">
-            <p>PARTNER OFFER</p>
-            <div style="width:120px; height:240px; background:url('banner.png.png') center/cover; margin:10px 0;"></div>
-            <a href="#" style="color:var(--gold); text-decoration:none;">VIP ACCESS →</a>
+            <p style="color:var(--gold); font-size:0.7rem; font-weight:bold;">PREMIUM ACCESS</p>
+            <div class="ad-box">
+                <img src="banner.png.png" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <a href="https://t.vlmai-3.com/396104/6924?aff_sub5=SF_006OG000004lmDN" target="_blank" class="ad-link">JOIN NOW</a>
+            <p style="font-size:0.6rem; color:#666; margin-top:15px;">Experience the elite studio features.</p>
         </div>
 
         <div class="studio-container">
@@ -77,7 +87,7 @@
             </div>
             
             <div class="glass-panel">
-                <div class="user-stats">SESSION CREDITS: <span id="creditCount">100</span></div>
+                <div class="user-stats">VIP SESSION: <span id="creditCount">100 CREDITS</span></div>
                 
                 <div class="tabs">
                     <div class="tab active" onclick="setTool('img-to-img')">IMAGE STUDIO</div>
@@ -85,23 +95,23 @@
                     <div class="tab" onclick="setTool('lip-sync')">LIP SYNC</div>
                 </div>
 
-                <label style="font-size: 0.7rem; color: var(--gold);">AI MODEL ENGINE</label>
+                <label style="font-size: 0.7rem; color: var(--gold); letter-spacing: 1px;">AI ENGINE MODEL</label>
                 <select id="modelSelector">
                     <option value="flux-pro">FLUX 1.1 PRO (Masterpiece Quality)</option>
                     <option value="realistic">REALISTIC VISION (Photo Studio)</option>
-                    <option value="img2img-pro">CINEMATIC TRANSFORM (Edit Upload)</option>
-                    <option value="flux-schnell">FLUX FAST (Drafts)</option>
+                    <option value="img2img-pro">CINEMATIC TRANSFORM (Edit Source)</option>
+                    <option value="flux-schnell">FLUX FAST (Standard)</option>
                 </select>
 
                 <div id="inputs">
-                    <input type="file" id="imageInput" accept="image/*">
+                    <input type="file" id="imageInput" accept="image/*" style="margin:10px 0; font-size:0.8rem;">
                     <div id="audio-field" style="display:none;">
                         <input type="file" id="audioInput" accept="audio/*">
                     </div>
-                    <textarea id="prompt" placeholder="Describe exactly what you want to see..."></textarea>
+                    <textarea id="prompt" placeholder="Describe your creative vision..."></textarea>
                     
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <label style="font-size: 0.7rem; color: #666;">MODIFICATION STRENGTH</label>
+                        <label style="font-size: 0.7rem; color: #666;">CREATIVE FREEDOM</label>
                         <input type="range" id="strength" min="1" max="10" step="0.5" value="7.5" style="width:70%; accent-color: var(--gold);">
                     </div>
                 </div>
@@ -109,32 +119,46 @@
                 <button class="render-btn" onclick="startRender()">EXECUTE PRODUCTION</button>
 
                 <div id="output-container">
-                    <div id="displayArea"><p style="color:#444;">Awaiting Input...</p></div>
+                    <div id="displayArea"><p style="color:#333;">Initialize generation to view output...</p></div>
                     <div id="statusBadge" class="status-badge" style="display:none;">READY</div>
                 </div>
             </div>
 
+            <!-- MONETIZATION: STRIPE STORE -->
             <div class="store-section">
-                <h3 style="color:var(--gold); letter-spacing:3px;">RECHARGE STUDIO CREDITS</h3>
+                <h3 style="color:var(--gold); letter-spacing:3px; text-transform:uppercase;">Recharge Studio Credits</h3>
                 <div class="credit-card">
-                    <h4>STARTER PACK</h4>
+                    <h4>STARTER</h4>
                     <p>100 CREDITS</p>
                     <p style="font-size:1.5rem; color:var(--gold);">$10.00</p>
-                    <button class="buy-btn" onclick="checkout('starter')">BUY NOW</button>
+                    <a href="https://buy.stripe.com/6oU8wRfbO4wqdQueDE8N200" target="_blank" class="buy-btn">PURCHASE</a>
                 </div>
                 <div class="credit-card">
-                    <h4>PRO BUNDLE</h4>
+                    <h4>ELITE PRO</h4>
                     <p>550 CREDITS</p>
-                    <p style="font-size:1.5rem; color:var(--gold);">$45.00</p>
-                    <button class="buy-btn" onclick="checkout('pro')">BUY NOW</button>
+                    <p style="font-size:1.5rem; color:var(--gold); font-weight:bold;">$45.00</p>
+                    <a href="https://buy.stripe.com/bJe7sNd3GbYS7s61QS8N201" target="_blank" class="buy-btn">PURCHASE</a>
+                </div>
+            </div>
+
+            <!-- LIVE CAM WIDGET -->
+            <div class="widget-section">
+                <h4 style="color:var(--gold); margin-top:0; letter-spacing:2px;">LIVE STUDIO FEED</h4>
+                <div id="cam-widget-container">
+                    <!-- YOUR WIDGET SCRIPT -->
+                    <script src="https://crxcr2.com/cams-widget-ext/script?landing_id=%7Boffer_url_id%7D&genders=f&providers=chaturbate%2Cimlive&skin=1&containerAlignment=center&cols=4&rows=1&number=4&background=transparent&useFeed=1&animateFeed=1&smoothAnimation=1&ratio=1&verticalSpace=10px&horizontalSpace=10px&colorFilter=0&colorFilterStrength=0&AuxiliaryCSS=%0A&lang=en&token=e698f390-051d-11f1-8e58-ffbaf8ca8890&api_key=8389c2842c3c186e10c4f3f6db2a1d92304aff4d6d1e8e47f25b9627f078d33a"></script>
                 </div>
             </div>
         </div>
 
+        <!-- RIGHT AFFILIATE SIDEBAR -->
         <div class="ad-sidebar">
-            <p>ADVERTISEMENT</p>
-            <div style="width:120px; height:240px; background:#111; margin:10px 0; border:1px dashed #444; display:flex; align-items:center; justify-content:center;">AD SPACE</div>
-            <p style="font-size:0.6rem;">Contact for rates.</p>
+            <p style="color:var(--gold); font-size:0.7rem; font-weight:bold;">LIMITED OFFER</p>
+            <div class="ad-box" style="background:#000; border-color:var(--gold);">
+                <span style="color:var(--gold); font-size:0.6rem; padding:10px;">ADVERTISER BLOCK</span>
+            </div>
+            <a href="https://t.vlmai-3.com/396104/7477?aff_sub5=SF_006OG000004lmDN" target="_blank" class="ad-link">CLAIM NOW</a>
+            <p style="font-size:0.6rem; color:#666; margin-top:15px;">Exclusive rewards for studio members.</p>
         </div>
     </div>
 
@@ -161,10 +185,9 @@
         async function startRender() {
             const status = document.getElementById('statusBadge');
             const display = document.getElementById('displayArea');
-            
             status.style.display = 'block';
-            status.innerText = 'UPLOADING ASSETS...';
-            display.innerHTML = '<div style="color:var(--gold); font-family:monospace;">CONNECTING TO CLUSTER...</div>';
+            status.innerText = 'UPLOADING...';
+            display.innerHTML = '<div style="color:var(--gold); font-family:monospace;">STAGING AI CLUSTER...</div>';
 
             try {
                 const imgBase64 = await toBase64(document.getElementById('imageInput').files[0]);
@@ -187,7 +210,7 @@
                 if (prediction.error) throw new Error(prediction.error);
                 poll(prediction.id);
             } catch (err) {
-                alert("Error: " + err.message);
+                alert("Render System Error: " + err.message);
                 status.style.display = 'none';
             }
         }
@@ -197,14 +220,14 @@
             const interval = setInterval(async () => {
                 const res = await fetch(`/api/status?id=${id}`);
                 const data = await res.json();
-                status.innerText = data.status.toUpperCase() + '...';
+                status.innerText = data.status.toUpperCase();
                 
                 if (data.status === 'succeeded') {
                     clearInterval(interval);
                     renderOutput(data.output);
                 } else if (data.status === 'failed') {
                     clearInterval(interval);
-                    alert("The AI Cluster failed to process this request.");
+                    alert("AI Generation Encountered an Error.");
                 }
             }, 3000);
         }
@@ -216,12 +239,6 @@
             display.innerHTML = src.includes('.mp4') 
                 ? `<video src="${src}" controls autoplay loop></video>`
                 : `<img src="${src}">`;
-        }
-
-        function checkout(tier) {
-            alert(`Stripe Gateway Initializing...\nTier: ${tier}\nUse Test Card: 4242 4242 4242 4242`);
-            // To make this live, paste your Stripe Payment Link here:
-            // window.location.href = "YOUR_STRIPE_LINK_HERE";
         }
     </script>
 </body>
