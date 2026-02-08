@@ -13,56 +13,70 @@ export default async function handler(req, res) {
     try {
         const { tool, prompt, image, audio, prompt_strength } = req.body;
 
-        let model, input;
+        let url, body;
 
-        if (tool === 'img-to-img') {
-            if (image) {
-                model = 'timothybrooks/instruct-pix2pix';
-                input = {
+        if (tool === 'img-to-img' && image) {
+            // instruct-pix2pix is an OLD model - must use /versions/ endpoint
+            url = 'https://api.replicate.com/v1/predictions';
+            body = JSON.stringify({
+                version: '30c1d0b916a6f8efce20493f5d61ee27491ab2a60437c13c588468b9810ec23f',
+                input: {
                     image: image,
                     prompt: prompt || 'make it more cinematic',
                     num_outputs: 1,
                     guidance_scale: 7.5,
-                    image_guidance_scale: prompt_strength || 1.5,
-                    num_inference_steps: 20
-                };
-            } else {
-                model = 'black-forest-labs/flux-schnell';
-                input = {
+                    image_guidance_scale: parseFloat(prompt_strength) || 1.5
+                }
+            });
+
+        } else if (tool === 'img-to-img') {
+            // No image = text-to-image with flux (PROVEN WORKING)
+            url = 'https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions';
+            body = JSON.stringify({
+                input: {
                     prompt: prompt || 'high quality cinematic photo',
                     num_outputs: 1,
                     aspect_ratio: '1:1',
                     output_format: 'webp',
                     output_quality: 90
-                };
-            }
-        } else if (tool === 'img-to-video') {
-            model = 'stability-ai/stable-video-diffusion';
-            input = {
-                input_image: image,
-                sizing_strategy: 'maintain_aspect_ratio',
-                frames_per_second: 7,
-                motion_bucket_id: 127
-            };
-        } else if (tool === 'lip-sync') {
-            model = 'cjwbw/wav2lip';
-            input = {
-                face: image,
-                audio: audio
-            };
-        } else {
-            model = 'black-forest-labs/flux-schnell';
-            input = {
-                prompt: prompt || 'cinematic photo, high quality',
-                num_outputs: 1,
-                aspect_ratio: '1:1',
-                output_format: 'webp',
-                output_quality: 90
-            };
-        }
+                }
+            });
 
-        // SAME ENDPOINT AS YOUR WORKING TEST - no version hash needed!
-        const url = 'https://api.replicate.com/v1/models/' + model + '/predictions';
+        } else if (tool === 'img-to-video') {
+            // wan-video is a NEW model - uses /models/ endpoint
+            url = 'https://api.replicate.com/v1/models/wan-video/wan-2.5-i2v-fast/predictions';
+            body = JSON.stringify({
+                input: {
+                    image: image,
+                    prompt: prompt || 'cinematic motion, smooth camera movement'
+                }
+            });
+
+        } else if (tool === 'lip-sync') {
+            // devxpy/cog-wav2lip - OLD model, needs /versions/ endpoint
+            // NOTE: face and audio must be URLs or base64 data URIs
+            url = 'https://api.replicate.com/v1/predictions';
+            body = JSON.stringify({
+                version: '8d65e3f4f4298520e079198b493c25adfc43c058ffec924f2aefc8010ed25eef',
+                input: {
+                    face: image,
+                    audio: audio
+                }
+            });
+
+        } else {
+            // Fallback: flux text-to-image (PROVEN WORKING)
+            url = 'https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions';
+            body = JSON.stringify({
+                input: {
+                    prompt: prompt || 'cinematic photo, high quality',
+                    num_outputs: 1,
+                    aspect_ratio: '1:1',
+                    output_format: 'webp',
+                    output_quality: 90
+                }
+            });
+        }
 
         const createResponse = await fetch(url, {
             method: 'POST',
@@ -70,19 +84,20 @@ export default async function handler(req, res) {
                 'Authorization': 'Bearer ' + TOKEN,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ input: input })
+            body: body
         });
 
         const prediction = await createResponse.json();
 
         if (!createResponse.ok || !prediction.id) {
+            console.error('Replicate error:', JSON.stringify(prediction));
             return res.json({
-                error: prediction.detail || prediction.title || JSON.stringify(prediction)
+                error: prediction.detail || prediction.title || 'Replicate rejected the request'
             });
         }
 
-        // Poll for result - same pattern as working test
-        for (let i = 0; i < 30; i++) {
+        // Poll for result
+        for (let i = 0; i < 60; i++) {
             await new Promise(function(ok) { setTimeout(ok, 2000); });
 
             const poll = await fetch(
@@ -94,14 +109,15 @@ export default async function handler(req, res) {
             if (result.status === 'succeeded') {
                 return res.json({ success: true, output: result.output });
             }
-            if (result.status === 'failed') {
+            if (result.status === 'failed' || result.status === 'canceled') {
                 return res.json({ error: result.error || 'Generation failed' });
             }
         }
 
-        return res.json({ error: 'Timed out waiting for result' });
+        return res.json({ error: 'Timed out' });
 
     } catch (err) {
+        console.error('Error:', err);
         return res.status(500).json({ error: err.message });
     }
 }
