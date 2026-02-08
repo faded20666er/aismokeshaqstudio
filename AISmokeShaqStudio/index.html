@@ -3,350 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Smoke Shaq Studio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>SMOKE SHAQ STUDIO | CINEMATIC AI</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #000 url('golddustbackdrop.jpg') center/cover fixed; color:#fff; font-family: 'Segoe UI', sans-serif; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-        .glass { background:rgba(0,0,0,0.88); backdrop-filter:blur(12px); border:1px solid rgba(212,175,55,0.25); }
-        .gold { color:#D4AF37; }
-        .glow { text-shadow:0 0 12px rgba(212,175,55,0.6); }
-        .diamond { background-image:url('diamindbackgroud.jpeg'); background-size:cover; background-blend-mode:overlay; background-color:rgba(0,0,0,0.92); }
-        .inp { background:#0a0a0a; border:1px solid #333; padding:10px; border-radius:6px; width:100%; font-size:12px; color:#D4AF37; outline:none; }
-        .inp:focus { border-color:#D4AF37; }
-        .btn-go { background:linear-gradient(135deg,#8a6d3b,#D4AF37,#8a6d3b); color:#000; font-weight:900; border:none; cursor:pointer; transition:0.2s; }
-        .btn-go:hover { box-shadow:0 0 30px #D4AF37; transform:scale(1.01); }
-        .btn-go:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
-        .tab { padding:10px 0; cursor:pointer; border-bottom:2px solid transparent; opacity:0.35; font-size:10px; font-weight:900; letter-spacing:0.15em; transition:0.2s; }
-        .tab:hover { opacity:0.7; }
-        .tab.on { opacity:1; border-color:#D4AF37; color:#D4AF37; }
-        .timeline-item { background:#111; border:1px solid #222; border-radius:8px; padding:8px; cursor:pointer; transition:0.2s; }
-        .timeline-item:hover { border-color:#D4AF37; }
-        #stage video, #stage img { max-width:100%; max-height:100%; border-radius:8px; border:2px solid #D4AF37; box-shadow:0 0 40px rgba(212,175,55,0.2); }
-        .loading { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #0a0a0a; }
+        body { background: var(--black); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        .hero { height: 100vh; background: url('golddustbackdrop.png') center/cover; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .logo { width: 180px; filter: drop-shadow(0 0 15px var(--gold)); margin-bottom: 20px; }
+        .studio-panel { background: rgba(0,0,0,0.85); border: 1px solid var(--gold); padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; box-shadow: 0 0 40px rgba(212,175,55,0.2); }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .tab { cursor: pointer; color: #666; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        .tab.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+        textarea { width: 100%; background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px; border-radius: 5px; margin: 10px 0; height: 80px; resize: none; }
+        .render-btn { width: 100%; background: linear-gradient(45deg, var(--gold), #f9d976); border: none; padding: 15px; font-weight: bold; cursor: pointer; border-radius: 5px; text-transform: uppercase; margin-top: 15px; transition: 0.3s; }
+        .render-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--gold); }
+        #output-container { margin-top: 20px; min-height: 200px; border: 1px dashed #333; display: flex; align-items: center; justify-content: center; position: relative; }
+        #output-container img, #output-container video { max-width: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .loader { display: none; color: var(--gold); font-size: 0.9rem; letter-spacing: 2px; text-align: center; }
+        .status-msg { position: absolute; bottom: 10px; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; color: var(--gold); }
     </style>
 </head>
 <body>
+    <div class="hero">
+        <img src="logo.jpg.jpg" class="logo" alt="Logo">
+        
+        <div class="studio-panel">
+            <div class="tabs">
+                <div class="tab active" onclick="setTool('img-to-img')">IMG → IMG</div>
+                <div class="tab" onclick="setTool('img-to-video')">IMG → VID</div>
+                <div class="tab" onclick="setTool('lip-sync')">LIP SYNC</div>
+            </div>
 
-<!-- HEADER -->
-<header class="h-16 glass flex items-center justify-between px-6 shrink-0 border-b border-yellow-900/30">
-    <div class="flex items-center gap-3">
-        <img src="logo.jpg.jpg" class="h-10 w-10 rounded-full border border-yellow-700">
-        <div>
-            <h1 class="text-lg font-black italic gold glow tracking-tight">SMOKE SHAQ STUDIO</h1>
-            <p class="text-[7px] tracking-[0.5em] opacity-40 uppercase">Cinematic AI Production Engine</p>
+            <div id="tool-inputs">
+                <label style="font-size: 0.7rem; color: #888;">SOURCE IMAGE (JPG/PNG)</label>
+                <input type="file" id="imageInput" accept="image/*" style="margin: 10px 0; color: #888;">
+                
+                <div id="audio-field" style="display:none;">
+                    <label style="font-size: 0.7rem; color: #888;">VOICE AUDIO (MP3/WAV)</label>
+                    <input type="file" id="audioInput" accept="audio/*" style="margin: 10px 0; color: #888;">
+                </div>
+
+                <label style="font-size: 0.7rem; color: #888;">PROMPT / DIRECTION</label>
+                <textarea id="prompt" placeholder="Describe the cinematic change..."></textarea>
+                
+                <label style="font-size: 0.7rem; color: #888;">PROMPT STRENGTH</label>
+                <input type="range" id="strength" min="1" max="10" step="0.5" value="1.5" style="width:100%; accent-color: var(--gold);">
+            </div>
+
+            <button class="render-btn" onclick="startRender()">Execute Render</button>
+
+            <div id="output-container">
+                <div id="loader" class="loader">HITTING THE CLUSTER...</div>
+                <div id="displayArea"></div>
+                <div id="statusUpdate" class="status-msg" style="display:none;"></div>
+            </div>
         </div>
     </div>
-    <div class="flex items-center gap-6">
-        <div class="text-right">
-            <p class="text-[8px] opacity-30 uppercase tracking-wider">Credits</p>
-            <p id="credits" class="text-base font-black gold glow">∞</p>
-        </div>
-        <img src="banner.png.png" class="h-8 opacity-60">
-    </div>
-</header>
 
-<!-- STATUS BAR -->
-<div id="statusBar" class="h-8 glass flex items-center justify-center text-xs opacity-0 transition-opacity duration-300">
-    <span id="statusText"></span>
-</div>
+    <script>
+        let currentTool = 'img-to-img';
 
-<!-- MAIN -->
-<main class="flex-1 flex overflow-hidden">
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('audio-field').style.display = (tool === 'lip-sync') ? 'block' : 'none';
+        }
 
-    <!-- LEFT: CONTROLS -->
-    <aside class="w-80 shrink-0 glass diamond border-r border-yellow-900/20 flex flex-col">
-        <!-- TABS -->
-        <div class="flex justify-around px-4 pt-4 border-b border-white/5 pb-2">
-            <div class="tab on" onclick="setTab('img-to-img')" id="tab-i2i">IMG → IMG</div>
-            <div class="tab" onclick="setTab('img-to-video')" id="tab-i2v">IMG → VID</div>
-            <div class="tab" onclick="setTab('lip-sync')" id="tab-ls">LIP SYNC</div>
-        </div>
+        async function toBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
 
-        <div class="flex-1 overflow-y-auto p-5 space-y-5">
+        async function startRender() {
+            const prompt = document.getElementById('prompt').value;
+            const imgFile = document.getElementById('imageInput').files[0];
+            const audioFile = document.getElementById('audioInput').files[0];
+            const strength = document.getElementById('strength').value;
 
-            <!-- IMG2IMG PANEL -->
-            <div id="panel-img-to-img">
-                <label class="text-[9px] uppercase opacity-30 block mb-1">Source Image (JPG/PNG only)</label>
-                <input type="file" accept="image/*" id="i2i-file" class="inp">
-                <label class="text-[9px] uppercase opacity-30 block mb-1 mt-4">Prompt / Direction</label>
-                <textarea id="i2i-prompt" class="inp h-28" placeholder="e.g. Low rider blue candy paint, gold rims, cinematic sunset in Seattle..."></textarea>
-                <label class="text-[9px] uppercase opacity-30 block mb-1 mt-4">Prompt Strength</label>
-                <input type="range" id="i2i-strength" min="0.1" max="1" step="0.05" value="0.75" class="w-full accent-yellow-600">
-                <p class="text-[9px] opacity-30 text-right"><span id="str-val">0.75</span> (higher = more creative)</p>
-            </div>
+            if ((currentTool !== 'img-to-img' || prompt === '') && !imgFile && currentTool !== 'img-to-img') {
+                alert("Please select a source image.");
+                return;
+            }
 
-            <!-- IMG2VID PANEL -->
-            <div id="panel-img-to-video" class="hidden">
-                <label class="text-[9px] uppercase opacity-30 block mb-1">Starting Frame (JPG/PNG)</label>
-                <input type="file" accept="image/*" id="i2v-file" class="inp">
-                <p class="text-[9px] opacity-20 mt-3">Generates a short cinematic video clip from your image using Stable Video Diffusion.</p>
-            </div>
+            const loader = document.getElementById('loader');
+            const display = document.getElementById('displayArea');
+            const statusBox = document.getElementById('statusUpdate');
+            
+            loader.style.display = 'block';
+            display.innerHTML = '';
+            statusBox.style.display = 'block';
+            statusBox.innerText = 'Initializing...';
 
-            <!-- LIP SYNC PANEL -->
-            <div id="panel-lip-sync" class="hidden">
-                <label class="text-[9px] uppercase opacity-30 block mb-1">Character Face (JPG/PNG)</label>
-                <input type="file" accept="image/*" id="ls-file" class="inp">
-                <label class="text-[9px] uppercase opacity-30 block mb-1 mt-4">Audio Track (MP3/WAV)</label>
-                <input type="file" accept="audio/*" id="ls-audio" class="inp">
-                <p class="text-[9px] opacity-20 mt-3">Syncs the character's lips to your audio track using Wav2Lip.</p>
-            </div>
-        </div>
+            try {
+                const imgBase64 = imgFile ? await toBase64(imgFile) : null;
+                const audioBase64 = audioFile ? await toBase64(audioFile) : null;
 
-        <div class="p-4">
-            <button onclick="generate()" id="btnGen" class="w-full btn-go py-4 rounded-lg text-xs uppercase tracking-widest">
-                Execute Render
-            </button>
-        </div>
-    </aside>
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tool: currentTool,
+                        prompt: prompt,
+                        image: imgBase64,
+                        audio: audioBase64,
+                        prompt_strength: strength
+                    })
+                });
 
-    <!-- CENTER: STAGE -->
-    <section class="flex-1 flex flex-col">
-        <div id="stage" class="flex-1 flex items-center justify-center p-8 relative bg-black/30">
-            <div id="placeholder" class="text-center">
-                <img src="logo.jpg.jpg" class="w-28 mx-auto opacity-[0.06] grayscale mb-4">
-                <p class="text-xl font-black italic opacity-[0.04] tracking-[0.8em]">STANDBY</p>
-            </div>
-            <div id="result" class="hidden"></div>
-        </div>
+                const prediction = await response.json();
 
-        <!-- TIMELINE -->
-        <div class="h-28 glass border-t border-yellow-900/20 p-3 overflow-x-auto">
-            <p class="text-[8px] uppercase tracking-widest opacity-20 mb-2">Timeline / History</p>
-            <div id="timeline" class="flex gap-3 h-16"></div>
-        </div>
-    </section>
-
-</main>
-
-<script>
-const email = "faded206@yahoo.com";
-let activeTab = 'img-to-img';
-let history = [];
-
-// TABS
-function setTab(t) {
-    activeTab = t;
-    document.querySelectorAll('.tab').forEach(el => el.classList.remove('on'));
-    document.getElementById('tab-' + (t==='img-to-img'?'i2i':t==='img-to-video'?'i2v':'ls')).classList.add('on');
-    ['img-to-img','img-to-video','lip-sync'].forEach(p => {
-        document.getElementById('panel-'+p).classList.toggle('hidden', p !== t);
-    });
-}
-
-// STRENGTH SLIDER
-document.getElementById('i2i-strength').addEventListener('input', e => {
-    document.getElementById('str-val').textContent = e.target.value;
-});
-
-// IMAGE COMPRESSOR - THIS WAS MISSING!
-async function compressImage(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-
-                // Max dimensions
-                const maxSize = 1024;
-                if (width > height && width > maxSize) {
-                    height = (height * maxSize) / width;
-                    width = maxSize;
-                } else if (height > maxSize) {
-                    width = (width * maxSize) / height;
-                    height = maxSize;
+                if (prediction.error) {
+                    throw new Error(prediction.error);
                 }
 
-                canvas.width = width;
-                canvas.height = height;
+                // Start Polling the status
+                pollStatus(prediction.id);
 
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Convert to base64 with compression
-                canvas.toBlob((blob) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(blob);
-                }, 'image/jpeg', 0.8);
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
-// FILE TO BASE64 - THIS WAS MISSING!
-async function fileToB64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
-// SET STATUS - THIS WAS MISSING!
-function setStatus(msg) {
-    const bar = document.getElementById('statusBar');
-    const text = document.getElementById('statusText');
-    text.textContent = msg;
-    bar.style.opacity = msg ? '1' : '0';
-}
-
-// SHOW OUTPUT - THIS WAS MISSING!
-function showOutput(output) {
-    const placeholder = document.getElementById('placeholder');
-    const result = document.getElementById('result');
-
-    placeholder.classList.add('hidden');
-    result.classList.remove('hidden');
-
-    // Handle different output types
-    if (typeof output === 'string') {
-        if (output.endsWith('.mp4') || output.endsWith('.webm')) {
-            result.innerHTML = `<video src="${output}" controls autoplay loop></video>`;
-        } else {
-            result.innerHTML = `<img src="${output}" alt="Generated">`;
-        }
-    } else if (Array.isArray(output) && output.length > 0) {
-        // Handle array output (some models return arrays)
-        const firstOutput = output[0];
-        if (firstOutput.endsWith('.mp4') || firstOutput.endsWith('.webm')) {
-            result.innerHTML = `<video src="${firstOutput}" controls autoplay loop></video>`;
-        } else {
-            result.innerHTML = `<img src="${firstOutput}" alt="Generated">`;
-        }
-    }
-
-    // Add to timeline
-    addToTimeline(output);
-}
-
-// ADD TO TIMELINE - THIS WAS MISSING!
-function addToTimeline(output) {
-    const timeline = document.getElementById('timeline');
-    const item = document.createElement('div');
-    item.className = 'timeline-item';
-
-    const url = Array.isArray(output) ? output[0] : output;
-    const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
-
-    item.innerHTML = isVideo 
-        ? `<video src="${url}" class="h-full w-full object-cover rounded"></video>`
-        : `<img src="${url}" class="h-full w-full object-cover rounded">`;
-
-    item.onclick = () => showOutput(url);
-    timeline.insertBefore(item, timeline.firstChild);
-
-    history.unshift(url);
-    if (history.length > 10) history.pop();
-}
-
-// MAIN GENERATE FUNCTION
-async function generate() {
-    const btn = document.getElementById('btnGen');
-    btn.disabled = true;
-    setStatus('Preparing...');
-
-    try {
-        let payload = { email, tool: activeTab };
-
-        if (activeTab === 'img-to-img') {
-            const file = document.getElementById('i2i-file').files[0];
-            if (!file) { 
-                alert('Please select a source image.'); 
-                btn.disabled = false; 
-                setStatus('');
-                return; 
+            } catch (err) {
+                alert("Error: " + err.message);
+                loader.style.display = 'none';
+                statusBox.style.display = 'none';
             }
-            if (!file.type.startsWith('image/')) { 
-                alert('IMG2IMG requires an IMAGE file (JPG/PNG), not a video.'); 
-                btn.disabled = false; 
-                setStatus('');
-                return; 
-            }
-            payload.image = await compressImage(file);
-            payload.prompt = document.getElementById('i2i-prompt').value || 'high quality cinematic photo';
-            payload.prompt_strength = parseFloat(document.getElementById('i2i-strength').value);
-        } else if (activeTab === 'img-to-video') {
-            const file = document.getElementById('i2v-file').files[0];
-            if (!file) { 
-                alert('Please select a source image.'); 
-                btn.disabled = false; 
-                setStatus('');
-                return; 
-            }
-            if (!file.type.startsWith('image/')) { 
-                alert('IMG2VID requires an IMAGE file.'); 
-                btn.disabled = false; 
-                setStatus('');
-                return; 
-            }
-            payload.image = await compressImage(file);
-        } else if (activeTab === 'lip-sync') {
-            const faceFile = document.getElementById('ls-file').files[0];
-            const audioFile = document.getElementById('ls-audio').files[0];
-            if (!faceFile || !audioFile) { 
-                alert('Lip sync needs both a face image AND an audio file.'); 
-                btn.disabled = false; 
-                setStatus('');
-                return; 
-            }
-            payload.image = await compressImage(faceFile);
-            payload.audio = await fileToB64(audioFile);
         }
 
-        setStatus('Sending to GPU cluster...');
+        async function pollStatus(id) {
+            const statusBox = document.getElementById('statusUpdate');
+            
+            const timer = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/status?id=${id}`);
+                    const data = await res.json();
 
-        const res = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+                    statusBox.innerText = `Status: ${data.status.toUpperCase()}...`;
 
-        const text = await res.text();
-        let data;
-        try { 
-            data = JSON.parse(text); 
-        } catch(e) {
-            console.error('Parse error:', text);
-            alert('Server returned invalid response. Check console for details.');
-            btn.disabled = false;
-            setStatus('Server error');
-            return;
+                    if (data.status === 'succeeded') {
+                        clearInterval(timer);
+                        showResult(data.output);
+                    } else if (data.status === 'failed' || data.status === 'canceled') {
+                        clearInterval(timer);
+                        alert("Generation Failed: " + (data.error || "Unknown error"));
+                        document.getElementById('loader').style.display = 'none';
+                        statusBox.style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error("Polling error", e);
+                }
+            }, 2500); // Check every 2.5 seconds
         }
 
-        if (data.error) {
-            alert('Error: ' + data.error);
-            btn.disabled = false;
-            setStatus('Error: ' + data.error);
-            return;
+        function showResult(output) {
+            const display = document.getElementById('displayArea');
+            const loader = document.getElementById('loader');
+            const statusBox = document.getElementById('statusUpdate');
+            
+            loader.style.display = 'none';
+            statusBox.style.display = 'none';
+
+            const result = Array.isArray(output) ? output[0] : output;
+
+            if (result.endsWith('.mp4') || result.includes('video')) {
+                display.innerHTML = `<video src="${result}" controls autoplay loop></video>`;
+            } else {
+                display.innerHTML = `<img src="${result}" alt="Generated Content">`;
+            }
         }
-
-        if (data.output) {
-            setStatus('Generation complete!');
-            showOutput(data.output);
-            btn.disabled = false;
-            setTimeout(() => setStatus(''), 3000);
-            return;
-        }
-
-        setStatus('Unexpected response from server');
-        console.error('Unexpected response:', data);
-        btn.disabled = false;
-
-    } catch(e) {
-        console.error('Error:', e);
-        alert('Error: ' + e.message);
-        btn.disabled = false;
-        setStatus('Error: ' + e.message);
-    }
-}
-</script>
+    </script>
 </body>
 </html>
