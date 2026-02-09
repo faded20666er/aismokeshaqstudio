@@ -220,11 +220,29 @@
         </div>
     </div>
 
-    <script>
+ <script>
+        // --- 1. THE PRICING & ENGINE CONFIGURATION ---
         let currentMode = 'img-to-img';
         let userEmail = localStorage.getItem('studio_email') || null;
 
+        const modelLibrary = {
+            'img-to-img': [
+                { id: 'flux-pro', name: 'FLUX 1.1 PRO (Masterpiece Stills)', cost: 5 },
+                { id: 'flux-schnell', name: 'FLUX SCHNELL (High-Speed Draft)', cost: 5 }
+            ],
+            'img-to-video': [
+                { id: 'kling-video', name: 'KLING 2.5 (High Motion Cinema)', cost: 15 },
+                { id: 'luma-ray', name: 'LUMA RAY (Fluid Motion)', cost: 15 }
+            ],
+            'lip-sync': [
+                { id: 'omni-human', name: 'OMNI-HUMAN (Digital Soul Sync)', cost: 20 },
+                { id: 'cog-wav2lip', name: 'WAV2LIP (Performance Sync)', cost: 20 }
+            ]
+        };
+
+        // --- 2. UI INITIALIZATION ---
         if(userEmail) { loginUI(userEmail); updateCredits(); }
+        updateEngineDropdown(); // Set initial dropdown
 
         function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
         function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
@@ -245,24 +263,37 @@
             document.getElementById('userHandle').innerText = email;
         }
 
-        function updateCost() {
-            const engine = document.getElementById('engineSelect').value;
-            const costMap = { 'flux-pro': 1, 'kling-video': 10, 'omni-human': 15 };
-            document.getElementById('costDisplay').innerText = costMap[engine];
-        }
-
         function setMode(mode, el) {
             currentMode = mode;
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
+            
+            // Show/Hide Timeline for Lip Sync
             document.getElementById('timelineContainer').style.display = (mode === 'lip-sync') ? 'block' : 'none';
-            const sel = document.getElementById('engineSelect');
-            if(mode === 'lip-sync') sel.value = 'omni-human';
-            if(mode === 'img-to-video') sel.value = 'kling-video';
-            if(mode === 'img-to-img') sel.value = 'flux-pro';
+            
+            updateEngineDropdown();
+        }
+
+        function updateEngineDropdown() {
+            const select = document.getElementById('engineSelect');
+            const models = modelLibrary[currentMode];
+            
+            select.innerHTML = models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
             updateCost();
         }
 
+        function updateCost() {
+            const select = document.getElementById('engineSelect');
+            const selectedId = select.value;
+            const allModels = Object.values(modelLibrary).flat();
+            const model = allModels.find(m => m.id === selectedId);
+            
+            if (model) {
+                document.getElementById('costDisplay').innerText = model.cost;
+            }
+        }
+
+        // --- 3. PRODUCTION & API LOGIC ---
         async function updateCredits() {
             if(!userEmail) return;
             try {
@@ -275,8 +306,6 @@
         async function startProduction() {
             if(!userEmail) return openLogin();
             const out = document.getElementById('studioOutput');
-            const dlBtn = document.getElementById('downloadBtn');
-            dlBtn.style.display = 'none';
             out.innerHTML = '<div style="color:var(--gold); font-size:1.5rem; animation: pulse 1.5s infinite;">PRODUCTION IN PROGRESS...</div>';
             
             try {
@@ -301,39 +330,38 @@
                     })
                 });
                 const job = await res.json();
+                if (job.error) throw new Error(job.error);
                 poll(job.id);
             } catch (err) {
                 alert("Studio Error: " + err.message);
-                out.innerHTML = '<p style="color:red;">PRODUCTION FAILED</p>';
+                out.innerHTML = '<p style="color:red;">PRODUCTION FAILED: ' + err.message + '</p>';
             }
         }
 
         function poll(id) {
             const out = document.getElementById('studioOutput');
-            const dlBtn = document.getElementById('downloadBtn');
-            
             const timer = setInterval(async () => {
-                const res = await fetch(`/api/status?id=${id}`);
-                const data = await res.json();
-                if (data.status === 'succeeded') {
-                    clearInterval(timer);
-                    const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
-                    const isVideo = resUrl.includes('.mp4') || resUrl.includes('.webm');
-                    
-                    out.innerHTML = isVideo 
-                        ? `<video src="${resUrl}" controls autoplay loop></video>`
-                        : `<img src="${resUrl}">`;
-                    
-                    // Setup Download Button
-                    dlBtn.href = resUrl;
-                    dlBtn.download = isVideo ? "smoke-shaq-video.mp4" : "smoke-shaq-image.png";
-                    dlBtn.style.display = 'inline-block';
-                    out.appendChild(dlBtn);
-
-                    updateCredits();
-                }
+                try {
+                    const res = await fetch(`/api/status?id=${id}`);
+                    const data = await res.json();
+                    if (data.status === 'succeeded') {
+                        clearInterval(timer);
+                        const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
+                        const isVideo = resUrl.includes('.mp4') || resUrl.includes('.webm');
+                        
+                        out.innerHTML = isVideo 
+                            ? `<video src="${resUrl}" controls autoplay loop style="width:100%"></video>`
+                            : `<img src="${resUrl}" style="width:100%">`;
+                        
+                        updateCredits();
+                    } else if (data.status === 'failed') {
+                        clearInterval(timer);
+                        out.innerHTML = '<p style="color:red;">GENERATION FAILED</p>';
+                    }
+                } catch (e) { console.log("Polling..."); }
             }, 3000);
         }
     </script>
 </body>
 </html>
+
