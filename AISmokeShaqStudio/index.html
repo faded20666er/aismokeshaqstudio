@@ -3,257 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMOKE SHAQ STUDIO | ELITE AI</title>
+    <title>SMOKE SHAQ STUDIO | ELITE PRO</title>
     <style>
-        :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #050505; }
+        :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #050505; --dark-glass: rgba(0,0,0,0.85); }
         
         body { 
-            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('diamindbackgroud.jpeg') fixed; 
-            background-size: cover; background-position: center;
-            color: white; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; overflow-x: hidden;
+            background: #000;
+            color: white; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow-x: hidden;
         }
 
-        /* THE TOP ROCKER (HEADER) - NOW FORCED VISIBLE */
+        /* BRIGHTER DIAMOND BACKGROUND LAYER */
+        .bg-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('diamindbackgroud.jpeg') center/cover;
+            filter: brightness(1.4) contrast(1.1); /* Brightens diamonds before the overlay */
+            z-index: -2;
+        }
+        .overlay-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.9) 80%);
+            z-index: -1;
+        }
+
+        /* TOP ROCKER HEADER */
         .top-rocker {
-            width: 100%; height: 90px; background: #000;
-            border-bottom: 3px solid var(--gold); display: flex;
+            width: 100%; height: 100px; background: #000;
+            border-bottom: 2px solid var(--gold); display: flex;
             align-items: center; justify-content: space-between;
-            padding: 0 50px; box-sizing: border-box; position: sticky; top: 0; z-index: 9999;
-            box-shadow: 0 10px 30px rgba(0,0,0,1);
+            padding: 0 60px; box-sizing: border-box; position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }
 
-        .logo-box { display: flex; align-items: center; min-width: 250px; }
-        .logo-img { max-height: 60px; object-fit: contain; }
-        .logo-text { color: var(--gold); font-weight: 900; font-size: 1.6rem; letter-spacing: 2px; text-transform: uppercase; }
+        .logo-text { color: var(--gold); font-weight: 900; font-size: 1.8rem; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 15px rgba(212,175,55,0.5); }
 
-        .auth-panel { display: flex; align-items: center; gap: 25px; }
-        .vip-login { 
-            background: #111; border: 1px solid var(--gold); color: white; 
-            padding: 12px 20px; border-radius: 8px; font-size: 0.9rem; width: 280px;
-            outline: none; transition: 0.3s;
+        .auth-status { display: flex; align-items: center; gap: 30px; }
+        .login-btn { 
+            background: transparent; border: 1px solid var(--gold); color: var(--gold);
+            padding: 10px 25px; border-radius: 4px; font-weight: 700; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
         }
-        .vip-login:focus { box-shadow: 0 0 15px var(--gold); }
-        .credit-pill { 
-            background: linear-gradient(to right, #D4AF37, #F9D976); color: black; 
-            padding: 12px 25px; border-radius: 50px; font-weight: 900; font-size: 0.9rem;
-            text-transform: uppercase; box-shadow: 0 0 20px rgba(212,175,55,0.4);
-        }
-
-        /* NAVIGATION TABS (Like separate pages) */
-        .page-nav { 
-            display: flex; justify-content: center; gap: 5px; 
-            background: rgba(0,0,0,0.5); padding: 10px 0; border-bottom: 1px solid #222;
-        }
-        .nav-link { 
-            padding: 15px 40px; cursor: pointer; color: #555; font-weight: 900; 
-            font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase;
-            transition: 0.4s; border-radius: 5px;
-        }
-        .nav-link:hover { color: var(--gold); background: rgba(255,255,255,0.05); }
-        .nav-link.active { color: var(--gold); background: rgba(212,175,55,0.1); border: 1px solid var(--gold); }
-
-        /* CONTENT LAYOUT */
-        .content-wrap { display: flex; justify-content: center; padding: 40px 30px; gap: 40px; }
+        .login-btn:hover { background: var(--gold); color: black; }
         
-        .side-ad { width: 160px; display: flex; flex-direction: column; gap: 20px; }
-        .ad-card { 
-            background: #000; border: 1px solid #333; padding: 10px; 
-            text-align: center; border-radius: 12px; transition: 0.3s;
+        .credit-display { 
+            display: none; align-items: center; gap: 15px; 
+            background: rgba(212,175,55,0.1); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(212,175,55,0.3);
         }
-        .ad-card:hover { border-color: var(--gold); }
-        .ad-card img { width: 100%; border-radius: 8px; margin-bottom: 12px; }
-        .btn-action { 
-            display: block; background: var(--gold); color: black; text-decoration: none;
-            padding: 10px; font-weight: 900; font-size: 0.7rem; border-radius: 6px;
-            text-transform: uppercase;
-        }
+        .credit-val { color: var(--gold); font-weight: 900; font-size: 1.1rem; }
 
-        /* MAIN STUDIO AREA */
-        .studio-frame { 
-            flex: 1; max-width: 850px; background: rgba(0,0,0,0.98); 
-            border: 1px solid #222; border-radius: 30px; padding: 45px;
+        /* NAVIGATION */
+        .page-nav { display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.6); padding: 15px 0; border-bottom: 1px solid #222; backdrop-filter: blur(10px); }
+        .nav-item { cursor: pointer; color: #777; font-weight: 900; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
+        .nav-item.active { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+
+        /* MAIN STUDIO */
+        .main-layout { display: flex; justify-content: center; padding: 50px; gap: 40px; }
+        .sidebar { width: 180px; }
+        .studio-card { 
+            flex: 1; max-width: 900px; background: var(--dark-glass); 
+            border: 1px solid #333; border-radius: 24px; padding: 50px;
             box-shadow: 0 0 100px rgba(0,0,0,1);
         }
 
-        /* TIMELINE (ONLY FOR LIP SYNC) */
-        #timeline { 
-            background: #050505; border: 1px dashed var(--gold); 
-            padding: 25px; border-radius: 15px; margin: 25px 0; display: none; 
+        /* DYNAMIC PRICING BADGE */
+        .cost-badge {
+            background: #111; border-left: 4px solid var(--gold);
+            padding: 12px 20px; margin-bottom: 30px; display: flex; 
+            justify-content: space-between; align-items: center; border-radius: 4px;
         }
-        .time-row { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; }
-        .time-mark { background: var(--gold); color: #000; padding: 6px 12px; border-radius: 6px; font-weight: 900; font-size: 0.7rem; }
-        .script-box { background: #000; border: 1px solid #222; color: white; padding: 12px; flex: 1; border-radius: 8px; }
+        .cost-label { font-size: 0.7rem; color: #888; font-weight: 900; text-transform: uppercase; }
+        .cost-amount { color: var(--gold); font-weight: 900; font-size: 1rem; }
 
-        /* FORMS */
-        label { display: block; color: var(--gold); font-size: 0.7rem; font-weight: 900; margin-bottom: 10px; text-transform: uppercase; }
+        /* FORM STYLING */
+        label { color: var(--gold); font-size: 0.65rem; font-weight: 900; letter-spacing: 1px; display: block; margin-bottom: 8px; }
         select, textarea, input[type="file"] {
             width: 100%; background: #000; border: 1px solid #222; color: white;
-            padding: 18px; border-radius: 12px; margin-bottom: 20px; box-sizing: border-box; font-size: 0.95rem;
+            padding: 18px; border-radius: 12px; margin-bottom: 25px; box-sizing: border-box;
         }
-        .btn-render {
-            width: 100%; padding: 25px; border: none; border-radius: 15px;
+        .render-btn {
+            width: 100%; padding: 25px; border: none; border-radius: 12px;
             background: linear-gradient(135deg, #D4AF37, #F9D976, #D4AF37);
-            color: black; font-weight: 900; font-size: 1.3rem; letter-spacing: 6px;
-            cursor: pointer; text-transform: uppercase; margin-top: 10px;
-            box-shadow: 0 10px 40px rgba(212,175,55,0.3);
+            color: black; font-weight: 900; font-size: 1.2rem; letter-spacing: 4px;
+            cursor: pointer; text-transform: uppercase;
         }
 
-        #output-canvas {
-            margin-top: 45px; width: 100%; min-height: 500px; background: #000;
-            border: 2px solid #0a0a0a; border-radius: 20px; display: flex;
-            align-items: center; justify-content: center; overflow: hidden;
+        /* LOGIN MODAL */
+        #loginModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center;
         }
-        #output-canvas img, #output-canvas video { width: 100%; height: auto; border-radius: 15px; }
+        .modal-content {
+            background: #0a0a0a; border: 1px solid var(--gold); padding: 50px;
+            border-radius: 20px; text-align: center; width: 400px; box-shadow: 0 0 50px var(--gold);
+        }
+        .modal-input { width: 100%; padding: 15px; background: #000; border: 1px solid #333; color: white; margin: 20px 0; border-radius: 5px; }
 
-        /* STORE */
-        .pricing-wrap { display: flex; gap: 25px; margin-top: 50px; }
-        .price-box { 
-            flex: 1; background: #0a0a0a; border: 1px solid #222;
-            padding: 30px; border-radius: 20px; text-align: center;
+        /* OUTPUT BOX */
+        #studioOutput {
+            margin-top: 50px; width: 100%; min-height: 500px; background: #000;
+            border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            border: 1px solid #111; overflow: hidden;
         }
-        .price-box h3 { color: var(--gold); margin: 0 0 10px 0; font-size: 1.4rem; }
+        #studioOutput img, #studioOutput video { width: 100%; }
+
+        .ad-box { background: #000; border: 1px solid #222; border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 20px; }
+        .ad-box img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- THE TOP ROCKER -->
-    <header class="top-rocker">
-        <div class="logo-box">
-            <!-- Fixed the 1,000 error loop here -->
-            <img src="logo.png" id="mainLogo" class="logo-img" onerror="this.onerror=null; this.style.display='none'; document.getElementById('textLogo').style.display='block';">
-            <div id="textLogo" class="logo-text" style="display:none;">SMOKE SHAQ STUDIO</div>
-        </div>
+    <div class="bg-layer"></div>
+    <div class="overlay-layer"></div>
 
-        <div class="auth-panel">
-            <input type="email" id="emailAuth" class="vip-login" placeholder="ENTER VIP EMAIL..." onchange="loadCredits()">
-            <div class="credit-pill">CREDITS: <span id="userCredits">0</span></div>
+    <!-- HEADER -->
+    <header class="top-rocker">
+        <div class="logo-text">SMOKE SHAQ STUDIO</div>
+        <div class="auth-status">
+            <button id="authBtn" class="login-btn" onclick="openLogin()">SIGN IN / JOIN VIP</button>
+            <div id="userPanel" class="credit-display">
+                <span id="userHandle" style="font-size: 0.8rem; opacity: 0.6;"></span>
+                <div class="credit-val"><span id="liveCredits">0</span> CREDITS</div>
+            </div>
         </div>
     </header>
 
-    <!-- NAVIGATION (Simulating Pages) -->
     <nav class="page-nav">
-        <div class="nav-link active" onclick="changeSection('img-to-img', this)">Image Studio</div>
-        <div class="nav-link" onclick="changeSection('img-to-video', this)">Video Engine</div>
-        <div class="nav-link" onclick="changeSection('lip-sync', this)">Pro Lip Sync</div>
+        <div class="nav-item active" onclick="setMode('img-to-img', this)">Image Studio</div>
+        <div class="nav-item" onclick="setMode('img-to-video', this)">Video Engine</div>
+        <div class="nav-item" onclick="setMode('lip-sync', this)">Pro Lip Sync</div>
     </nav>
 
-    <div class="content-wrap">
-        <aside class="side-ad">
-            <div class="ad-card">
-                <p style="color:var(--gold); font-size:0.6rem; font-weight:900;">VIP ACCESS</p>
-                <img src="banner.png.png" onerror="this.src='1.png.png'">
-                <a href="https://t.vlmai-3.com/396104/6924?aff_sub5=SF_006OG000004lmDN" class="btn-action">JOIN NOW</a>
+    <div class="main-layout">
+        <aside class="sidebar">
+            <div class="ad-box">
+                <img src="banner.png.png">
+                <a href="https://t.vlmai-3.com/396104/6924?aff_sub5=SF_006OG000004lmDN" style="color:var(--gold); font-weight:900; text-decoration:none; font-size:0.7rem;">JOIN ELITE CLUB</a>
             </div>
         </aside>
 
-        <main class="studio-frame">
-            <div id="studio-ui">
-                <label>ENGINE SELECT</label>
-                <select id="engineType">
-                    <option value="flux-pro">FLUX 1.1 PRO (Masterpiece Quality)</option>
-                    <option value="kling-video">KLING 2.5 (Cinema Motion)</option>
-                    <option value="omni-human">OMNI-HUMAN (Digital Soul)</option>
-                </select>
-
-                <label>SOURCE ASSET</label>
-                <input type="file" id="fileInput">
-
-                <!-- TIMELINE -->
-                <div id="timeline">
-                    <label>DIALOGUE TIMELINE & SCRIPT</label>
-                    <div class="time-row">
-                        <div class="time-mark">00:01</div>
-                        <input type="text" class="script-box" placeholder="Dialogue for Character 1...">
-                    </div>
-                    <div class="time-row">
-                        <div class="time-mark">00:06</div>
-                        <input type="text" class="script-box" placeholder="Dialogue for Character 2...">
-                    </div>
-                </div>
-
-                <label>PRODUCTION PROMPT</label>
-                <textarea id="userPrompt" rows="5" placeholder="Detailed visual instructions, style, lighting, and cinematic effects..."></textarea>
-                
-                <button class="btn-render" onclick="triggerProduction()">EXECUTE PRODUCTION</button>
+        <main class="studio-card">
+            <div class="cost-badge">
+                <span class="cost-label">Estimated Production Cost:</span>
+                <span class="cost-amount"><span id="costDisplay">1</span> CREDITS</span>
             </div>
 
-            <div id="output-canvas">
-                <p id="idleText" style="color:#111; font-weight:900; letter-spacing:15px; font-size:2rem; text-align:center;">STUDIO STANDBY</p>
+            <label>CHOOSE PRODUCTION ENGINE</label>
+            <select id="engineSelect" onchange="updateCost()">
+                <option value="flux-pro">FLUX 1.1 PRO (Masterpiece Stills)</option>
+                <option value="kling-video">KLING 2.5 (High Motion Cinema)</option>
+                <option value="omni-human">OMNI-HUMAN (Digital Soul Lip-Sync)</option>
+            </select>
+
+            <label>UPLOAD REFERENCE ASSET</label>
+            <input type="file" id="assetFile">
+
+            <div id="timelineContainer" style="display:none; border-left: 2px solid var(--gold); padding-left: 20px; margin-bottom: 25px;">
+                <label>SCENE SCRIPT / DIALOGUE</label>
+                <textarea id="scriptText" rows="3" placeholder="Enter what you want the character to say..."></textarea>
             </div>
 
-            <!-- PRICING -->
-            <div class="pricing-wrap">
-                <div class="price-box">
-                    <h3>100 CREDITS</h3>
-                    <p style="font-size:1.8rem;">$10.00</p>
-                    <a href="https://buy.stripe.com/6oU8wRfbO4wqdQueDE8N200" class="btn-action">GET ACCESS</a>
-                </div>
-                <div class="price-box" style="border-color:var(--gold)">
-                    <h3>550 CREDITS</h3>
-                    <p style="font-size:1.8rem; color:var(--gold);">$45.00</p>
-                    <a href="https://buy.stripe.com/bJe7sNd3GbYS7s61QS8N201" class="btn-action">ELITE PRO</a>
-                </div>
+            <label>ARTISTIC DIRECTION / PROMPT</label>
+            <textarea id="studioPrompt" rows="4" placeholder="Describe lighting, mood, camera angles, and details..."></textarea>
+
+            <button class="render-btn" onclick="startProduction()">EXECUTE PRODUCTION</button>
+
+            <div id="studioOutput">
+                <p style="color:#111; font-weight:900; letter-spacing:10px; font-size:1.5rem;">STUDIO STANDBY</p>
             </div>
         </main>
 
-        <aside class="side-ad">
-            <div class="ad-card">
-                <p style="color:var(--gold); font-size:0.6rem; font-weight:900;">ELITE OFFER</p>
-                <img src="banner.png.png" onerror="this.src='1.png.png'">
-                <a href="https://t.vlmai-3.com/396104/7477?aff_sub5=SF_006OG000004lmDN" class="btn-action">CLAIM NOW</a>
+        <aside class="sidebar">
+            <div class="ad-box">
+                <img src="banner.png.png">
+                <a href="https://t.vlmai-3.com/396104/7477?aff_sub5=SF_006OG000004lmDN" style="color:var(--gold); font-weight:900; text-decoration:none; font-size:0.7rem;">ELITE REWARDS</a>
             </div>
         </aside>
     </div>
 
-    <!-- CAM FEED -->
-    <div style="padding: 60px 20px; background: #000; border-top: 3px solid var(--gold); text-align: center;">
-        <h2 style="color:var(--gold); letter-spacing:10px; margin-bottom:40px; text-transform:uppercase;">LIVE TALENT FEED</h2>
-        <div style="max-width:1200px; margin:0 auto;">
-            <script src="https://crxcr2.com/cams-widget-ext/script?landing_id=%7Boffer_url_id%7D&genders=f&providers=chaturbate%2Cimlive&skin=1&containerAlignment=center&cols=4&rows=1&number=4&background=transparent&useFeed=1&animateFeed=1&smoothAnimation=1&ratio=1&verticalSpace=10px&horizontalSpace=10px&colorFilter=0&colorFilterStrength=0&AuxiliaryCSS=%0A&lang=en&token=e698f390-051d-11f1-8e58-ffbaf8ca8890&api_key=8389c2842c3c186e10c4f3f6db2a1d92304aff4d6d1e8e47f25b9627f078d33a"></script>
+    <!-- LOGIN MODAL -->
+    <div id="loginModal">
+        <div class="modal-content">
+            <h2 style="color:var(--gold); margin-top:0;">VIP STUDIO LOGIN</h2>
+            <p style="color:#666; font-size:0.8rem;">Enter your registered email to access your production credits and assets.</p>
+            <input type="email" id="loginEmail" class="modal-input" placeholder="Your VIP Email Address">
+            <button class="render-btn" style="padding:15px; font-size:1rem;" onclick="processLogin()">AUTHENTICATE</button>
+            <p onclick="closeLogin()" style="margin-top:20px; cursor:pointer; font-size:0.7rem; color:var(--gold); text-decoration:underline;">CANCEL</p>
         </div>
     </div>
 
     <script>
-        let studioTool = 'img-to-img';
+        let currentMode = 'img-to-img';
+        let userEmail = localStorage.getItem('studio_email') || null;
 
-        function changeSection(tool, el) {
-            studioTool = tool;
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+        // Auto-login if email exists
+        if(userEmail) {
+            loginUI(userEmail);
+            updateCredits();
+        }
+
+        function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
+        function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
+
+        function processLogin() {
+            const email = document.getElementById('loginEmail').value;
+            if(!email.includes('@')) return alert("Enter a valid VIP email.");
+            localStorage.setItem('studio_email', email);
+            userEmail = email;
+            loginUI(email);
+            updateCredits();
+            closeLogin();
+        }
+
+        function loginUI(email) {
+            document.getElementById('authBtn').style.display = 'none';
+            document.getElementById('userPanel').style.display = 'flex';
+            document.getElementById('userHandle').innerText = email;
+        }
+
+        function updateCost() {
+            const engine = document.getElementById('engineSelect').value;
+            const costMap = { 'flux-pro': 1, 'kling-video': 10, 'omni-human': 15 };
+            document.getElementById('costDisplay').innerText = costMap[engine];
+        }
+
+        function setMode(mode, el) {
+            currentMode = mode;
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
             
-            // Toggle Timeline Visibility
-            document.getElementById('timeline').style.display = (tool === 'lip-sync') ? 'block' : 'none';
+            document.getElementById('timelineContainer').style.display = (mode === 'lip-sync') ? 'block' : 'none';
             
-            // Update Select defaults for better UX
-            const sel = document.getElementById('engineType');
-            if (tool === 'lip-sync') sel.value = 'omni-human';
-            if (tool === 'img-to-video') sel.value = 'kling-video';
-            if (tool === 'img-to-img') sel.value = 'flux-pro';
+            // Set engine automatically based on tab
+            const sel = document.getElementById('engineSelect');
+            if(mode === 'lip-sync') sel.value = 'omni-human';
+            if(mode === 'img-to-video') sel.value = 'kling-video';
+            if(mode === 'img-to-img') sel.value = 'flux-pro';
+            updateCost();
         }
 
-        async function loadCredits() {
-            const email = document.getElementById('emailAuth').value;
-            if(!email) return;
-            try {
-                const res = await fetch(`/api/credits?email=${email}`);
-                const data = await res.json();
-                document.getElementById('userCredits').innerText = data.credits || 0;
-            } catch(e) { console.log("Credit sync failed"); }
+        async function updateCredits() {
+            if(!userEmail) return;
+            const res = await fetch(`/api/credits?email=${userEmail}`);
+            const data = await res.json();
+            document.getElementById('liveCredits').innerText = data.credits || 0;
         }
 
-        async function triggerProduction() {
-            const canvas = document.getElementById('output-canvas');
-            canvas.innerHTML = '<div style="color:var(--gold); font-size:1.8rem; font-weight:900; animation: pulse 1s infinite;">PRODUCTION PHASE ACTIVE...</div>';
+        async function startProduction() {
+            if(!userEmail) return openLogin();
+            
+            const out = document.getElementById('studioOutput');
+            out.innerHTML = '<div style="color:var(--gold); font-size:1.5rem; animation: pulse 1.5s infinite;">PRODUCTION IN PROGRESS...</div>';
 
             try {
-                const file = document.getElementById('fileInput').files[0];
-                const reader = new FileReader();
+                const file = document.getElementById('assetFile').files[0];
                 let b64 = null;
-                
-                if (file) {
-                    b64 = await new Promise((resolve) => {
+                if(file) {
+                    b64 = await new Promise((res) => {
                         const r = new FileReader();
-                        r.onload = () => resolve(r.result);
+                        r.onload = () => res(r.result);
                         r.readAsDataURL(file);
                     });
                 }
@@ -262,40 +268,34 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        tool: studioTool,
-                        modelId: document.getElementById('engineType').value,
-                        prompt: document.getElementById('userPrompt').value,
+                        tool: currentMode,
+                        modelId: document.getElementById('engineSelect').value,
+                        prompt: document.getElementById('studioPrompt').value,
                         image: b64,
-                        email: document.getElementById('emailAuth').value
+                        email: userEmail
                     })
                 });
 
                 const job = await res.json();
-                startPolling(job.id);
+                poll(job.id);
             } catch (err) {
                 alert("Studio Error: " + err.message);
-                canvas.innerHTML = '<p style="color:red;">PRODUCTION FAILED</p>';
+                out.innerHTML = '<p style="color:red;">PRODUCTION FAILED</p>';
             }
         }
 
-        function startPolling(id) {
+        function poll(id) {
             const timer = setInterval(async () => {
                 const res = await fetch(`/api/status?id=${id}`);
                 const data = await res.json();
                 if (data.status === 'succeeded') {
                     clearInterval(timer);
-                    const resultUrl = Array.isArray(data.output) ? data.output[0] : data.output;
-                    const isVideo = resultUrl.includes('.mp4') || resultUrl.includes('.webm');
-                    
-                    document.getElementById('output-canvas').innerHTML = isVideo 
-                        ? `<video src="${resultUrl}" controls autoplay loop></video>`
-                        : `<img src="${resultUrl}">`;
-                    
-                    loadCredits();
-                }
-                if (data.status === 'failed') {
-                    clearInterval(timer);
-                    alert("Production engine failed to render.");
+                    const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
+                    const isVideo = resUrl.includes('.mp4') || resUrl.includes('.webm');
+                    document.getElementById('studioOutput').innerHTML = isVideo 
+                        ? `<video src="${resUrl}" controls autoplay loop></video>`
+                        : `<img src="${resUrl}">`;
+                    updateCredits();
                 }
             }, 3000);
         }
