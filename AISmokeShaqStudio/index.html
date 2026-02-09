@@ -3,162 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMOKE SHAQ STUDIO | PREMIUM AI</title>
+    <title>SMOKE SHAQ STUDIO | THE ELITE AI ENGINE</title>
     <style>
-        :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #050505; }
+        :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #050505; --dark-gray: #111; }
         body { 
             background: var(--black) url('diamindbackgroud.jpeg') fixed; 
-            background-size: cover;
-            color: white; font-family: 'Inter', sans-serif; margin: 0; 
+            background-size: cover; color: white; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; 
         }
         .main-layout { display: flex; justify-content: space-between; padding: 20px; gap: 20px; }
+        .ad-sidebar { width: 180px; min-height: 800px; background: rgba(0,0,0,0.8); border-left: 1px solid var(--gold); border-right: 1px solid var(--gold); padding: 15px; text-align: center; }
         
-        /* AD SIDEBARS */
-        .ad-sidebar { width: 160px; min-height: 600px; background: rgba(0,0,0,0.6); border: 1px solid var(--gold); border-radius: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .ad-box { width: 100%; height: 250px; background: linear-gradient(45deg, #111, #222); border: 1px solid #333; margin: 15px 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .ad-link { color: var(--gold); text-decoration: none; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; border: 1px solid var(--gold); padding: 8px; width: 80%; transition: 0.3s; }
-        .ad-link:hover { background: var(--gold); color: black; }
+        .studio-container { flex: 1; max-width: 1000px; margin: 0 auto; }
+        .logo-container { text-align: center; margin-bottom: 30px; }
+        .logo { max-width: 280px; filter: drop-shadow(0 0 20px var(--gold)); object-fit: contain; }
 
-        .studio-container { flex: 1; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
-        
-        .logo-container { width: 100%; display: flex; justify-content: center; margin-bottom: 20px; }
-        .logo { max-width: 250px; max-height: 120px; object-fit: contain; filter: drop-shadow(0 0 15px var(--gold)); }
-        
         .glass-panel { 
-            background: rgba(0,0,0,0.85); 
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--gold); 
-            padding: 30px; border-radius: 20px; 
-            width: 100%; box-shadow: 0 0 50px rgba(0,0,0,1); 
-            box-sizing: border-box;
+            background: rgba(0,0,0,0.9); border: 1px solid var(--gold); 
+            padding: 40px; border-radius: 25px; box-shadow: 0 0 100px rgba(0,0,0,1);
         }
 
-        .tabs { display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .tab { cursor: pointer; color: #777; font-weight: bold; font-size: 0.85rem; letter-spacing: 2px; }
-        .tab.active { color: var(--gold); text-shadow: 0 0 10px var(--gold); border-bottom: 2px solid var(--gold); }
+        .tabs { display: flex; gap: 30px; margin-bottom: 30px; border-bottom: 1px solid #222; }
+        .tab { cursor: pointer; color: #555; padding-bottom: 10px; font-weight: 800; font-size: 0.9rem; letter-spacing: 2px; transition: 0.3s; }
+        .tab.active { color: var(--gold); border-bottom: 3px solid var(--gold); text-shadow: 0 0 10px var(--gold); }
+
+        .control-group { margin-bottom: 20px; }
+        label { display: block; font-size: 0.7rem; color: var(--gold); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
         
-        select, textarea { 
-            width: 100%; background: #111; border: 1px solid #333; color: white; 
-            padding: 12px; border-radius: 8px; margin: 10px 0; box-sizing: border-box;
+        select, textarea, input[type="text"] { 
+            width: 100%; background: #0a0a0a; border: 1px solid #333; color: white; 
+            padding: 15px; border-radius: 10px; font-size: 0.9rem; box-sizing: border-box;
         }
+
+        /* TIMELINE UI */
+        .timeline-box { background: #050505; border: 1px dashed var(--gold); padding: 15px; border-radius: 10px; margin-top: 10px; }
+        .timeline-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .timestamp { width: 60px; text-align: center; background: var(--gold); color: black; font-weight: bold; border-radius: 4px; }
 
         .render-btn { 
             width: 100%; background: linear-gradient(135deg, #D4AF37 0%, #F9D976 50%, #D4AF37 100%); 
-            border: none; padding: 18px; font-weight: 900; cursor: pointer; border-radius: 8px; 
-            text-transform: uppercase; letter-spacing: 3px; color: #000; margin-top: 10px;
+            border: none; padding: 20px; font-weight: 900; cursor: pointer; border-radius: 12px; 
+            text-transform: uppercase; letter-spacing: 4px; color: #000; font-size: 1.1rem;
+            box-shadow: 0 10px 30px rgba(212,175,55,0.3); margin-top: 20px;
         }
 
         #output-container { 
-            margin-top: 30px; width: 100%; min-height: 400px; border: 1px solid #222; 
-            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-            background: #000; overflow: hidden; position: relative;
+            margin-top: 40px; width: 100%; min-height: 500px; background: #000; 
+            border: 1px solid #222; border-radius: 20px; display: flex; align-items: center; 
+            justify-content: center; position: relative; overflow: hidden;
         }
-        #output-container img, #output-container video { width: 100%; height: auto; }
+        #output-container video, #output-container img { width: 100%; border-radius: 15px; }
 
-        .status-badge { position: absolute; bottom: 20px; background: var(--gold); color: black; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+        .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
+        .price-card { background: rgba(255,255,255,0.03); border: 1px solid #222; padding: 30px; border-radius: 15px; text-align: center; transition: 0.3s; }
+        .price-card:hover { border-color: var(--gold); background: rgba(212,175,55,0.05); }
+        .buy-link { display: block; background: var(--gold); color: black; padding: 15px; border-radius: 8px; text-decoration: none; font-weight: 900; margin-top: 20px; }
 
-        /* STORE SECTION */
-        .store-section { margin-top: 40px; text-align: center; width: 100%; }
-        .credit-card { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 20px; border-radius: 12px; display: inline-block; width: 220px; margin: 10px; transition: 0.3s; vertical-align: top; }
-        .credit-card:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
-        .buy-btn { background: var(--gold); color: black; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; text-decoration: none; display: block; }
-        
-        /* WIDGET SECTION */
-        .widget-section { margin-top: 50px; width: 100%; background: rgba(0,0,0,0.8); border: 2px solid var(--gold); border-radius: 15px; padding: 20px; box-sizing: border-box; text-align: center; }
-        .user-stats { margin-bottom: 10px; font-size: 0.8rem; color: var(--gold); font-weight: bold; }
+        .cam-section { margin-top: 60px; padding: 30px; background: rgba(0,0,0,0.9); border: 2px solid var(--gold); border-radius: 20px; }
     </style>
 </head>
 <body>
 
     <div class="main-layout">
-        <!-- LEFT AFFILIATE SIDEBAR -->
+        <!-- Sidebar Left -->
         <div class="ad-sidebar">
-            <p style="color:var(--gold); font-size:0.7rem; font-weight:bold;">PREMIUM ACCESS</p>
-            <div class="ad-box">
-                <img src="banner.png.png" style="width:100%; height:100%; object-fit:cover;">
-            </div>
-            <a href="https://t.vlmai-3.com/396104/6924?aff_sub5=SF_006OG000004lmDN" target="_blank" class="ad-link">JOIN NOW</a>
-            <p style="font-size:0.6rem; color:#666; margin-top:15px;">Experience the elite studio features.</p>
+            <h4 style="color:var(--gold)">VIP CLUB</h4>
+            <div style="height:250px; background:url('banner.png.png') center/cover; margin:20px 0; border:1px solid #333;"></div>
+            <a href="https://t.vlmai-3.com/396104/6924?aff_sub5=SF_006OG000004lmDN" class="buy-link" style="font-size:0.7rem">ACCESS ELITE CONTENT</a>
         </div>
 
         <div class="studio-container">
             <div class="logo-container">
-                <img src="logo.jpg.jpg" class="logo" id="mainLogo">
+                <img src="logo.jpg.jpg" class="logo">
             </div>
-            
+
             <div class="glass-panel">
-                <div class="user-stats">VIP SESSION: <span id="creditCount">100 CREDITS</span></div>
-                
                 <div class="tabs">
                     <div class="tab active" onclick="setTool('img-to-img')">IMAGE STUDIO</div>
                     <div class="tab" onclick="setTool('img-to-video')">VIDEO ENGINE</div>
-                    <div class="tab" onclick="setTool('lip-sync')">LIP SYNC</div>
+                    <div class="tab" onclick="setTool('lip-sync')">PRO LIP SYNC</div>
                 </div>
 
-                <label style="font-size: 0.7rem; color: var(--gold); letter-spacing: 1px;">AI ENGINE MODEL</label>
-                <select id="modelSelector">
-                    <option value="flux-pro">FLUX 1.1 PRO (Masterpiece Quality)</option>
-                    <option value="realistic">REALISTIC VISION (Photo Studio)</option>
-                    <option value="img2img-pro">CINEMATIC TRANSFORM (Edit Source)</option>
-                    <option value="flux-schnell">FLUX FAST (Standard)</option>
-                </select>
+                <div class="control-group">
+                    <label>Select AI Engine</label>
+                    <select id="modelSelector">
+                        <option value="flux-pro">FLUX 1.1 PRO (Ultra High-End Images)</option>
+                        <option value="kling-video">KLING 2.5 TURBO (Pro Video Generation)</option>
+                        <option value="omni-human">OMNI-HUMAN (Digital Human Animation)</option>
+                        <option value="sync-pro">SYNC LABS 2.0 (Studio Lip Sync)</option>
+                    </select>
+                </div>
 
-                <div id="inputs">
-                    <input type="file" id="imageInput" accept="image/*" style="margin:10px 0; font-size:0.8rem;">
-                    <div id="audio-field" style="display:none;">
-                        <input type="file" id="audioInput" accept="audio/*">
+                <div class="control-group" id="imageGroup">
+                    <label>Source Media (Required)</label>
+                    <input type="file" id="mediaInput">
+                </div>
+
+                <div class="control-group" id="timelineGroup" style="display:none;">
+                    <label>Dialogue Timeline (Characters & Speech)</label>
+                    <div class="timeline-box">
+                        <div class="timeline-row">
+                            <div class="timestamp">0:01</div>
+                            <input type="text" placeholder="Character 1 Dialogue..." style="flex:1">
+                        </div>
+                        <div class="timeline-row">
+                            <div class="timestamp">0:05</div>
+                            <input type="text" placeholder="Character 2 Dialogue..." style="flex:1">
+                        </div>
+                        <p style="font-size:0.6rem; color:#666; margin:0;">AI will automatically detect and sync faces based on voice.</p>
                     </div>
-                    <textarea id="prompt" placeholder="Describe your creative vision..."></textarea>
-                    
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <label style="font-size: 0.7rem; color: #666;">CREATIVE FREEDOM</label>
-                        <input type="range" id="strength" min="1" max="10" step="0.5" value="7.5" style="width:70%; accent-color: var(--gold);">
-                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Creative Prompt / Script</label>
+                    <textarea id="prompt" rows="4" placeholder="Describe the scene or enter the full script here..."></textarea>
                 </div>
 
                 <button class="render-btn" onclick="startRender()">EXECUTE PRODUCTION</button>
 
                 <div id="output-container">
-                    <div id="displayArea"><p style="color:#333;">Initialize generation to view output...</p></div>
-                    <div id="statusBadge" class="status-badge" style="display:none;">READY</div>
+                    <div id="displayArea"><p style="color:#222; font-weight:800; letter-spacing:5px;">AWAITING COMMAND</p></div>
                 </div>
             </div>
 
-            <!-- MONETIZATION: STRIPE STORE -->
-            <div class="store-section">
-                <h3 style="color:var(--gold); letter-spacing:3px; text-transform:uppercase;">Recharge Studio Credits</h3>
-                <div class="credit-card">
-                    <h4>STARTER</h4>
-                    <p>100 CREDITS</p>
-                    <p style="font-size:1.5rem; color:var(--gold);">$10.00</p>
-                    <a href="https://buy.stripe.com/6oU8wRfbO4wqdQueDE8N200" target="_blank" class="buy-btn">PURCHASE</a>
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <h2 style="color:var(--gold)">100 CREDITS</h2>
+                    <p style="color:#777">Entry Level Production</p>
+                    <h1 style="margin:10px 0;">$10</h1>
+                    <a href="https://buy.stripe.com/6oU8wRfbO4wqdQueDE8N200" class="buy-link">BUY NOW</a>
                 </div>
-                <div class="credit-card">
-                    <h4>ELITE PRO</h4>
-                    <p>550 CREDITS</p>
-                    <p style="font-size:1.5rem; color:var(--gold); font-weight:bold;">$45.00</p>
-                    <a href="https://buy.stripe.com/bJe7sNd3GbYS7s61QS8N201" target="_blank" class="buy-btn">PURCHASE</a>
+                <div class="price-card" style="border-color:var(--gold)">
+                    <h2 style="color:var(--gold)">550 CREDITS</h2>
+                    <p style="color:#777">Professional Studio Bundle</p>
+                    <h1 style="margin:10px 0;">$45</h1>
+                    <a href="https://buy.stripe.com/bJe7sNd3GbYS7s61QS8N201" class="buy-link">BEST VALUE</a>
                 </div>
             </div>
 
-            <!-- LIVE CAM WIDGET -->
-            <div class="widget-section">
-                <h4 style="color:var(--gold); margin-top:0; letter-spacing:2px;">LIVE STUDIO FEED</h4>
-                <div id="cam-widget-container">
-                    <!-- YOUR WIDGET SCRIPT -->
-                    <script src="https://crxcr2.com/cams-widget-ext/script?landing_id=%7Boffer_url_id%7D&genders=f&providers=chaturbate%2Cimlive&skin=1&containerAlignment=center&cols=4&rows=1&number=4&background=transparent&useFeed=1&animateFeed=1&smoothAnimation=1&ratio=1&verticalSpace=10px&horizontalSpace=10px&colorFilter=0&colorFilterStrength=0&AuxiliaryCSS=%0A&lang=en&token=e698f390-051d-11f1-8e58-ffbaf8ca8890&api_key=8389c2842c3c186e10c4f3f6db2a1d92304aff4d6d1e8e47f25b9627f078d33a"></script>
-                </div>
+            <!-- Cam Widget -->
+            <div class="cam-section">
+                <h3 style="color:var(--gold); text-align:center; letter-spacing:5px; margin-bottom:30px;">LIVE TALENT FEED</h3>
+                <script src="https://crxcr2.com/cams-widget-ext/script?landing_id=%7Boffer_url_id%7D&genders=f&providers=chaturbate%2Cimlive&skin=1&containerAlignment=center&cols=4&rows=1&number=4&background=transparent&useFeed=1&animateFeed=1&smoothAnimation=1&ratio=1&verticalSpace=10px&horizontalSpace=10px&colorFilter=0&colorFilterStrength=0&AuxiliaryCSS=%0A&lang=en&token=e698f390-051d-11f1-8e58-ffbaf8ca8890&api_key=8389c2842c3c186e10c4f3f6db2a1d92304aff4d6d1e8e47f25b9627f078d33a"></script>
             </div>
         </div>
 
-        <!-- RIGHT AFFILIATE SIDEBAR -->
+        <!-- Sidebar Right -->
         <div class="ad-sidebar">
-            <p style="color:var(--gold); font-size:0.7rem; font-weight:bold;">LIMITED OFFER</p>
-            <div class="ad-box" style="background:#000; border-color:var(--gold);">
-                <span style="color:var(--gold); font-size:0.6rem; padding:10px;">ADVERTISER BLOCK</span>
-            </div>
-            <a href="https://t.vlmai-3.com/396104/7477?aff_sub5=SF_006OG000004lmDN" target="_blank" class="ad-link">CLAIM NOW</a>
-            <p style="font-size:0.6rem; color:#666; margin-top:15px;">Exclusive rewards for studio members.</p>
+            <h4 style="color:var(--gold)">PROMOS</h4>
+            <div style="height:200px; border:1px dashed var(--gold); display:flex; align-items:center; justify-content:center; margin:20px 0; font-size:0.6rem; color:#444;">AD SPACE</div>
+            <a href="https://t.vlmai-3.com/396104/7477?aff_sub5=SF_006OG000004lmDN" class="buy-link" style="font-size:0.7rem">CLAIM REWARD</a>
         </div>
     </div>
 
@@ -169,7 +162,9 @@
             currentTool = tool;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
-            document.getElementById('audio-field').style.display = (tool === 'lip-sync') ? 'block' : 'none';
+            
+            // Show timeline for Lip Sync
+            document.getElementById('timelineGroup').style.display = (tool === 'lip-sync') ? 'block' : 'none';
         }
 
         async function toBase64(file) {
@@ -183,15 +178,12 @@
         }
 
         async function startRender() {
-            const status = document.getElementById('statusBadge');
             const display = document.getElementById('displayArea');
-            status.style.display = 'block';
-            status.innerText = 'UPLOADING...';
-            display.innerHTML = '<div style="color:var(--gold); font-family:monospace;">STAGING AI CLUSTER...</div>';
+            display.innerHTML = '<div style="color:var(--gold); font-size:1.2rem; animation:pulse 1s infinite;">ENCRYPTING ASSETS & SYNCING CLUSTERS...</div>';
 
             try {
-                const imgBase64 = await toBase64(document.getElementById('imageInput').files[0]);
-                const audioBase64 = await toBase64(document.getElementById('audioInput').files[0]);
+                const mediaFile = document.getElementById('mediaInput').files[0];
+                const mediaBase64 = await toBase64(mediaFile);
 
                 const response = await fetch('/api/generate', {
                     method: 'POST',
@@ -200,45 +192,32 @@
                         tool: currentTool,
                         modelId: document.getElementById('modelSelector').value,
                         prompt: document.getElementById('prompt').value,
-                        image: imgBase64,
-                        audio: audioBase64,
-                        prompt_strength: document.getElementById('strength').value
+                        image: mediaBase64,
+                        prompt_strength: 8.0 // High quality default
                     })
                 });
 
                 const prediction = await response.json();
-                if (prediction.error) throw new Error(prediction.error);
                 poll(prediction.id);
             } catch (err) {
-                alert("Render System Error: " + err.message);
-                status.style.display = 'none';
+                alert("Studio Overload: " + err.message);
             }
         }
 
         async function poll(id) {
-            const status = document.getElementById('statusBadge');
+            const display = document.getElementById('displayArea');
             const interval = setInterval(async () => {
                 const res = await fetch(`/api/status?id=${id}`);
                 const data = await res.json();
-                status.innerText = data.status.toUpperCase();
                 
                 if (data.status === 'succeeded') {
                     clearInterval(interval);
-                    renderOutput(data.output);
-                } else if (data.status === 'failed') {
-                    clearInterval(interval);
-                    alert("AI Generation Encountered an Error.");
+                    const src = Array.isArray(data.output) ? data.output[0] : data.output;
+                    display.innerHTML = src.includes('.mp4') 
+                        ? `<video src="${src}" controls autoplay loop></video>`
+                        : `<img src="${src}">`;
                 }
             }, 3000);
-        }
-
-        function renderOutput(out) {
-            const display = document.getElementById('displayArea');
-            document.getElementById('statusBadge').style.display = 'none';
-            const src = Array.isArray(out) ? out[0] : out;
-            display.innerHTML = src.includes('.mp4') 
-                ? `<video src="${src}" controls autoplay loop></video>`
-                : `<img src="${src}">`;
         }
     </script>
 </body>
