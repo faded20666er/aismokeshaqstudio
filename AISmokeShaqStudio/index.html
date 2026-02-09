@@ -86,7 +86,27 @@
             cursor: pointer; text-transform: uppercase; box-shadow: 0 10px 30px rgba(212,175,55,0.2);
         }
 
-        /* LOGIN MODAL */
+        /* OUTPUT BOX */
+        #studioOutput {
+            margin-top: 50px; width: 100%; min-height: 500px; background: #000;
+            border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 1px solid #111; overflow: hidden; position: relative;
+        }
+        #studioOutput img, #studioOutput video { width: 100%; max-height: 800px; object-fit: contain; }
+
+        /* DOWNLOAD BUTTON (NEW) */
+        .dl-btn {
+            margin-top: 20px; padding: 15px 30px; background: transparent; 
+            border: 2px solid var(--gold); color: var(--gold); font-weight: 900;
+            text-decoration: none; border-radius: 8px; text-transform: uppercase;
+            font-size: 0.8rem; letter-spacing: 2px; transition: 0.3s; display: none;
+        }
+        .dl-btn:hover { background: var(--gold); color: black; }
+
+        .ad-box { background: #000; border: 1px solid #222; border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 20px; }
+        .ad-box img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
+
+        /* MODAL */
         #loginModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center;
@@ -96,17 +116,6 @@
             border-radius: 20px; text-align: center; width: 400px; box-shadow: 0 0 50px var(--gold);
         }
         .modal-input { width: 100%; padding: 15px; background: #000; border: 1px solid #333; color: white; margin: 20px 0; border-radius: 5px; }
-
-        /* OUTPUT BOX */
-        #studioOutput {
-            margin-top: 50px; width: 100%; min-height: 500px; background: #000;
-            border-radius: 15px; display: flex; align-items: center; justify-content: center;
-            border: 1px solid #111; overflow: hidden;
-        }
-        #studioOutput img, #studioOutput video { width: 100%; }
-
-        .ad-box { background: #000; border: 1px solid #222; border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 20px; }
-        .ad-box img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -114,7 +123,6 @@
     <div class="bg-layer"></div>
     <div class="overlay-layer"></div>
 
-    <!-- HEADER -->
     <header class="top-rocker">
         <div class="logo-text">SMOKE SHAQ STUDIO</div>
         <div class="auth-status">
@@ -167,10 +175,11 @@
             <button class="render-btn" onclick="startProduction()">EXECUTE PRODUCTION</button>
 
             <div id="studioOutput">
-                <p style="color:#111; font-weight:900; letter-spacing:10px; font-size:1.5rem;">STUDIO STANDBY</p>
+                <p id="standbyText" style="color:#111; font-weight:900; letter-spacing:10px; font-size:1.5rem;">STUDIO STANDBY</p>
+                <a id="downloadBtn" href="#" download="smoke-shaq-production.png" class="dl-btn">DOWNLOAD ASSET</a>
             </div>
 
-            <!-- PRICING OPTIONS -->
+            <!-- STRIPE PRICING -->
             <div style="display:flex; gap:20px; margin-top:50px;">
                 <div style="flex:1; border:1px solid #222; padding:20px; text-align:center; border-radius:15px;">
                     <h3 style="color:var(--gold); margin:0;">100 CREDITS</h3>
@@ -193,7 +202,7 @@
         </aside>
     </div>
 
-    <!-- RESTORED CAM WIDGET -->
+    <!-- LIVE TALENT FEED -->
     <div style="padding: 60px 20px; background: #000; border-top: 3px solid var(--gold); text-align: center;">
         <h2 style="color:var(--gold); letter-spacing:10px; margin-bottom:40px; text-transform:uppercase;">LIVE TALENT FEED</h2>
         <div style="max-width:1200px; margin:0 auto;">
@@ -201,11 +210,10 @@
         </div>
     </div>
 
-    <!-- LOGIN MODAL -->
+    <!-- MODAL -->
     <div id="loginModal">
         <div class="modal-content">
             <h2 style="color:var(--gold); margin-top:0;">VIP STUDIO LOGIN</h2>
-            <p style="color:#666; font-size:0.8rem;">Enter your registered email to access your production credits.</p>
             <input type="email" id="loginEmail" class="modal-input" placeholder="Your VIP Email Address">
             <button class="render-btn" style="padding:15px; font-size:1rem;" onclick="processLogin()">AUTHENTICATE</button>
             <p onclick="closeLogin()" style="margin-top:20px; cursor:pointer; font-size:0.7rem; color:var(--gold); text-decoration:underline;">CANCEL</p>
@@ -267,7 +275,10 @@
         async function startProduction() {
             if(!userEmail) return openLogin();
             const out = document.getElementById('studioOutput');
+            const dlBtn = document.getElementById('downloadBtn');
+            dlBtn.style.display = 'none';
             out.innerHTML = '<div style="color:var(--gold); font-size:1.5rem; animation: pulse 1.5s infinite;">PRODUCTION IN PROGRESS...</div>';
+            
             try {
                 const file = document.getElementById('assetFile').files[0];
                 let b64 = null;
@@ -298,6 +309,9 @@
         }
 
         function poll(id) {
+            const out = document.getElementById('studioOutput');
+            const dlBtn = document.getElementById('downloadBtn');
+            
             const timer = setInterval(async () => {
                 const res = await fetch(`/api/status?id=${id}`);
                 const data = await res.json();
@@ -305,9 +319,17 @@
                     clearInterval(timer);
                     const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
                     const isVideo = resUrl.includes('.mp4') || resUrl.includes('.webm');
-                    document.getElementById('studioOutput').innerHTML = isVideo 
+                    
+                    out.innerHTML = isVideo 
                         ? `<video src="${resUrl}" controls autoplay loop></video>`
                         : `<img src="${resUrl}">`;
+                    
+                    // Setup Download Button
+                    dlBtn.href = resUrl;
+                    dlBtn.download = isVideo ? "smoke-shaq-video.mp4" : "smoke-shaq-image.png";
+                    dlBtn.style.display = 'inline-block';
+                    out.appendChild(dlBtn);
+
                     updateCredits();
                 }
             }, 3000);
