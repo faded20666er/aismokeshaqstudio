@@ -6,94 +6,74 @@ const redis = new Redis({
 });
 
 export default async function handler(req, res) {
+    // Only allow POST
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const { modelId, prompt, image, audio, email } = req.body;
+    try {
+        const { modelId, prompt, image, audio, email } = req.body;
 
-    // 1. THE COST MAP (The Cash Register)
-    const costMap = {
-        'flux-pro': 5,
-        'flux-schnell': 5,
-        'kling-video': 15,
-        'luma-ray': 15,
-        'omni-human': 20,
-        'sync-pro': 20,
-        'cog-wav2lip': 20
-    };
-
-    const cost = costMap[modelId] || 5;
-
-    // 2. CREDIT CHECK (Skip check for your specific email)
-    if (email !== 'faded206@yahoo.com') {
-        const userCredits = await redis.get(`credits_${email}`) || 0;
-        if (userCredits < cost) {
-            return res.status(402).json({ error: `Insufficient Credits. This requires ${cost} credits.` });
+        if (!email) {
+            return res.status(400).json({ error: "Missing Email. Please Sign In." });
         }
-        // Deduct credits
-        await redis.set(`credits_${email}`, userCredits - cost);
-    }
 
-    // 3. MODEL MAPPING
-    let modelVersion = "";
-    let input = { prompt: prompt };
+        // 1. COST CALCULATION
+        const costMap = {
+            'flux-pro': 5,
+            'kling-video': 15,
+            'omni-human': 20,
+            'sync-pro': 20
+        };
+        const cost = costMap[modelId] || 5;
 
-    switch(modelId) {
-        case 'flux-pro':
+        // 2. CREDIT CHECK (Bypass for owner)
+        if (email !== 'faded206@yahoo.com') {
+            const userCredits = await redis.get(`credits_${email.toLowerCase().trim()}`) || 0;
+            if (Number(userCredits) < cost) {
+                return res.status(402).json({ error: `Need ${cost} credits. You have ${userCredits}.` });
+            }
+            await redis.set(`credits_${email.toLowerCase().trim()}`, Number(userCredits) - cost);
+        }
+
+        // 3. REPLICATE PREPARATION
+        let modelVersion = "";
+        let input = { prompt: prompt };
+
+        if (modelId === 'flux-pro') {
             modelVersion = "black-forest-labs/flux-1.1-pro";
-            input = { prompt: prompt, aspect_ratio: "1:1", output_format: "jpg" };
-            break;
-        
-        case 'kling-video':
+            input = { prompt: prompt, aspect_ratio: "1:1" };
+        } else if (modelId === 'kling-video') {
             modelVersion = "kwaivgi/kling-v2.5-turbo-pro";
-            input = { 
-                prompt: prompt, 
-                start_image: image || null,
-                duration: 5,
-                cfg_scale: 0.8
-            };
-            break;
-
-        case 'omni-human':
+            input = { prompt: prompt, start_image: image, duration: 5 };
+        } else if (modelId === 'omni-human') {
             modelVersion = "bytedance/omni-human-1.5";
-            input = { 
-                image: image,
-                audio: audio || "https://replicate.delivery/pbxt/JyS0Q9G.../test.mp3",
-                prompt: prompt
-            };
-            break;
-
-        case 'sync-pro':
-            modelVersion = "sync/lipsync-2-pro";
-            input = { 
-                video: image, 
-                audio: audio || "https://replicate.delivery/pbxt/JyS0Q9G.../test.mp3"
-            };
-            break;
-
-        default:
+            input = { image: image, audio: audio, prompt: prompt };
+        } else {
             modelVersion = "black-forest-labs/flux-schnell";
             input = { prompt: prompt };
-    }
+        }
 
-    // 4. EXECUTE REPLICATE CALL
-    try {
+        // 4. CALL REPLICATE
         const response = await fetch(`https://api.replicate.com/v1/models/${modelVersion}/predictions`, {
             method: "POST",
             headers: {
                 "Authorization": `Token ${process.env.REPLICATE_API_TOKEN}`,
                 "Content-Type": "application/json",
-                "Prefer": "wait=false" // Don't make Vercel timeout
             },
             body: JSON.stringify({ input: input }),
         });
 
         const prediction = await response.json();
-        
-        // Return the prediction ID so the frontend can poll for the result
-        res.status(200).json({ id: prediction.id });
+
+        if (!response.ok) {
+            console.error("Replicate API Error:", prediction);
+            return res.status(response.status).json({ error: prediction.detail || "AI Engine Error" });
+        }
+
+        return res.status(200).json({ id: prediction.id });
+
     } catch (error) {
-        console.error("Replicate Error:", error);
-        res.status(500).json({ error: error.message });
+        console.error("CRITICAL SERVER ERROR:", error);
+        return res.status(500).json({ error: error.message });
     }
 }
 
