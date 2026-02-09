@@ -1,60 +1,60 @@
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-    const TOKEN = process.env.REPLICATE_API_TOKEN;
+    const { tool, modelId, prompt, image, audio, prompt_strength } = req.body;
+
+    let modelVersion = "";
+    let input = { prompt: prompt };
+
+    // MAPPING TO YOUR NEW HIGH-END MODELS
+    switch(modelId) {
+        case 'flux-pro':
+            modelVersion = "black-forest-labs/flux-1.1-pro";
+            input = { prompt: prompt, aspect_ratio: "1:1", output_format: "jpg" };
+            break;
+        
+        case 'kling-video': // KLING 2.5
+            modelVersion = "kwaivgi/kling-v2.5-turbo-pro";
+            input = { 
+                prompt: prompt, 
+                start_image: image || null,
+                duration: 5,
+                cfg_scale: 0.8
+            };
+            break;
+
+        case 'omni-human': // OMNI HUMAN 1.5
+            modelVersion = "bytedance/omni-human-1.5";
+            input = { 
+                image: image,
+                audio: audio || "https://replicate.delivery/pbxt/JyS0Q9G.../test.mp3", // Fallback
+                prompt: prompt
+            };
+            break;
+
+        case 'sync-pro': // SYNC LABS 2.0
+            modelVersion = "sync/lipsync-2-pro";
+            input = { 
+                video: image, // Uses image as a static video
+                audio: audio || "https://replicate.delivery/pbxt/JyS0Q9G.../test.mp3"
+            };
+            break;
+
+        default:
+            modelVersion = "black-forest-labs/flux-schnell";
+    }
 
     try {
-        const { tool, prompt, image, audio, prompt_strength, modelId } = req.body;
-        let url = 'https://api.replicate.com/v1/predictions';
-        let body;
-
-        const scale = Math.max(1, parseFloat(prompt_strength) || 1.5);
-
-        // MODEL MAPPING
-        if (tool === 'img-to-video') {
-            url = 'https://api.replicate.com/v1/models/wan-video/wan-2.5-i2v-fast/predictions';
-            body = { input: { image, prompt: prompt || 'cinematic motion' } };
-        } 
-        else if (tool === 'lip-sync') {
-            body = {
-                version: '8d65e3f4f4298520e079198b493c25adfc43c058ffec924f2aefc8010ed25eef',
-                input: { face: image, audio: audio }
-            };
-        }
-        else {
-            // IMAGE GENERATION (Text or Img2Img)
-            switch(modelId) {
-                case 'flux-pro': // Top Quality
-                    url = 'https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions';
-                    body = { input: { prompt, aspect_ratio: "1:1" } };
-                    break;
-                case 'realistic': // Photography style
-                    body = { 
-                        version: "ac68270a3014fb05c7f19672661876805d7621434190c64c57503463a5658e4b",
-                        input: { prompt: "hyper-realistic photography, " + prompt, image: image || null } 
-                    };
-                    break;
-                case 'img2img-pro': // High-end image transformation
-                    body = {
-                        version: "30c1d0b916a6f8efce20493f5d61ee27491ab2a60437c13c588468b9810ec23f",
-                        input: { image, prompt, image_guidance_scale: scale }
-                    };
-                    break;
-                default: // flux-schnell (Standard/Fast)
-                    url = 'https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions';
-                    body = { input: { prompt, image: image || null } };
-            }
-        }
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+        const response = await fetch(`https://api.replicate.com/v1/models/${modelVersion}/predictions`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Token ${process.env.REPLICATE_API_TOKEN}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ input: input }),
         });
 
         const prediction = await response.json();
-        return res.status(200).json(prediction);
-
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
+        res.status(200).json(prediction);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 }
