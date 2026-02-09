@@ -1,4 +1,4 @@
-b <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,12 +16,12 @@ b <!DOCTYPE html>
         .bg-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: url('diamindbackgroud.jpeg') center/cover;
-            filter: brightness(1.4) contrast(1.1); /* Brightens diamonds before the overlay */
+            filter: brightness(1.5) contrast(1.2); 
             z-index: -2;
         }
         .overlay-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.9) 80%);
+            background: radial-gradient(circle, transparent 10%, rgba(0,0,0,0.92) 85%);
             z-index: -1;
         }
 
@@ -50,12 +50,12 @@ b <!DOCTYPE html>
         }
         .credit-val { color: var(--gold); font-weight: 900; font-size: 1.1rem; }
 
-        /* NAVIGATION */
-        .page-nav { display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.6); padding: 15px 0; border-bottom: 1px solid #222; backdrop-filter: blur(10px); }
+        /* NAVIGATION TABS */
+        .page-nav { display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.7); padding: 15px 0; border-bottom: 1px solid #222; backdrop-filter: blur(10px); }
         .nav-item { cursor: pointer; color: #777; font-weight: 900; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
         .nav-item.active { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
 
-        /* MAIN STUDIO */
+        /* MAIN STUDIO LAYOUT */
         .main-layout { display: flex; justify-content: center; padding: 50px; gap: 40px; }
         .sidebar { width: 180px; }
         .studio-card { 
@@ -64,7 +64,7 @@ b <!DOCTYPE html>
             box-shadow: 0 0 100px rgba(0,0,0,1);
         }
 
-        /* DYNAMIC PRICING BADGE */
+        /* COST BADGE */
         .cost-badge {
             background: #111; border-left: 4px solid var(--gold);
             padding: 12px 20px; margin-bottom: 30px; display: flex; 
@@ -73,17 +73,17 @@ b <!DOCTYPE html>
         .cost-label { font-size: 0.7rem; color: #888; font-weight: 900; text-transform: uppercase; }
         .cost-amount { color: var(--gold); font-weight: 900; font-size: 1rem; }
 
-        /* FORM STYLING */
-        label { color: var(--gold); font-size: 0.65rem; font-weight: 900; letter-spacing: 1px; display: block; margin-bottom: 8px; }
+        /* FORM ELEMENTS */
+        label { color: var(--gold); font-size: 0.65rem; font-weight: 900; letter-spacing: 1px; display: block; margin-bottom: 8px; text-transform: uppercase; }
         select, textarea, input[type="file"] {
             width: 100%; background: #000; border: 1px solid #222; color: white;
-            padding: 18px; border-radius: 12px; margin-bottom: 25px; box-sizing: border-box;
+            padding: 18px; border-radius: 12px; margin-bottom: 25px; box-sizing: border-box; font-size: 0.9rem;
         }
         .render-btn {
             width: 100%; padding: 25px; border: none; border-radius: 12px;
             background: linear-gradient(135deg, #D4AF37, #F9D976, #D4AF37);
             color: black; font-weight: 900; font-size: 1.2rem; letter-spacing: 4px;
-            cursor: pointer; text-transform: uppercase;
+            cursor: pointer; text-transform: uppercase; box-shadow: 0 10px 30px rgba(212,175,55,0.2);
         }
 
         /* LOGIN MODAL */
@@ -169,6 +169,20 @@ b <!DOCTYPE html>
             <div id="studioOutput">
                 <p style="color:#111; font-weight:900; letter-spacing:10px; font-size:1.5rem;">STUDIO STANDBY</p>
             </div>
+
+            <!-- PRICING OPTIONS -->
+            <div style="display:flex; gap:20px; margin-top:50px;">
+                <div style="flex:1; border:1px solid #222; padding:20px; text-align:center; border-radius:15px;">
+                    <h3 style="color:var(--gold); margin:0;">100 CREDITS</h3>
+                    <p>$10.00</p>
+                    <a href="https://buy.stripe.com/6oU8wRfbO4wqdQueDE8N200" style="color:white; text-decoration:none; font-size:0.8rem; border:1px solid var(--gold); padding:10px; display:block; border-radius:5px;">BUY NOW</a>
+                </div>
+                <div style="flex:1; border:1px solid var(--gold); padding:20px; text-align:center; border-radius:15px; background:rgba(212,175,55,0.05);">
+                    <h3 style="color:var(--gold); margin:0;">550 CREDITS</h3>
+                    <p>$45.00</p>
+                    <a href="https://buy.stripe.com/bJe7sNd3GbYS7s61QS8N201" style="color:black; background:var(--gold); text-decoration:none; font-size:0.8rem; padding:10px; display:block; border-radius:5px; font-weight:bold;">BEST VALUE</a>
+                </div>
+            </div>
         </main>
 
         <aside class="sidebar">
@@ -179,11 +193,19 @@ b <!DOCTYPE html>
         </aside>
     </div>
 
+    <!-- RESTORED CAM WIDGET -->
+    <div style="padding: 60px 20px; background: #000; border-top: 3px solid var(--gold); text-align: center;">
+        <h2 style="color:var(--gold); letter-spacing:10px; margin-bottom:40px; text-transform:uppercase;">LIVE TALENT FEED</h2>
+        <div style="max-width:1200px; margin:0 auto;">
+            <script src="https://crxcr2.com/cams-widget-ext/script?landing_id=%7Boffer_url_id%7D&genders=f&providers=chaturbate%2Cimlive&skin=1&containerAlignment=center&cols=4&rows=1&number=4&background=transparent&useFeed=1&animateFeed=1&smoothAnimation=1&ratio=1&verticalSpace=10px&horizontalSpace=10px&colorFilter=0&colorFilterStrength=0&AuxiliaryCSS=%0A&lang=en&token=e698f390-051d-11f1-8e58-ffbaf8ca8890&api_key=8389c2842c3c186e10c4f3f6db2a1d92304aff4d6d1e8e47f25b9627f078d33a"></script>
+        </div>
+    </div>
+
     <!-- LOGIN MODAL -->
     <div id="loginModal">
         <div class="modal-content">
             <h2 style="color:var(--gold); margin-top:0;">VIP STUDIO LOGIN</h2>
-            <p style="color:#666; font-size:0.8rem;">Enter your registered email to access your production credits and assets.</p>
+            <p style="color:#666; font-size:0.8rem;">Enter your registered email to access your production credits.</p>
             <input type="email" id="loginEmail" class="modal-input" placeholder="Your VIP Email Address">
             <button class="render-btn" style="padding:15px; font-size:1rem;" onclick="processLogin()">AUTHENTICATE</button>
             <p onclick="closeLogin()" style="margin-top:20px; cursor:pointer; font-size:0.7rem; color:var(--gold); text-decoration:underline;">CANCEL</p>
@@ -194,11 +216,7 @@ b <!DOCTYPE html>
         let currentMode = 'img-to-img';
         let userEmail = localStorage.getItem('studio_email') || null;
 
-        // Auto-login if email exists
-        if(userEmail) {
-            loginUI(userEmail);
-            updateCredits();
-        }
+        if(userEmail) { loginUI(userEmail); updateCredits(); }
 
         function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
         function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
@@ -229,10 +247,7 @@ b <!DOCTYPE html>
             currentMode = mode;
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
-            
             document.getElementById('timelineContainer').style.display = (mode === 'lip-sync') ? 'block' : 'none';
-            
-            // Set engine automatically based on tab
             const sel = document.getElementById('engineSelect');
             if(mode === 'lip-sync') sel.value = 'omni-human';
             if(mode === 'img-to-video') sel.value = 'kling-video';
@@ -242,17 +257,17 @@ b <!DOCTYPE html>
 
         async function updateCredits() {
             if(!userEmail) return;
-            const res = await fetch(`/api/credits?email=${userEmail}`);
-            const data = await res.json();
-            document.getElementById('liveCredits').innerText = data.credits || 0;
+            try {
+                const res = await fetch(`/api/credits?email=${userEmail}`);
+                const data = await res.json();
+                document.getElementById('liveCredits').innerText = data.credits || 0;
+            } catch(e) { console.log("Credit sync offline"); }
         }
 
         async function startProduction() {
             if(!userEmail) return openLogin();
-            
             const out = document.getElementById('studioOutput');
             out.innerHTML = '<div style="color:var(--gold); font-size:1.5rem; animation: pulse 1.5s infinite;">PRODUCTION IN PROGRESS...</div>';
-
             try {
                 const file = document.getElementById('assetFile').files[0];
                 let b64 = null;
@@ -263,7 +278,6 @@ b <!DOCTYPE html>
                         r.readAsDataURL(file);
                     });
                 }
-
                 const res = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -275,7 +289,6 @@ b <!DOCTYPE html>
                         email: userEmail
                     })
                 });
-
                 const job = await res.json();
                 poll(job.id);
             } catch (err) {
@@ -302,4 +315,3 @@ b <!DOCTYPE html>
     </script>
 </body>
 </html>
-
