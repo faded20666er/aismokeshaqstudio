@@ -64,7 +64,7 @@
             background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.85) 70%, #000 100%); 
         }
 
-        /* HEADER & PENDANT SYSTEM - MASTER FIX */
+        /* HEADER & PENDANT SYSTEM */
         .header-container { 
             width: 100%; 
             position: sticky; 
@@ -85,7 +85,7 @@
             padding: 0 20px; 
         }
 
-  .logo-group { 
+        .logo-group { 
             position: absolute;
             left: 50%;
             top: 50%;
@@ -94,21 +94,11 @@
             flex-direction: column;
             align-items: center; 
             justify-content: center;
-            pointer-events: none; /* Crucial: clicks go through this layer */
+            pointer-events: none; 
             z-index: 10;
-        }
-         .logo-text { 
-            display: none; 
         }
 
         .pendant-box { 
-            height: 150px; 
-            display: flex;
-            justify-content: center;
-            pointer-events: none;
-        }
-
-       .pendant-box { 
             position: absolute; 
             top: -50px; 
             height: 150px; 
@@ -116,23 +106,26 @@
             z-index: 10; 
             display: flex;
             justify-content: center;
-            width: auto; /* Changed from 100% to auto so it doesn't block the right side */
+            width: auto;
             left: 50%;
             transform: translateX(-50%);
         }
+
         .pendant-img { 
             height: 100%; 
             filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)); 
         }
+
         .auth-status { 
-            margin-left: auto; /* Pushes it to the far right */
+            margin-left: auto; 
             display: flex; 
             align-items: center; 
             gap: 20px; 
-            z-index: 9999; /* Higher than everything else */
+            z-index: 9999; 
             position: relative;
-            pointer-events: auto !important; /* Forces clickability */
+            pointer-events: auto !important;
         }
+
         .login-btn { 
             background: transparent; 
             border: 1px solid var(--gold); 
@@ -176,7 +169,6 @@
             color: var(--gold); 
             text-shadow: 0 0 15px rgba(212,175,55,0.5); 
         }
-
 
         /* LAYOUT */
         .main-layout { 
@@ -357,6 +349,17 @@
             border-top: 1px solid #222; 
         }
 
+        .footer {
+            padding: 40px 0;
+            text-align: center;
+            background: #000;
+            color: #444;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            font-weight: 900;
+            border-top: 1px solid #111;
+        }
+
         @keyframes jiggle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
     </style>
@@ -372,17 +375,14 @@
      <div class="header-container">
         <header class="top-rocker" style="position: relative; display: flex; width: 100%; align-items: center; padding: 0 40px; box-sizing: border-box;">
             
-            <!-- LEFT AREA (Empty to keep balance) -->
             <div style="width: 200px;"></div> 
             
-            <!-- CENTER LOGO UNIT (Now absolute positioned) -->
             <div class="logo-group">
                 <div class="pendant-box">
                     <img src="pendant.png" class="pendant-img" alt="Elite Pendant">
                 </div>
             </div>
 
-            <!-- RIGHT AUTH UNIT -->
             <div class="auth-status">
                 <button id="authBtn" class="login-btn" onclick="openLogin()">SIGN IN / JOIN VIP</button>
                <div id="userPanel" style="display:none; align-items:center; gap:15px; background:rgba(212,175,55,0.1); padding:8px 25px; border-radius:50px; border:1px solid rgba(212,175,55,0.2);">
@@ -403,8 +403,6 @@
             </div>
         </nav>
     </div>
-
-
 
     <div class="main-layout">
         <aside class="sidebar">
@@ -472,7 +470,11 @@
         </div>
     </div>
 
-    <!-- CHAT & LOGIN UI -->
+    <!-- AI FOOTER -->
+    <footer class="footer">
+        POWERED BY GEMINI 3.0 FLASH PREVIEW & SMOKE SHAQ PRODUCTIONS
+    </footer>
+
     <div class="ai-fab-container">
         <div class="ai-label">PROMPT HELP</div>
         <div class="ai-fab" onclick="toggleChat()">✨</div>
@@ -518,12 +520,12 @@
             'lip-sync': [{ id: 'omni-human', name: 'OMNI-HUMAN', cost: 20 }] 
         };
 
-        function openLogin() { 
-            document.getElementById('loginModal').style.display = 'flex'; 
-        }
+        function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
+        function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
 
-        function closeLogin() { 
-            document.getElementById('loginModal').style.display = 'none'; 
+        function logout() {
+            localStorage.removeItem('studio_email');
+            window.location.reload();
         }
 
         function processLogin() { 
@@ -565,9 +567,7 @@
             input.value = '';
         }
 
-        function applyPrompt(p) { 
-            document.getElementById('studioPrompt').value = p; 
-        }
+        function applyPrompt(p) { document.getElementById('studioPrompt').value = p; }
 
         function setMode(mode, el) { 
             currentMode = mode; 
@@ -591,30 +591,20 @@
             if(m) document.getElementById('costDisplay').innerText = m.cost; 
         }
 
-           async function updateCredits() { 
+        async function updateCredits() { 
             if(!userEmail) return; 
             try { 
                 const res = await fetch(`/api/credits?email=${userEmail}`); 
                 const data = await res.json(); 
-                
-                // Get credits from database, or default to 0
                 userCredits = data.credits || 0; 
-
-                // NEW: Welcome Gift Logic for your Ads
-                // If a new user has 0 credits, we give them 50 to start
                 const giftKey = 'gift_claimed_' + userEmail;
                 if(userCredits === 0 && !localStorage.getItem(giftKey)) {
                     userCredits = 50; 
-                    // This tells the browser they've received their starter pack
                     localStorage.setItem(giftKey, 'true'); 
                 }
-
                 document.getElementById('liveCredits').innerText = userCredits; 
-            } catch(e) {
-                console.log("Credit sync standby...");
-            } 
+            } catch(e) { console.log("Credit sync standby..."); } 
         }
-
 
         function pimpPrompt() { 
             const area = document.getElementById('studioPrompt'); 
@@ -688,14 +678,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
