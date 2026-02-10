@@ -243,15 +243,15 @@
             ]
         };
 
-        // --- 2. UI INITIALIZATION ---
+              // --- 2. UI INITIALIZATION ---
         if(userEmail) { loginUI(userEmail); updateCredits(); }
-        updateEngineDropdown(); // Set initial dropdown
+        updateEngineDropdown(); 
 
         function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
         function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
 
         function processLogin() {
-            const email = document.getElementById('loginEmail').value;
+            const email = document.getElementById('loginEmail').value.toLowerCase().trim();
             if(!email.includes('@')) return alert("Enter a valid VIP email.");
             localStorage.setItem('studio_email', email);
             userEmail = email;
@@ -262,14 +262,21 @@
 
         function loginUI(email) {
             document.getElementById('authBtn').style.display = 'none';
-            document.getElementById('userPanel').style.display = 'flex';
+            const panel = document.getElementById('userPanel');
+            panel.style.display = 'flex'; 
             document.getElementById('userHandle').innerText = email;
         }
 
-        function setMode(mode, el) {
-            currentMode = mode;
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            el.classList.add('active');
+        // --- THE LOGOUT COMMAND ---
+        function logout() {
+            localStorage.removeItem('studio_email'); // Deletes the saved login
+            userEmail = null;
+            document.getElementById('authBtn').style.display = 'block';
+            document.getElementById('userPanel').style.display = 'none';
+            document.getElementById('liveCredits').innerText = '0';
+            window.location.reload(); // Refresh to ensure a clean slate
+        }
+
             
             // Show/Hide Timeline for Lip Sync
             document.getElementById('timelineContainer').style.display = (mode === 'lip-sync') ? 'block' : 'none';
@@ -367,6 +374,7 @@
     </script>
 </body>
 </html>
+
 
 
 
