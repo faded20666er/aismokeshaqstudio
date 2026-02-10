@@ -8,116 +8,134 @@
         :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #050505; --dark-glass: rgba(0,0,0,0.92); }
         body { background: #000; color: white; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow-x: hidden; }
         
+        /* BACKGROUND LAYERS */
         .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('golddustbackdrop.png') center/cover, url('diamindbackgroud.jpeg') center/cover; background-blend-mode: overlay; filter: brightness(1.5) contrast(1.2); z-index: -2; }
         .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 10%, rgba(0,0,0,0.95) 90%); z-index: -1; }
         
-        .top-rocker { width: 100%; height: 100px; background: #000; border-bottom: 2px solid var(--gold); display: flex; align-items: center; justify-content: space-between; padding: 0 60px; box-sizing: border-box; position: sticky; top: 0; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
-        .logo-text { color: var(--gold); font-weight: 900; font-size: 1.8rem; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 20px rgba(212,175,55,0.4); }
+        /* THE PENDANT HEADER (NEW) */
+        .top-rocker { 
+            width: 100%; height: 120px; background: #000; 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 60px; box-sizing: border-box; position: sticky; top: 0; z-index: 1000;
+        }
+        
+        .pendant-container {
+            position: absolute; left: 240px; top: 0; height: 160px; z-index: 1100;
+            pointer-events: none;
+        }
+        .pendant-img { height: 100%; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8)); }
+
+        .logo-text { color: var(--gold); font-weight: 900; font-size: 1.8rem; letter-spacing: 3px; text-transform: uppercase; }
         
         .auth-status { display: flex; align-items: center; gap: 30px; }
-        .login-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 28px; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        .login-btn:hover { background: var(--gold); color: black; box-shadow: 0 0 20px var(--gold); }
-        .credit-display { display: none; align-items: center; gap: 15px; background: rgba(212,175,55,0.1); padding: 10px 25px; border-radius: 50px; border: 1px solid rgba(212,175,55,0.2); }
-        .credit-val { color: var(--gold); font-weight: 900; font-size: 1.1rem; }
+        .login-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 10px 25px; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .login-btn:hover { background: var(--gold); color: black; }
 
-        .page-nav { display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.8); padding: 18px 0; border-bottom: 1px solid #222; backdrop-filter: blur(15px); }
-        .nav-item { cursor: pointer; color: #555; font-weight: 900; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
-        .nav-item.active { color: var(--gold); text-shadow: 0 0 15px var(--gold); }
+        .credit-display { display: none; align-items: center; gap: 15px; background: rgba(212,175,55,0.1); padding: 8px 20px; border-radius: 50px; border: 1px solid rgba(212,175,55,0.2); }
+        .credit-val { color: var(--gold); font-weight: 900; }
 
-        .main-layout { display: flex; justify-content: center; padding: 50px 20px; gap: 40px; max-width: 1600px; margin: 0 auto; }
+        /* NAV BAR WITH GOLD DIVIDER */
+        .nav-wrapper { width: 100%; border-top: 2px solid var(--gold); background: #000; position: sticky; top: 120px; z-index: 900; }
+        .page-nav { display: flex; justify-content: center; gap: 40px; padding: 15px 0; }
+        .nav-item { cursor: pointer; color: #555; font-weight: 900; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
+        .nav-item.active { color: var(--gold); }
+
+        /* STUDIO LAYOUT */
+        .main-layout { display: flex; justify-content: center; padding: 60px 20px; gap: 40px; max-width: 1600px; margin: 0 auto; }
         .sidebar { width: 250px; }
         .studio-card { flex: 1; max-width: 850px; background: var(--dark-glass); border: 1px solid #222; border-radius: 24px; padding: 40px; box-shadow: 0 0 100px rgba(0,0,0,1); }
         
-        .cost-badge { background: #000; border: 1px solid #222; border-left: 4px solid var(--gold); padding: 15px 25px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; }
-        label { color: var(--gold); font-size: 0.7rem; font-weight: 900; display: block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1.5px; }
-        select, textarea, input[type="file"], input[type="range"] { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 18px; border-radius: 12px; margin-bottom: 25px; box-sizing: border-box; font-size: 0.95rem; }
+        /* FORM & BUTTONS */
+        .cost-badge { background: #000; border: 1px solid #222; border-left: 4px solid var(--gold); padding: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+        label { color: var(--gold); font-size: 0.65rem; font-weight: 900; display: block; margin-bottom: 8px; text-transform: uppercase; }
+        select, textarea, input[type="file"], input[type="range"] { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 18px; border-radius: 12px; margin-bottom: 25px; box-sizing: border-box; }
         
-        .magic-btn { background: #111; border: 1px solid #444; color: var(--gold); padding: 8px 15px; border-radius: 6px; font-size: 0.65rem; font-weight: 900; cursor: pointer; float: right; margin-top: -45px; position: relative; z-index: 10; text-transform: uppercase; transition: 0.3s; }
-        .render-btn { width: 100%; padding: 25px; border: none; border-radius: 12px; background: linear-gradient(135deg, #D4AF37, #F9D976, #D4AF37); color: black; font-weight: 900; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; letter-spacing: 4px; transition: 0.4s; }
+        .magic-btn { background: #111; border: 1px solid #444; color: var(--gold); padding: 8px 15px; border-radius: 6px; font-size: 0.6rem; font-weight: 900; cursor: pointer; float: right; margin-top: -45px; position: relative; z-index: 10; }
+        .render-btn { width: 100%; padding: 25px; border: none; border-radius: 12px; background: linear-gradient(135deg, #D4AF37, #F9D976, #D4AF37); color: black; font-weight: 900; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; letter-spacing: 4px; }
         
-        #studioOutput { margin-top: 50px; width: 100%; min-height: 500px; background: #000; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #111; position: relative; overflow: hidden; }
-        #studioOutput img, #studioOutput video { width: 100%; max-height: 800px; border-radius: 10px; }
-        
-        .ad-box { background: #000; border: 1px solid #222; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 30px; }
-        .ad-box img { width: 100%; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; }
+        #studioOutput { margin-top: 50px; width: 100%; min-height: 500px; background: #000; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #111; overflow: hidden; }
+        #studioOutput img, #studioOutput video { width: 100%; }
 
-        /* JIGGLING AI ASSISTANT ORB */
+        /* AI ORB */
         .ai-fab-container { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: center; z-index: 2000; }
-        .ai-label { background: var(--gold); color: black; font-size: 0.6rem; font-weight: 900; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; letter-spacing: 1px; animation: jiggle 2s infinite; }
-        .ai-fab { width: 70px; height: 70px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; cursor: pointer; box-shadow: 0 0 30px var(--gold); transition: 0.3s; }
-        .ai-fab:hover { transform: scale(1.1); }
+        .ai-label { background: var(--gold); color: black; font-size: 0.6rem; font-weight: 900; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; animation: jiggle 2s infinite; }
+        .ai-fab { width: 70px; height: 70px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; cursor: pointer; box-shadow: 0 0 30px var(--gold); }
         
-        #aiChatWindow { display: none; position: fixed; bottom: 120px; right: 30px; width: 380px; height: 550px; background: #0a0a0a; border: 1px solid var(--gold); border-radius: 20px; z-index: 2000; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,1); }
-        .chat-header { background: #000; padding: 20px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        #aiChatWindow { display: none; position: fixed; bottom: 120px; right: 30px; width: 380px; height: 550px; background: #0a0a0a; border: 1px solid var(--gold); border-radius: 20px; z-index: 2000; flex-direction: column; overflow: hidden; }
         .chat-body { flex: 1; padding: 20px; overflow-y: auto; font-size: 0.8rem; color: #ccc; }
-        .chat-footer { padding: 15px; background: #000; border-top: 1px solid #222; display: flex; }
-        .chat-input { flex: 1; background: #111; border: 1px solid #333; color: white; padding: 10px; border-radius: 5px; margin-right: 10px; }
-        
-        .ai-msg { background: rgba(212,175,55,0.1); padding: 15px; border-radius: 10px; border-left: 3px solid var(--gold); margin-bottom: 20px; position: relative; }
-        .use-this-btn { background: #111; border: 1px solid var(--gold); color: var(--gold); font-size: 0.6rem; padding: 5px 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; font-weight: 900; text-transform: uppercase; }
-        .user-msg { text-align: right; color: var(--gold); margin-bottom: 15px; font-weight: 900; font-size: 0.75rem; }
+        .ai-msg { background: rgba(212,175,55,0.1); padding: 15px; border-radius: 10px; border-left: 3px solid var(--gold); margin-bottom: 20px; }
+        .use-this-btn { background: #111; border: 1px solid var(--gold); color: var(--gold); font-size: 0.6rem; padding: 5px 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; font-weight: 900; }
 
-        /* LOGIN MODAL */
-        #loginModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: #080808; border: 1px solid var(--gold); padding: 60px; border-radius: 30px; text-align: center; width: 450px; }
-        
-        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
         @keyframes jiggle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
     </style>
 </head>
 <body>
     <div class="bg-layer"></div>
     <div class="overlay-layer"></div>
 
+    <!-- PENDANT HEADER SECTION -->
     <header class="top-rocker">
         <div class="logo-text">SMOKE SHAQ STUDIO</div>
+        <div class="pendant-container">
+            <!-- Ensure you upload your image as 'pendant.png' -->
+            <img src="pendant.png" class="pendant-img" alt="Jewelry Piece">
+        </div>
         <div class="auth-status">
             <button id="authBtn" class="login-btn" onclick="openLogin()">SIGN IN / JOIN VIP</button>
             <div id="userPanel" class="credit-display">
-                <span id="userHandle" style="font-size: 0.75rem; opacity: 0.5;"></span>
+                <span id="userHandle" style="font-size: 0.7rem; opacity: 0.5;"></span>
                 <div class="credit-val"><span id="liveCredits">0</span> CREDITS</div>
-                <button onclick="logout()" style="background:none; border:none; color:#555; cursor:pointer; font-size:0.6rem; margin-left:15px; font-weight:900;">[ EXIT ]</button>
             </div>
         </div>
     </header>
 
-    <nav class="page-nav">
-        <div class="nav-item active" onclick="setMode('img-to-img', this)">Image Studio</div>
-        <div class="nav-item" onclick="setMode('img-to-video', this)">Video Engine</div>
-        <div class="nav-item" onclick="setMode('lip-sync', this)">Pro Lip Sync</div>
-    </nav>
+    <div class="nav-wrapper">
+        <nav class="page-nav">
+            <div class="nav-item active" onclick="setMode('img-to-img', this)">Image Studio</div>
+            <div class="nav-item" onclick="setMode('img-to-video', this)">Video Engine</div>
+            <div class="nav-item" onclick="setMode('lip-sync', this)">Pro Lip Sync</div>
+        </nav>
+    </div>
 
     <div class="main-layout">
         <aside class="sidebar">
-            <div class="ad-box">
-                <img src="banner.png">
+            <div style="background:#000; border:1px solid #222; border-radius:12px; padding:15px; text-align:center;">
+                <img src="banner.png" style="width:100%; border-radius:8px; margin-bottom:15px;">
                 <a href="https://t.vlmai-3.com/396104/6924?aff_sub5=SF_006OG000004lmDN" style="color:var(--gold); font-weight:900; text-decoration:none; font-size:0.75rem; text-transform:uppercase;">Join Elite Club</a>
             </div>
         </aside>
 
         <main class="studio-card">
             <div class="cost-badge">
-                <span style="color:#888; font-size:0.75rem; font-weight:900;">PRODUCTION COST:</span>
+                <span style="color:#888; font-size:0.7rem; font-weight:900;">PRODUCTION COST:</span>
                 <span style="color:var(--gold); font-weight:900;"><span id="costDisplay">5</span> CREDITS</span>
             </div>
+
             <label>Select Production Engine</label>
             <select id="engineSelect" onchange="updateCost()"></select>
+
             <label>Upload Reference Asset</label>
             <input type="file" id="assetFile">
+
             <div id="sliderControl">
                 <label>Logo Preservation (Image Influence)</label>
                 <input type="range" id="promptStrength" min="0.1" max="0.9" step="0.05" value="0.85">
             </div>
+
             <div id="timelineContainer" style="display:none;">
                 <label>Script / Dialogue</label>
-                <textarea id="scriptText" rows="3" placeholder="Enter dialogue..."></textarea>
+                <textarea id="scriptText" rows="3" placeholder="Enter dialogue for character to speak..."></textarea>
             </div>
+
             <div style="position:relative;">
                 <label>Artistic Direction (Prompt)</label>
                 <button class="magic-btn" onclick="pimpPrompt()">✨ Pimp My Prompt</button>
                 <textarea id="studioPrompt" rows="4" placeholder="Describe your vision..."></textarea>
             </div>
+
             <button class="render-btn" onclick="startProduction()">Execute Production</button>
+
             <div id="studioOutput">
                 <p id="standbyText" style="color:#111; font-weight:900; letter-spacing:10px; font-size:1.8rem;">STUDIO STANDBY</p>
                 <div id="activeRender" style="display:none; text-align:center;">
@@ -130,7 +148,7 @@
         <aside class="sidebar">
             <div style="background:rgba(212,175,55,0.05); border:1px solid var(--gold); border-radius:15px; padding:20px;">
                 <h3 style="color:var(--gold); font-size:0.8rem; margin:0 0 10px 0; text-transform:uppercase;">Elite Guide</h3>
-                <div id="dynamicGuide" style="font-size:0.75rem; color:#ccc; line-height:1.6;"></div>
+                <div id="dynamicGuide" style="font-size:0.7rem; color:#ccc; line-height:1.6;"></div>
             </div>
             <div style="margin-top:20px; border:1px solid #222; border-radius:15px; padding:20px; text-align:center;">
                 <h4 style="color:var(--gold); margin:0 0 10px 0;">REFILL CREDITS</h4>
@@ -148,29 +166,29 @@
         </div>
     </div>
 
-    <!-- AI PROMPT ASSISTANT (ORB) -->
+    <!-- AI ORB & CHAT -->
     <div class="ai-fab-container">
         <div class="ai-label">PROMPT HELP</div>
         <div class="ai-fab" onclick="toggleChat()">✨</div>
     </div>
     <div id="aiChatWindow">
-        <div class="chat-header">
-            <span style="color:var(--gold); font-weight:900; font-size:0.75rem;">SHAQ-AI PROMOT ARCHITECT</span>
+        <div style="background:#000; padding:20px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
+            <span style="color:var(--gold); font-weight:900; font-size:0.75rem;">SHAQ-AI ARCHITECT</span>
             <span onclick="toggleChat()" style="cursor:pointer;">×</span>
         </div>
         <div class="chat-body" id="chatBody">
-            <div class="ai-msg">I am SHAQ-AI. I specialize in branding and pro-visuals. Ask me for a prompt for your logo, a video scene, or a lip-sync script.</div>
+            <div class="ai-msg">I am SHAQ-AI. I specialize in branding and pro-visuals. Ask me for a prompt for your logo, a character scene, or a lip-sync script.</div>
         </div>
-        <div class="chat-footer">
-            <input type="text" id="chatInput" class="chat-input" placeholder="e.g. Give me a pro logo prompt...">
-            <button style="background:var(--gold); border:none; padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:900;" onclick="sendChat()">GO</button>
+        <div style="padding:15px; background:#000; border-top:1px solid #222; display:flex;">
+            <input type="text" id="chatInput" style="flex:1; background:#111; border:1px solid #333; color:white; padding:10px; border-radius:5px;" placeholder="Ask for a prompt...">
+            <button style="background:var(--gold); border:none; padding:10px 15px; border-radius:5px; margin-left:10px; font-weight:900; cursor:pointer;" onclick="sendChat()">GO</button>
         </div>
     </div>
 
-    <div id="loginModal">
-        <div class="modal-content">
+    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:10000; justify-content:center; align-items:center;">
+        <div style="background:#080808; border:1px solid var(--gold); padding:60px; border-radius:30px; text-align:center; width:450px;">
             <h2 style="color:var(--gold); margin-top:0;">VIP ACCESS</h2>
-            <input type="email" id="loginEmail" class="modal-input" placeholder="Enter VIP Email">
+            <input type="email" id="loginEmail" style="width:100%; padding:15px; background:#000; border:1px solid #333; color:white; margin:20px 0;" placeholder="Enter VIP Email">
             <button class="render-btn" style="padding:15px;" onclick="processLogin()">AUTHENTICATE</button>
             <p onclick="closeLogin()" style="margin-top:20px; cursor:pointer; color:#444; text-decoration:underline;">CANCEL</p>
         </div>
@@ -182,9 +200,9 @@
         let userCredits = 0;
 
         const guides = {
-            'img-to-img': `<b>IMAGE TIPS:</b><br>1. Use <b>0.85</b> Preservation to keep your logo exact.<br>2. Avoid celebrity names to prevent AI confusion.`,
+            'img-to-img': `<b>IMAGE TIPS:</b><br>1. Use <b>0.85</b> Preservation to keep your logo exact.<br>2. For Logos, mention "Typography".`,
             'img-to-video': `<b>VIDEO TIPS:</b><br>1. Describe cinematic camera motion like "slow dolly zoom".`,
-            'lip-sync': `<b>LIP SYNC TIPS:</b><br>1. Use high-quality headshots.<br>2. Clear, short sentences work best.`
+            'lip-sync': `<b>LIP SYNC TIPS:</b><br>1. Use high-quality headshots.<br>2. Keep scripts natural.`
         };
 
         const modelLibrary = {
@@ -209,7 +227,6 @@
             document.getElementById('userPanel').style.display = 'flex';
             document.getElementById('userHandle').innerText = email;
         }
-        function logout() { localStorage.removeItem('studio_email'); window.location.reload(); }
 
         function toggleChat() {
             const win = document.getElementById('aiChatWindow');
@@ -221,21 +238,21 @@
             const body = document.getElementById('chatBody');
             const val = input.value.toLowerCase();
             if(!val) return;
-            body.innerHTML += `<div class="user-msg">${input.value}</div>`;
+            body.innerHTML += `<div style="text-align:right; color:var(--gold); margin-bottom:15px; font-weight:900;">${input.value}</div>`;
             input.value = '';
 
-            let response = "I'm ready. Tell me if you need a Logo Prompt, Video Motion, or a Script.";
+            let response = "I'm ready. I can help with Logos, Character Consistency, or Lip-Sync scripts.";
             let promptToUse = "";
 
             if(val.includes('logo')) {
-                promptToUse = "Hyper-realistic 3D typography, metallic chrome logo, volumetric smoke background, 8k cinematic lighting, ultra-detailed textures, branding aesthetic --no face --no human";
-                response = `<b>LOGO PROMPT:</b><br>"${promptToUse}"<br><button class="use-this-btn" onclick="applyPrompt('${promptToUse}')">Apply to Studio</button>`;
-            } else if(val.includes('video')) {
-                promptToUse = "Slow cinematic drone sweep across a dark luxury studio, embers floating in the air, shallow depth of field, 4k masterwork";
-                response = `<b>VIDEO PROMPT:</b><br>"${promptToUse}"<br><button class="use-this-btn" onclick="applyPrompt('${promptToUse}')">Apply to Studio</button>`;
+                promptToUse = "Hyper-realistic 3D typography logo, metallic chrome, volumetric smoke, 8k cinematic lighting --no face --no human";
+                response = `<b>PRO LOGO PROMPT:</b><br>"${promptToUse}"<br><button class="use-this-btn" onclick="applyPrompt('${promptToUse}')">Apply to Studio</button>`;
+            } else if(val.includes('character') || val.includes('person') || val.includes('face')) {
+                promptToUse = "Photorealistic character portrait, 8k, cinematic studio lighting, highly detailed skin, consistent facial structure";
+                response = `<b>CHARACTER PROMPT:</b><br>"${promptToUse}"<br><button class="use-this-btn" onclick="applyPrompt('${promptToUse}')">Apply to Studio</button>`;
             } else if(val.includes('script') || val.includes('lip')) {
-                promptToUse = "Welcome to the Smoke Shaq Studio Elite. Here, we define the future of digital production. Ready for your next masterpiece?";
-                response = `<b>LIP SYNC SCRIPT:</b><br>"${promptToUse}"<br><button class="use-this-btn" onclick="applyScript('${promptToUse}')">Apply to Script Box</button>`;
+                promptToUse = "Welcome to Smoke Shaq Studio. Let's create something elite.";
+                response = `<b>LIP SYNC SCRIPT:</b><br>"${promptToUse}"<br><button class="use-this-btn" onclick="applyScript('${promptToUse}')">Apply to Script</button>`;
             }
 
             setTimeout(() => {
@@ -284,9 +301,17 @@
 
         function pimpPrompt() {
             const area = document.getElementById('studioPrompt');
-            let base = area.value || "Smoke Shaq Studio logo";
-            // Anti-Shaq Logic: emphasize typography and logo
-            area.value = `${base}, 3D branding typography, metallic emblem, cinematic volumetric smoke, 8k resolution, photorealistic studio lighting, dark aesthetic --no human --no face`;
+            let base = area.value || "A professional production";
+            let enhanced = "";
+
+            if (currentMode === 'img-to-img' && (base.toLowerCase().includes('logo') || base.toLowerCase().includes('studio'))) {
+                enhanced = `${base}, 3D branding typography, metallic emblem, cinematic volumetric smoke, 8k resolution, photorealistic studio lighting, dark aesthetic --no human --no face`;
+            } else if (currentMode === 'lip-sync' || base.toLowerCase().includes('man') || base.toLowerCase().includes('woman')) {
+                enhanced = `${base}, hyper-realistic skin textures, professional studio portrait lighting, 8k, consistent character design, cinematic depth of field`;
+            } else {
+                enhanced = `${base}, cinematic masterpiece, highly detailed, 8k, volumetric lighting`;
+            }
+            area.value = enhanced;
         }
 
         async function startProduction() {
@@ -324,7 +349,6 @@
                 const job = await res.json();
                 poll(job.id);
             } catch (err) {
-                alert("Production Offline");
                 document.getElementById('activeRender').style.display = 'none';
                 document.getElementById('standbyText').style.display = 'block';
             }
@@ -346,7 +370,6 @@
             }, 3000);
         }
 
-        // Init
         document.getElementById('dynamicGuide').innerHTML = guides['img-to-img'];
         updateEngineDropdown();
         if(userEmail) { loginUI(userEmail); updateCredits(); }
