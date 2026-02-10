@@ -365,24 +365,28 @@
         <div class="bg-overlay"></div>
     </div>
 
-    <div class="header-container">
+      <div class="header-container">
         <header class="top-rocker">
+            <div style="min-width: 250px;"></div> <!-- Spacer to keep logo centered -->
+            
             <div class="logo-group">
-                <div class="logo-text">SMOKE SHAQ STUDIO</div>
                 <div class="pendant-box">
                     <img src="pendant.png" class="pendant-img">
                 </div>
+                <div class="logo-text">SMOKE SHAQ STUDIO</div>
             </div>
+
             <div class="auth-status">
                 <button id="authBtn" class="login-btn" onclick="openLogin()">SIGN IN / JOIN VIP</button>
-                <div id="userPanel" style="display:none; align-items:center; gap:15px; background:rgba(212,175,55,0.1); padding:6px 15px; border-radius:50px; border:1px solid rgba(212,175,55,0.2);">
+                <div id="userPanel" style="display:none; align-items:center; gap:15px; background:rgba(212,175,55,0.1); padding:8px 18px; border-radius:50px; border:1px solid rgba(212,175,55,0.2);">
                     <span id="userHandle" style="font-size: 0.65rem; opacity: 0.5;"></span>
-                    <span style="color:var(--gold); font-weight:900; font-size:0.8rem;">
+                    <span style="color:var(--gold); font-weight:900; font-size:0.85rem;">
                         <span id="liveCredits">0</span> CREDITS
                     </span>
                 </div>
             </div>
         </header>
+
         <nav class="nav-bar">
             <div class="page-nav">
                 <div class="nav-item active" onclick="setMode('img-to-img', this)">Image Studio</div>
@@ -391,6 +395,7 @@
             </div>
         </nav>
     </div>
+
 
     <div class="main-layout">
         <aside class="sidebar">
@@ -659,4 +664,5 @@
     </script>
 </body>
 </html>
+
 
