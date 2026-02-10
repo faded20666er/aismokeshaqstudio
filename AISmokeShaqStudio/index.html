@@ -5,60 +5,344 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMOKE SHAQ STUDIO | ELITE PRO</title>
     <style>
-        :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #050505; --dark-glass: rgba(0,0,0,0.94); }
-        html, body { margin: 0; padding: 0; min-height: 100vh; width: 100%; background: #000; color: white; font-family: 'Segoe UI', Roboto, sans-serif; overflow-x: hidden; }
+        :root { 
+            --gold: #D4AF37; 
+            --diamond: #E5E4E2; 
+            --black: #050505; 
+            --dark-glass: rgba(0,0,0,0.94); 
+        }
 
-        /* UNIVERSAL BACKGROUND SYSTEM - FIXED TO SCREEN */
-        .bg-system { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
-        .bg-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('diamindbackgroud.jpeg') center/cover no-repeat; filter: brightness(1.3) contrast(1.1); }
-        .bg-dust { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('golddustbackdrop.png') center/cover no-repeat; mix-blend-mode: overlay; opacity: 0.8; }
-        .bg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.85) 70%, #000 100%); }
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            min-height: 100vh; 
+            width: 100%; 
+            background: #000; 
+            color: white; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            overflow-x: hidden; 
+        }
 
-        /* HEADER & HANGING PENDANT */
-        .header-container { width: 100%; position: sticky; top: 0; z-index: 2000; background: #000; border-bottom: 2px solid var(--gold); }
-        .top-rocker { max-width: 1600px; margin: 0 auto; height: 110px; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; position: relative; }
-        .logo-group { display: flex; align-items: center; position: relative; }
-        .logo-text { color: var(--gold); font-weight: 900; font-size: 1.8rem; letter-spacing: 3px; text-transform: uppercase; z-index: 5; }
-        .pendant-box { position: absolute; left: 260px; top: -10px; height: 160px; pointer-events: none; z-index: 10; }
-        .pendant-img { height: 100%; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)); }
+        /* UNIVERSAL BACKGROUND SYSTEM */
+        .bg-system { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            z-index: -1; 
+            pointer-events: none; 
+        }
 
-        .auth-status { display: flex; align-items: center; gap: 20px; z-index: 5; }
-        .login-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 8px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 0.75rem; transition: 0.3s; }
+        .bg-image { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: url('diamindbackgroud.jpeg') center/cover no-repeat; 
+            filter: brightness(1.3) contrast(1.1); 
+        }
+
+        .bg-dust { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: url('golddustbackdrop.png') center/cover no-repeat; 
+            mix-blend-mode: overlay; 
+            opacity: 0.8; 
+        }
+
+        .bg-overlay { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.85) 70%, #000 100%); 
+        }
+
+        /* HEADER & PENDANT */
+        .header-container { 
+            width: 100%; 
+            position: sticky; 
+            top: 0; 
+            z-index: 2000; 
+            background: #000; 
+            border-bottom: 2px solid var(--gold); 
+        }
+
+        .top-rocker { 
+            max-width: 1600px; 
+            margin: 0 auto; 
+            height: 110px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 40px; 
+            position: relative; 
+        }
+
+        .logo-group { 
+            display: flex; 
+            align-items: center; 
+            position: relative; 
+        }
+
+        .logo-text { 
+            color: var(--gold); 
+            font-weight: 900; 
+            font-size: 1.8rem; 
+            letter-spacing: 3px; 
+            text-transform: uppercase; 
+            z-index: 5; 
+        }
+
+        .pendant-box { 
+            position: absolute; 
+            left: 260px; 
+            top: -10px; 
+            height: 160px; 
+            pointer-events: none; 
+            z-index: 10; 
+        }
+
+        .pendant-img { 
+            height: 100%; 
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)); 
+        }
+
+        .auth-status { 
+            display: flex; 
+            align-items: center; 
+            gap: 20px; 
+            z-index: 5; 
+        }
+
+        .login-btn { 
+            background: transparent; 
+            border: 1px solid var(--gold); 
+            color: var(--gold); 
+            padding: 8px 20px; 
+            border-radius: 4px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            font-size: 0.75rem; 
+            transition: 0.3s; 
+        }
+
         .login-btn:hover { background: var(--gold); color: black; }
 
-        /* NAVIGATION TABS */
-        .nav-bar { background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); padding: 15px 0; border-bottom: 1px solid #222; }
-        .page-nav { display: flex; justify-content: center; gap: 40px; }
-        .nav-item { cursor: pointer; color: #555; font-weight: 900; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
-        .nav-item.active { color: var(--gold); text-shadow: 0 0 10px rgba(212,175,55,0.4); }
+        /* NAVIGATION */
+        .nav-bar { 
+            background: rgba(0,0,0,0.8); 
+            backdrop-filter: blur(10px); 
+            padding: 15px 0; 
+            border-bottom: 1px solid #222; 
+        }
 
-        /* STUDIO LAYOUT */
-        .main-layout { display: flex; justify-content: center; padding: 40px 20px; gap: 30px; max-width: 1600px; margin: 0 auto; min-height: 80vh; }
+        .page-nav { 
+            display: flex; 
+            justify-content: center; 
+            gap: 40px; 
+        }
+
+        .nav-item { 
+            cursor: pointer; 
+            color: #555; 
+            font-weight: 900; 
+            font-size: 0.75rem; 
+            letter-spacing: 2px; 
+            text-transform: uppercase; 
+            transition: 0.3s; 
+        }
+
+        .nav-item.active { 
+            color: var(--gold); 
+            text-shadow: 0 0 10px rgba(212,175,55,0.4); 
+        }
+
+        /* LAYOUT */
+        .main-layout { 
+            display: flex; 
+            justify-content: center; 
+            padding: 40px 20px; 
+            gap: 30px; 
+            max-width: 1600px; 
+            margin: 0 auto; 
+            min-height: 80vh; 
+        }
+
         .sidebar { width: 220px; }
-        .studio-card { flex: 1; max-width: 800px; background: var(--dark-glass); border: 1px solid #222; border-radius: 20px; padding: 40px; box-shadow: 0 0 80px rgba(0,0,0,0.8); }
+
+        .studio-card { 
+            flex: 1; 
+            max-width: 800px; 
+            background: var(--dark-glass); 
+            border: 1px solid #222; 
+            border-radius: 20px; 
+            padding: 40px; 
+            box-shadow: 0 0 80px rgba(0,0,0,0.8); 
+        }
         
-        /* FORM ELEMENTS */
-        .cost-badge { background: #000; border-left: 4px solid var(--gold); padding: 12px 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
-        label { color: var(--gold); font-size: 0.65rem; font-weight: 900; display: block; margin-bottom: 8px; text-transform: uppercase; opacity: 0.8; }
-        select, textarea, input[type="file"], input[type="range"] { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 16px; border-radius: 10px; margin-bottom: 25px; box-sizing: border-box; }
+        .cost-badge { 
+            background: #000; 
+            border-left: 4px solid var(--gold); 
+            padding: 12px 20px; 
+            margin-bottom: 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+
+        label { 
+            color: var(--gold); 
+            font-size: 0.65rem; 
+            font-weight: 900; 
+            display: block; 
+            margin-bottom: 8px; 
+            text-transform: uppercase; 
+            opacity: 0.8; 
+        }
+
+        select, textarea, input[type="file"], input[type="range"] { 
+            width: 100%; 
+            background: #000; 
+            border: 1px solid #333; 
+            color: white; 
+            padding: 16px; 
+            border-radius: 10px; 
+            margin-bottom: 25px; 
+            box-sizing: border-box; 
+        }
         
-        .magic-btn { background: #111; border: 1px solid #444; color: var(--gold); padding: 8px 12px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; cursor: pointer; float: right; margin-top: -42px; position: relative; z-index: 10; }
-        .render-btn { width: 100%; padding: 22px; border: none; border-radius: 10px; background: linear-gradient(135deg, #D4AF37, #F9D976, #D4AF37); color: black; font-weight: 900; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; letter-spacing: 3px; }
+        .magic-btn { 
+            background: #111; 
+            border: 1px solid #444; 
+            color: var(--gold); 
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            font-size: 0.6rem; 
+            font-weight: 900; 
+            cursor: pointer; 
+            float: right; 
+            margin-top: -42px; 
+            position: relative; 
+            z-index: 10; 
+        }
+
+        .render-btn { 
+            width: 100%; 
+            padding: 22px; 
+            border: none; 
+            border-radius: 10px; 
+            background: linear-gradient(135deg, #D4AF37, #F9D976, #D4AF37); 
+            color: black; 
+            font-weight: 900; 
+            font-size: 1.1rem; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            letter-spacing: 3px; 
+        }
         
-        #studioOutput { margin-top: 40px; width: 100%; min-height: 450px; background: #000; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #111; overflow: hidden; }
+        #studioOutput { 
+            margin-top: 40px; 
+            width: 100%; 
+            min-height: 450px; 
+            background: #000; 
+            border-radius: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            border: 1px solid #111; 
+            overflow: hidden; 
+        }
+
         #studioOutput img, #studioOutput video { width: 100%; }
 
         /* SHAQ-AI CHAT */
-        .ai-fab-container { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: center; z-index: 3000; }
-        .ai-label { background: var(--gold); color: black; font-size: 0.6rem; font-weight: 900; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; animation: jiggle 2s infinite; }
-        .ai-fab { width: 60px; height: 60px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 0 30px rgba(212,175,55,0.5); }
-        #aiChatWindow { display: none; position: fixed; bottom: 110px; right: 30px; width: 350px; height: 500px; background: #0a0a0a; border: 1px solid var(--gold); border-radius: 15px; z-index: 3000; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
-        .chat-body { flex: 1; padding: 15px; overflow-y: auto; font-size: 0.75rem; color: #ccc; }
-        .ai-msg { background: rgba(212,175,55,0.1); padding: 12px; border-radius: 8px; border-left: 3px solid var(--gold); margin-bottom: 15px; }
-        .use-btn { background: #111; border: 1px solid var(--gold); color: var(--gold); font-size: 0.6rem; padding: 4px 8px; margin-top: 8px; border-radius: 3px; cursor: pointer; font-weight: 900; }
+        .ai-fab-container { 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            z-index: 3000; 
+        }
 
-        /* LIVE TALENT FEED */
-        .talent-section { padding: 60px 20px; background: #000; text-align: center; border-top: 1px solid #222; }
+        .ai-label { 
+            background: var(--gold); 
+            color: black; 
+            font-size: 0.6rem; 
+            font-weight: 900; 
+            padding: 4px 10px; 
+            border-radius: 4px; 
+            margin-bottom: 8px; 
+            animation: jiggle 2s infinite; 
+        }
+
+        .ai-fab { 
+            width: 60px; 
+            height: 60px; 
+            background: var(--gold); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.5rem; 
+            cursor: pointer; 
+            box-shadow: 0 0 30px rgba(212,175,55,0.5); 
+        }
+
+        #aiChatWindow { 
+            display: none; 
+            position: fixed; 
+            bottom: 110px; 
+            right: 30px; 
+            width: 350px; 
+            height: 500px; 
+            background: #0a0a0a; 
+            border: 1px solid var(--gold); 
+            border-radius: 15px; 
+            z-index: 3000; 
+            flex-direction: column; 
+            overflow: hidden; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9); 
+        }
+
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; font-size: 0.75rem; color: #ccc; }
+
+        .ai-msg { 
+            background: rgba(212,175,55,0.1); 
+            padding: 12px; 
+            border-radius: 8px; 
+            border-left: 3px solid var(--gold); 
+            margin-bottom: 15px; 
+        }
+
+        .use-btn { 
+            background: #111; 
+            border: 1px solid var(--gold); 
+            color: var(--gold); 
+            font-size: 0.6rem; 
+            padding: 4px 8px; 
+            margin-top: 8px; 
+            border-radius: 3px; 
+            cursor: pointer; 
+            font-weight: 900; 
+        }
+
+        .talent-section { 
+            padding: 60px 20px; 
+            background: #000; 
+            text-align: center; 
+            border-top: 1px solid #222; 
+        }
 
         @keyframes jiggle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
@@ -66,19 +350,27 @@
 </head>
 <body>
 
-    <div class="bg-system"><div class="bg-image"></div><div class="bg-dust"></div><div class="bg-overlay"></div></div>
+    <div class="bg-system">
+        <div class="bg-image"></div>
+        <div class="bg-dust"></div>
+        <div class="bg-overlay"></div>
+    </div>
 
     <div class="header-container">
         <header class="top-rocker">
             <div class="logo-group">
                 <div class="logo-text">SMOKE SHAQ STUDIO</div>
-                <div class="pendant-box"><img src="pendant.png" class="pendant-img"></div>
+                <div class="pendant-box">
+                    <img src="pendant.png" class="pendant-img">
+                </div>
             </div>
             <div class="auth-status">
                 <button id="authBtn" class="login-btn" onclick="openLogin()">SIGN IN / JOIN VIP</button>
                 <div id="userPanel" style="display:none; align-items:center; gap:15px; background:rgba(212,175,55,0.1); padding:6px 15px; border-radius:50px; border:1px solid rgba(212,175,55,0.2);">
                     <span id="userHandle" style="font-size: 0.65rem; opacity: 0.5;"></span>
-                    <span style="color:var(--gold); font-weight:900; font-size:0.8rem;"><span id="liveCredits">0</span> CREDITS</span>
+                    <span style="color:var(--gold); font-weight:900; font-size:0.8rem;">
+                        <span id="liveCredits">0</span> CREDITS
+                    </span>
                 </div>
             </div>
         </header>
@@ -106,18 +398,47 @@
             </div>
             <label>Studio Engine</label>
             <select id="engineSelect" onchange="updateCost()"></select>
+            
             <label>Reference Asset</label>
             <input type="file" id="assetFile">
-            <div id="sliderControl"><label>Asset Preservation</label><input type="range" id="promptStrength" min="0.1" max="0.9" step="0.05" value="0.85"></div>
-            <div id="timelineContainer" style="display:none;"><label>Voice Script</label><textarea id="scriptText" rows="3"></textarea></div>
-            <div style="position:relative;"><label>Creative Prompt</label><button class="magic-btn" onclick="pimpPrompt()">✨ Pimp My Prompt</button><textarea id="studioPrompt" rows="4"></textarea></div>
+            
+            <div id="sliderControl">
+                <label>Asset Preservation</label>
+                <input type="range" id="promptStrength" min="0.1" max="0.9" step="0.05" value="0.85">
+            </div>
+            
+            <div id="timelineContainer" style="display:none;">
+                <label>Voice Script</label>
+                <textarea id="scriptText" rows="3"></textarea>
+            </div>
+            
+            <div style="position:relative;">
+                <label>Creative Prompt</label>
+                <button class="magic-btn" onclick="pimpPrompt()">✨ Pimp My Prompt</button>
+                <textarea id="studioPrompt" rows="4"></textarea>
+            </div>
+            
             <button class="render-btn" onclick="startProduction()">Execute Production</button>
-            <div id="studioOutput"><p id="standbyText" style="color:#111; font-weight:900; letter-spacing:8px; font-size:1.5rem;">STUDIO STANDBY</p><div id="activeRender" style="display:none; text-align:center;"><div style="color:var(--gold); font-size:1.1rem; font-weight:900; animation: pulse 1.5s infinite;">PROCESSING DIGITAL ASSETS...</div></div><div id="resultContainer"></div></div>
+            
+            <div id="studioOutput">
+                <p id="standbyText" style="color:#111; font-weight:900; letter-spacing:8px; font-size:1.5rem;">STUDIO STANDBY</p>
+                <div id="activeRender" style="display:none; text-align:center;">
+                    <div style="color:var(--gold); font-size:1.1rem; font-weight:900; animation: pulse 1.5s infinite;">PROCESSING DIGITAL ASSETS...</div>
+                </div>
+                <div id="resultContainer"></div>
+            </div>
         </main>
 
         <aside class="sidebar">
-            <div style="background:rgba(212,175,55,0.05); border:1px solid var(--gold); border-radius:12px; padding:15px; margin-bottom:20px;"><h3 style="color:var(--gold); font-size:0.75rem; margin:0 0 10px 0;">Elite Guide</h3><div id="dynamicGuide" style="font-size:0.65rem; color:#888;"></div></div>
-            <div style="border:1px solid #222; border-radius:12px; padding:15px; text-align:center; background:#000;"><h4 style="color:var(--gold); margin:0 0 10px 0; font-size:0.75rem;">REFILL CREDITS</h4><a href="https://buy.stripe.com/6oU8wRfbO4wqdQueDE8N200" style="color:white; font-size:0.65rem; text-decoration:none; display:block; border:1px solid #333; padding:8px; border-radius:4px; margin-bottom:10px;">100 - $10</a><a href="https://buy.stripe.com/bJe7sNd3GbYS7s61QS8N201" style="color:black; font-weight:900; background:var(--gold); font-size:0.65rem; text-decoration:none; display:block; padding:8px; border-radius:4px;">550 - $45</a></div>
+            <div style="background:rgba(212,175,55,0.05); border:1px solid var(--gold); border-radius:12px; padding:15px; margin-bottom:20px;">
+                <h3 style="color:var(--gold); font-size:0.75rem; margin:0 0 10px 0;">Elite Guide</h3>
+                <div id="dynamicGuide" style="font-size:0.65rem; color:#888;"></div>
+            </div>
+            <div style="border:1px solid #222; border-radius:12px; padding:15px; text-align:center; background:#000;">
+                <h4 style="color:var(--gold); margin:0 0 10px 0; font-size:0.75rem;">REFILL CREDITS</h4>
+                <a href="https://buy.stripe.com/6oU8wRfbO4wqdQueDE8N200" style="color:white; font-size:0.65rem; text-decoration:none; display:block; border:1px solid #333; padding:8px; border-radius:4px; margin-bottom:10px;">100 - $10</a>
+                <a href="https://buy.stripe.com/bJe7sNd3GbYS7s61QS8N201" style="color:black; font-weight:900; background:var(--gold); font-size:0.65rem; text-decoration:none; display:block; padding:8px; border-radius:4px;">550 - $45</a>
+            </div>
         </aside>
     </div>
 
@@ -129,23 +450,80 @@
     </div>
 
     <!-- CHAT & LOGIN UI -->
-    <div class="ai-fab-container"><div class="ai-label">PROMPT HELP</div><div class="ai-fab" onclick="toggleChat()">✨</div></div>
-    <div id="aiChatWindow"><div style="background:#000; padding:15px; border-bottom:1px solid #222; display:flex; justify-content:space-between;"><span style="color:var(--gold); font-weight:900; font-size:0.7rem;">SHAQ-AI ARCHITECT</span><span onclick="toggleChat()" style="cursor:pointer;">×</span></div><div class="chat-body" id="chatBody"><div class="ai-msg">I am SHAQ-AI. I help with branding and scenes. Ask for a logo prompt.</div></div><div style="padding:10px; background:#000; border-top:1px solid #222; display:flex;"><input type="text" id="chatInput" style="flex:1; background:#111; border:1px solid #333; color:white; padding:8px; border-radius:5px;" placeholder="Ask for a prompt..."><button style="background:var(--gold); border:none; padding:8px; border-radius:5px; margin-left:5px; cursor:pointer;" onclick="sendChat()">GO</button></div></div>
-    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:10000; justify-content:center; align-items:center;"><div style="background:#080808; border:1px solid var(--gold); padding:40px; border-radius:20px; text-align:center; width:350px;"><h2 style="color:var(--gold);">VIP ACCESS</h2><input type="email" id="loginEmail" style="width:100%; padding:12px; background:#000; border:1px solid #333; color:white; margin:15px 0;" placeholder="VIP Email"><button class="render-btn" style="padding:12px; font-size:0.9rem;" onclick="processLogin()">AUTHENTICATE</button><p onclick="closeLogin()" style="margin-top:15px; cursor:pointer; color:#444; font-size:0.7rem;">CANCEL</p></div></div>
+    <div class="ai-fab-container">
+        <div class="ai-label">PROMPT HELP</div>
+        <div class="ai-fab" onclick="toggleChat()">✨</div>
+    </div>
+    
+    <div id="aiChatWindow">
+        <div style="background:#000; padding:15px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
+            <span style="color:var(--gold); font-weight:900; font-size:0.7rem;">SHAQ-AI ARCHITECT</span>
+            <span onclick="toggleChat()" style="cursor:pointer;">×</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="ai-msg">I am SHAQ-AI. I help with branding and scenes. Ask for a logo prompt.</div>
+        </div>
+        <div style="padding:10px; background:#000; border-top:1px solid #222; display:flex;">
+            <input type="text" id="chatInput" style="flex:1; background:#111; border:1px solid #333; color:white; padding:8px; border-radius:5px;" placeholder="Ask for a prompt...">
+            <button style="background:var(--gold); border:none; padding:8px; border-radius:5px; margin-left:5px; cursor:pointer;" onclick="sendChat()">GO</button>
+        </div>
+    </div>
+
+    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:10000; justify-content:center; align-items:center;">
+        <div style="background:#080808; border:1px solid var(--gold); padding:40px; border-radius:20px; text-align:center; width:350px;">
+            <h2 style="color:var(--gold);">VIP ACCESS</h2>
+            <input type="email" id="loginEmail" style="width:100%; padding:12px; background:#000; border:1px solid #333; color:white; margin:15px 0;" placeholder="VIP Email">
+            <button class="render-btn" style="padding:12px; font-size:0.9rem;" onclick="processLogin()">AUTHENTICATE</button>
+            <p onclick="closeLogin()" style="margin-top:15px; cursor:pointer; color:#444; font-size:0.7rem;">CANCEL</p>
+        </div>
+    </div>
 
     <script>
         let currentMode = 'img-to-img';
         let userEmail = localStorage.getItem('studio_email') || null;
         let userCredits = 0;
 
-        const guides = { 'img-to-img': `<b>IMAGE TIPS:</b><br>1. Use 0.85 Preservation.<br>2. Use 'Logo' for branding results.`, 'img-to-video': `<b>VIDEO TIPS:</b><br>1. Mention camera motion.`, 'lip-sync': `<b>LIP SYNC TIPS:</b><br>1. Best with clear headshots.` };
-        const modelLibrary = { 'img-to-img': [{ id: 'flux-pro', name: 'FLUX 1.1 PRO', cost: 5 }], 'img-to-video': [{ id: 'kling-video', name: 'KLING 2.5', cost: 15 }], 'lip-sync': [{ id: 'omni-human', name: 'OMNI-HUMAN', cost: 20 }] };
+        const guides = { 
+            'img-to-img': `<b>IMAGE TIPS:</b><br>1. Use 0.85 Preservation.<br>2. Use 'Logo' for branding results.`, 
+            'img-to-video': `<b>VIDEO TIPS:</b><br>1. Mention camera motion.`, 
+            'lip-sync': `<b>LIP SYNC TIPS:</b><br>1. Best with clear headshots.` 
+        };
 
-        function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
-        function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
-        function processLogin() { const email = document.getElementById('loginEmail').value.toLowerCase().trim(); if(!email.includes('@')) return alert("Invalid email"); localStorage.setItem('studio_email', email); userEmail = email; loginUI(email); updateCredits(); closeLogin(); }
-        function loginUI(email) { document.getElementById('authBtn').style.display = 'none'; document.getElementById('userPanel').style.display = 'flex'; document.getElementById('userHandle').innerText = email; }
-        function toggleChat() { const win = document.getElementById('aiChatWindow'); win.style.display = (win.style.display === 'flex') ? 'none' : 'flex'; }
+        const modelLibrary = { 
+            'img-to-img': [{ id: 'flux-pro', name: 'FLUX 1.1 PRO', cost: 5 }], 
+            'img-to-video': [{ id: 'kling-video', name: 'KLING 2.5', cost: 15 }], 
+            'lip-sync': [{ id: 'omni-human', name: 'OMNI-HUMAN', cost: 20 }] 
+        };
+
+        function openLogin() { 
+            document.getElementById('loginModal').style.display = 'flex'; 
+        }
+
+        function closeLogin() { 
+            document.getElementById('loginModal').style.display = 'none'; 
+        }
+
+        function processLogin() { 
+            const email = document.getElementById('loginEmail').value.toLowerCase().trim(); 
+            if(!email.includes('@')) return alert("Invalid email"); 
+            localStorage.setItem('studio_email', email); 
+            userEmail = email; 
+            loginUI(email); 
+            updateCredits(); 
+            closeLogin(); 
+        }
+
+        function loginUI(email) { 
+            document.getElementById('authBtn').style.display = 'none'; 
+            document.getElementById('userPanel').style.display = 'flex'; 
+            document.getElementById('userHandle').innerText = email; 
+        }
+
+        function toggleChat() { 
+            const win = document.getElementById('aiChatWindow'); 
+            win.style.display = (win.style.display === 'flex') ? 'none' : 'flex'; 
+        }
+
         function sendChat() {
             const input = document.getElementById('chatInput');
             const body = document.getElementById('chatBody');
@@ -153,16 +531,61 @@
             if(!val) return;
             body.innerHTML += `<div style="text-align:right; color:var(--gold); margin-bottom:10px;">${input.value}</div>`;
             let resp = "I'm ready. I help with Logos or Characters.";
-            if(val.includes('logo')) { const p = "3D metallic logo, smoke, 8k --no human --no face"; resp = `<b>LOGO PROMPT:</b><br>"${p}"<br><button class="use-btn" onclick="applyPrompt('${p}')">Apply</button>`; }
-            setTimeout(() => { body.innerHTML += `<div class="ai-msg">${resp}</div>`; body.scrollTop = body.scrollHeight; }, 600);
+            if(val.includes('logo')) { 
+                const p = "3D metallic logo, smoke, 8k --no human --no face"; 
+                resp = `<b>LOGO PROMPT:</b><br>"${p}"<br><button class="use-btn" onclick="applyPrompt('${p}')">Apply</button>`; 
+            }
+            setTimeout(() => { 
+                body.innerHTML += `<div class="ai-msg">${resp}</div>`; 
+                body.scrollTop = body.scrollHeight; 
+            }, 600);
             input.value = '';
         }
-        function applyPrompt(p) { document.getElementById('studioPrompt').value = p; }
-        function setMode(mode, el) { currentMode = mode; document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); document.getElementById('timelineContainer').style.display = (mode === 'lip-sync') ? 'block' : 'none'; document.getElementById('sliderControl').style.display = (mode === 'img-to-img') ? 'block' : 'none'; document.getElementById('dynamicGuide').innerHTML = guides[mode]; updateEngineDropdown(); }
-        function updateEngineDropdown() { const s = document.getElementById('engineSelect'); s.innerHTML = modelLibrary[currentMode].map(m => `<option value="${m.id}">${m.name}</option>`).join(''); updateCost(); }
-        function updateCost() { const s = document.getElementById('engineSelect'); const m = modelLibrary[currentMode].find(x => x.id === s.value); if(m) document.getElementById('costDisplay').innerText = m.cost; }
-        async function updateCredits() { if(!userEmail) return; try { const res = await fetch(`/api/credits?email=${userEmail}`); const data = await res.json(); userCredits = data.credits || 0; document.getElementById('liveCredits').innerText = userCredits; } catch(e) {} }
-        function pimpPrompt() { const area = document.getElementById('studioPrompt'); let base = area.value || "Professional masterpiece"; let enhanced = base.toLowerCase().includes('logo') ? `${base}, 3D metallic logo, smoke, 8k --no human --no face` : `${base}, hyper-realistic skin, 8k, cinematic`; area.value = enhanced; }
+
+        function applyPrompt(p) { 
+            document.getElementById('studioPrompt').value = p; 
+        }
+
+        function setMode(mode, el) { 
+            currentMode = mode; 
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
+            el.classList.add('active'); 
+            document.getElementById('timelineContainer').style.display = (mode === 'lip-sync') ? 'block' : 'none'; 
+            document.getElementById('sliderControl').style.display = (mode === 'img-to-img') ? 'block' : 'none'; 
+            document.getElementById('dynamicGuide').innerHTML = guides[mode]; 
+            updateEngineDropdown(); 
+        }
+
+        function updateEngineDropdown() { 
+            const s = document.getElementById('engineSelect'); 
+            s.innerHTML = modelLibrary[currentMode].map(m => `<option value="${m.id}">${m.name}</option>`).join(''); 
+            updateCost(); 
+        }
+
+        function updateCost() { 
+            const s = document.getElementById('engineSelect'); 
+            const m = modelLibrary[currentMode].find(x => x.id === s.value); 
+            if(m) document.getElementById('costDisplay').innerText = m.cost; 
+        }
+
+        async function updateCredits() { 
+            if(!userEmail) return; 
+            try { 
+                const res = await fetch(`/api/credits?email=${userEmail}`); 
+                const data = await res.json(); 
+                userCredits = data.credits || 0; 
+                document.getElementById('liveCredits').innerText = userCredits; 
+            } catch(e) {} 
+        }
+
+        function pimpPrompt() { 
+            const area = document.getElementById('studioPrompt'); 
+            let base = area.value || "Professional masterpiece"; 
+            let enhanced = base.toLowerCase().includes('logo') 
+                ? `${base}, 3D metallic logo, smoke, 8k --no human --no face` 
+                : `${base}, hyper-realistic skin, 8k, cinematic`; 
+            area.value = enhanced; 
+        }
         
         async function startProduction() {
             if(!userEmail) return openLogin();
@@ -174,10 +597,32 @@
             try {
                 const file = document.getElementById('assetFile').files[0];
                 let b64 = null;
-                if(file) { b64 = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); }); }
-                const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tool: currentMode, modelId: document.getElementById('engineSelect').value, prompt: document.getElementById('studioPrompt').value, image: b64, email: userEmail, prompt_strength: parseFloat(document.getElementById('promptStrength').value), script: document.getElementById('scriptText').value }) });
-                const job = await res.json(); poll(job.id);
-            } catch (err) { document.getElementById('activeRender').style.display = 'none'; document.getElementById('standbyText').style.display = 'block'; }
+                if(file) { 
+                    b64 = await new Promise((res) => { 
+                        const r = new FileReader(); 
+                        r.onload = () => res(r.result); 
+                        r.readAsDataURL(file); 
+                    }); 
+                }
+                const res = await fetch('/api/generate', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ 
+                        tool: currentMode, 
+                        modelId: document.getElementById('engineSelect').value, 
+                        prompt: document.getElementById('studioPrompt').value, 
+                        image: b64, 
+                        email: userEmail, 
+                        prompt_strength: parseFloat(document.getElementById('promptStrength').value), 
+                        script: document.getElementById('scriptText').value 
+                    }) 
+                });
+                const job = await res.json(); 
+                poll(job.id);
+            } catch (err) { 
+                document.getElementById('activeRender').style.display = 'none'; 
+                document.getElementById('standbyText').style.display = 'block'; 
+            }
         }
 
         function poll(id) {
@@ -188,7 +633,9 @@
                     clearInterval(timer);
                     document.getElementById('activeRender').style.display = 'none';
                     const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
-                    document.getElementById('resultContainer').innerHTML = resUrl.includes('.mp4') ? `<video src="${resUrl}" controls autoplay loop></video>` : `<img src="${resUrl}">`;
+                    document.getElementById('resultContainer').innerHTML = resUrl.includes('.mp4') 
+                        ? `<video src="${resUrl}" controls autoplay loop></video>` 
+                        : `<img src="${resUrl}">`;
                     updateCredits();
                 }
             }, 3000);
@@ -196,7 +643,10 @@
 
         document.getElementById('dynamicGuide').innerHTML = guides['img-to-img'];
         updateEngineDropdown();
-        if(userEmail) { loginUI(userEmail); updateCredits(); }
+        if(userEmail) { 
+            loginUI(userEmail); 
+            updateCredits(); 
+        }
     </script>
 </body>
 </html>
