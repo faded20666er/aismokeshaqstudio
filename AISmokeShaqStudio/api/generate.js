@@ -8,11 +8,20 @@ const redis = new Redis({
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
 
-    try {
-        const { modelId, prompt, image, email } = req.body;
-        const userEmail = (email || "").toLowerCase().trim();
-        const isOwner = userEmail === 'faded206@yahoo.com' || userEmail === 'faded20666@gmail.com';
+    const { modelId, prompt, image, email } = req.body;
+    const userEmail = (email || "").toLowerCase().trim();
+    const isOwner = userEmail === 'faded206@yahoo.com' || userEmail === 'faded20666@gmail.com';
 
+    // Model Mapping
+    const modelMap = {
+        'flux-pro': 'black-forest-labs/flux-1.1-pro',
+        'kling-video': 'kwaivgi/kling-v2.5-turbo-pro',
+        'omni-human': 'bytedance/omni-human-1'
+    };
+
+    const targetModel = modelMap[modelId] || modelMap['flux-pro'];
+
+    try {
         // 1. Credit Check
         if (!isOwner) {
             const credits = await redis.get(`credits_${userEmail}`) || 0;
@@ -21,44 +30,51 @@ export default async function handler(req, res) {
             await redis.set(`credits_${userEmail}`, Number(credits) - cost);
         }
 
-        // 2. Model Mapping
-        const modelMap = {
-            'flux-pro': 'black-forest-labs/flux-1.1-pro',
-            'kling-video': 'kwaivgi/kling-v2.5-turbo-pro',
-            'omni-human': 'bytedance/omni-human-1'
-        };
+        // 2. The Execution Loop (Handles the 429 Throttle automatically)
+        let attempts = 0;
+        let success = false;
+        let result = null;
 
-        // 3. Call Replicate
-        const response = await fetch(`https://api.replicate.com/v1/models/${modelMap[modelId]}/predictions`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Token ${process.env.REPLICATE_API_TOKEN}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ 
-                input: { 
-                    prompt: prompt, 
-                    image: image,
-                    image_path: image
-                } 
-            }),
-        });
+        while (attempts < 3 && !success) {
+            const response = await fetch(`https://api.replicate.com/v1/models/${targetModel}/predictions`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Token ${process.env.REPLICATE_API_TOKEN}`,
+                    "Content-Type": "application/json",
+                    "Prefer": "wait"
+                },
+                body: JSON.stringify({ 
+                    input: { 
+                        prompt: prompt, 
+                        image: image,
+                        image_path: image 
+                    } 
+                }),
+            });
 
-        const result = await response.json();
-        
-        if (!response.ok) {
-            // If it fails, we give the user their credits back automatically
-            if (!isOwner) {
-                const credits = await redis.get(`credits_${userEmail}`) || 0;
-                await redis.set(`credits_${userEmail}`, Number(credits) + 15);
+            result = await response.json();
+
+            if (response.status === 429) {
+                console.log("Throttled. Waiting 10 seconds...");
+                await new Promise(r => setTimeout(r, 10000));
+                attempts++;
+            } else if (!response.ok) {
+                throw new Error(result.detail || "Replicate API Error");
+            } else {
+                success = true;
             }
-            throw new Error(result.detail || "Replicate Throttled the request.");
         }
 
-        return res.status(200).json({ id: result.id });
+        if (!success) throw new Error("Studio is currently at max capacity. Try again in 30 seconds.");
+
+        return res.status(200).json({ id: result.id, output: result.output });
 
     } catch (err) {
-        console.error("Generate Error:", err.message);
+        // Refund on failure
+        if (!isOwner) {
+            const current = await redis.get(`credits_${userEmail}`) || 0;
+            await redis.set(`credits_${userEmail}`, Number(current) + 15);
+        }
         return res.status(500).json({ error: err.message });
     }
 }
