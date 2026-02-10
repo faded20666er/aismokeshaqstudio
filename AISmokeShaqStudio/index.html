@@ -94,7 +94,7 @@
         }
         #studioOutput img, #studioOutput video { width: 100%; max-height: 800px; object-fit: contain; }
 
-        /* DOWNLOAD BUTTON (NEW) */
+        /* DOWNLOAD BUTTON */
         .dl-btn {
             margin-top: 20px; padding: 15px 30px; background: transparent; 
             border: 2px solid var(--gold); color: var(--gold); font-weight: 900;
@@ -123,15 +123,13 @@
     <div class="bg-layer"></div>
     <div class="overlay-layer"></div>
 
-      <header class="top-rocker">
+    <header class="top-rocker">
         <div class="logo-text">SMOKE SHAQ STUDIO</div>
         <div class="auth-status">
             <button id="authBtn" class="login-btn" onclick="openLogin()">SIGN IN / JOIN VIP</button>
-            <!-- Added style="display:none;" here so it doesn't show empty credits on load -->
             <div id="userPanel" class="credit-display" style="display:none;">
                 <span id="userHandle" style="font-size: 0.8rem; opacity: 0.6;"></span>
                 <div class="credit-val"><span id="liveCredits">0</span> CREDITS</div>
-                <!-- This is your new Sign Out button -->
                 <button onclick="logout()" style="background:none; border:none; color:var(--gold); cursor:pointer; font-size:0.6rem; text-decoration:underline; margin-left:15px; font-weight:900; text-transform:uppercase;">[ Sign Out ]</button>
             </div>
         </div>
@@ -146,7 +144,7 @@
     <div class="main-layout">
         <aside class="sidebar">
             <div class="ad-box">
-                <img src="banner.png.png">
+                <img src="banner.png">
                 <a href="https://t.vlmai-3.com/396104/6924?aff_sub5=SF_006OG000004lmDN" style="color:var(--gold); font-weight:900; text-decoration:none; font-size:0.7rem;">JOIN ELITE CLUB</a>
             </div>
         </aside>
@@ -159,9 +157,7 @@
 
             <label>CHOOSE PRODUCTION ENGINE</label>
             <select id="engineSelect" onchange="updateCost()">
-                <option value="flux-pro">FLUX 1.1 PRO (Masterpiece Stills)</option>
-                <option value="kling-video">KLING 2.5 (High Motion Cinema)</option>
-                <option value="omni-human">OMNI-HUMAN (Digital Soul Lip-Sync)</option>
+                <!-- Populated by JS -->
             </select>
 
             <label>UPLOAD REFERENCE ASSET</label>
@@ -182,7 +178,6 @@
                 <a id="downloadBtn" href="#" download="smoke-shaq-production.png" class="dl-btn">DOWNLOAD ASSET</a>
             </div>
 
-            <!-- STRIPE PRICING -->
             <div style="display:flex; gap:20px; margin-top:50px;">
                 <div style="flex:1; border:1px solid #222; padding:20px; text-align:center; border-radius:15px;">
                     <h3 style="color:var(--gold); margin:0;">100 CREDITS</h3>
@@ -199,7 +194,7 @@
 
         <aside class="sidebar">
             <div class="ad-box">
-                <img src="banner.png.png">
+                <img src="banner.png">
                 <a href="https://t.vlmai-3.com/396104/7477?aff_sub5=SF_006OG000004lmDN" style="color:var(--gold); font-weight:900; text-decoration:none; font-size:0.7rem;">ELITE REWARDS</a>
             </div>
         </aside>
@@ -213,7 +208,6 @@
         </div>
     </div>
 
-    <!-- MODAL -->
     <div id="loginModal">
         <div class="modal-content">
             <h2 style="color:var(--gold); margin-top:0;">VIP STUDIO LOGIN</h2>
@@ -223,8 +217,7 @@
         </div>
     </div>
 
- <script>
-        // --- 1. THE PRICING & ENGINE CONFIGURATION ---
+    <script>
         let currentMode = 'img-to-img';
         let userEmail = localStorage.getItem('studio_email') || null;
 
@@ -243,7 +236,7 @@
             ]
         };
 
-              // --- 2. UI INITIALIZATION ---
+        // --- 1. INITIALIZATION ---
         if(userEmail) { loginUI(userEmail); updateCredits(); }
         updateEngineDropdown(); 
 
@@ -267,27 +260,23 @@
             document.getElementById('userHandle').innerText = email;
         }
 
-        // --- THE LOGOUT COMMAND ---
         function logout() {
-            localStorage.removeItem('studio_email'); // Deletes the saved login
+            localStorage.removeItem('studio_email');
             userEmail = null;
-            document.getElementById('authBtn').style.display = 'block';
-            document.getElementById('userPanel').style.display = 'none';
-            document.getElementById('liveCredits').innerText = '0';
-            window.location.reload(); // Refresh to ensure a clean slate
+            window.location.reload();
         }
 
-            
-            // Show/Hide Timeline for Lip Sync
+        function setMode(mode, el) {
+            currentMode = mode;
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
             document.getElementById('timelineContainer').style.display = (mode === 'lip-sync') ? 'block' : 'none';
-            
             updateEngineDropdown();
         }
 
         function updateEngineDropdown() {
             const select = document.getElementById('engineSelect');
             const models = modelLibrary[currentMode];
-            
             select.innerHTML = models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
             updateCost();
         }
@@ -297,13 +286,11 @@
             const selectedId = select.value;
             const allModels = Object.values(modelLibrary).flat();
             const model = allModels.find(m => m.id === selectedId);
-            
             if (model) {
                 document.getElementById('costDisplay').innerText = model.cost;
             }
         }
 
-        // --- 3. PRODUCTION & API LOGIC ---
         async function updateCredits() {
             if(!userEmail) return;
             try {
@@ -358,11 +345,9 @@
                         clearInterval(timer);
                         const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
                         const isVideo = resUrl.includes('.mp4') || resUrl.includes('.webm');
-                        
                         out.innerHTML = isVideo 
                             ? `<video src="${resUrl}" controls autoplay loop style="width:100%"></video>`
                             : `<img src="${resUrl}" style="width:100%">`;
-                        
                         updateCredits();
                     } else if (data.status === 'failed') {
                         clearInterval(timer);
@@ -374,7 +359,3 @@
     </script>
 </body>
 </html>
-
-
-
-
