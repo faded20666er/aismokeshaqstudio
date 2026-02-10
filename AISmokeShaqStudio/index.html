@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMOKE SHAQ STUDIO | ELITE PRO</title>
     <style>
-        :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #050505; --dark-glass: rgba(0,0,0,0.9); }
+        :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #050505; --dark-glass: rgba(0,0,0,0.92); }
         body { background: #000; color: white; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow-x: hidden; }
         
         .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('golddustbackdrop.png') center/cover, url('diamindbackgroud.jpeg') center/cover; background-blend-mode: overlay; filter: brightness(1.5) contrast(1.2); z-index: -2; }
@@ -32,6 +32,14 @@
         label { color: var(--gold); font-size: 0.7rem; font-weight: 900; display: block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1.5px; }
         select, textarea, input[type="file"], input[type="range"] { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 18px; border-radius: 12px; margin-bottom: 25px; box-sizing: border-box; font-size: 0.95rem; }
         
+        /* PROMPT MAGIC BUTTON */
+        .magic-btn {
+            background: #111; border: 1px solid #444; color: var(--gold); padding: 8px 15px; border-radius: 6px;
+            font-size: 0.65rem; font-weight: 900; cursor: pointer; float: right; margin-top: -45px; position: relative;
+            z-index: 10; text-transform: uppercase; transition: 0.3s;
+        }
+        .magic-btn:hover { background: var(--gold); color: #000; border-color: var(--gold); }
+
         .slider-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.6rem; color: #888; font-weight: 900; }
 
         .render-btn { width: 100%; padding: 25px; border: none; border-radius: 12px; background: linear-gradient(135deg, #D4AF37, #F9D976, #D4AF37); color: black; font-weight: 900; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; letter-spacing: 4px; transition: 0.4s; }
@@ -92,8 +100,7 @@
             </div>
 
             <div class="pro-tip">
-                <b style="color:var(--gold);">PRO LOGO TIP:</b> To keep your logo, describe it in the prompt. Example: <br>
-                <i>"The Smoke Shaq Studio logo with 3D wooden text, set on fire with realistic thick smoke and flashy orange sparks, cinematic lighting."</i>
+                <b style="color:var(--gold);">PRO TIP:</b> Keep the Preservation slider high (0.85) to keep your logo exact. Use the ✨ Magic button to optimize your description!
             </div>
             
             <label>Select Production Engine</label>
@@ -104,15 +111,18 @@
 
             <label>Logo Preservation (Image Influence)</label>
             <div class="slider-label"><span>MORE CREATIVE</span> <span>STAY TRUE TO LOGO</span></div>
-            <input type="range" id="promptStrength" min="0.1" max="0.9" step="0.05" value="0.75">
+            <input type="range" id="promptStrength" min="0.1" max="0.9" step="0.05" value="0.85">
             
             <div id="timelineContainer" style="display:none; border-left: 2px solid var(--gold); padding-left: 25px; margin-bottom: 25px;">
                 <label>Script / Dialogue</label>
                 <textarea id="scriptText" rows="3" placeholder="Enter dialogue..."></textarea>
             </div>
             
-            <label>Artistic Direction (Describe the look)</label>
-            <textarea id="studioPrompt" rows="4" placeholder="Describe the fire, smoke, and lighting..."></textarea>
+            <div style="position:relative;">
+                <label>Artistic Direction (Prompt)</label>
+                <button class="magic-btn" onclick="pimpPrompt()">✨ Pimp My Prompt</button>
+                <textarea id="studioPrompt" rows="4" placeholder="Describe what you want to see..."></textarea>
+            </div>
             
             <button class="render-btn" onclick="startProduction()">Execute Production</button>
             
@@ -150,21 +160,28 @@
         let userCredits = 0;
 
         const modelLibrary = {
-            'img-to-img': [
-                { id: 'flux-pro', name: 'FLUX 1.1 PRO (Masterpiece Stills)', cost: 5 },
-                { id: 'flux-schnell', name: 'FLUX SCHNELL (Fast Rendering)', cost: 5 }
-            ],
-            'img-to-video': [
-                { id: 'kling-video', name: 'KLING 2.5 (Cinema Grade Motion)', cost: 15 }
-            ],
-            'lip-sync': [
-                { id: 'omni-human', name: 'OMNI-HUMAN (Digital Soul Sync)', cost: 20 }
-            ]
+            'img-to-img': [{ id: 'flux-pro', name: 'FLUX 1.1 PRO (Masterpiece Stills)', cost: 5 }],
+            'img-to-video': [{ id: 'kling-video', name: 'KLING 2.5 (Cinema Grade Motion)', cost: 15 }],
+            'lip-sync': [{ id: 'omni-human', name: 'OMNI-HUMAN (Digital Soul Sync)', cost: 20 }]
         };
+
+        // ENHANCED PROMPT MAGIC LOGIC
+        function pimpPrompt() {
+            const promptArea = document.getElementById('studioPrompt');
+            let text = promptArea.value.trim();
+            if(!text) text = "Smoke Shaq Studio logo";
+            const enhancements = [
+                "cinematic 8k resolution", "intricate 3D textures", 
+                "volumetric lighting and atmosphere", "highly detailed materials", 
+                "professional color grading", "photorealistic shadows", 
+                "dynamic composition", "hyper-realistic rendering"
+            ];
+            const enhanced = `${text}, ${enhancements.sort(() => 0.5 - Math.random()).slice(0, 4).join(', ')}, masterpiece quality, sharp focus.`;
+            promptArea.value = enhanced;
+        }
 
         function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
         function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
-
         function processLogin() {
             const email = document.getElementById('loginEmail').value.toLowerCase().trim();
             if(!email.includes('@')) return alert("Enter valid email.");
@@ -174,13 +191,11 @@
             updateCredits();
             closeLogin();
         }
-
         function loginUI(email) {
             document.getElementById('authBtn').style.display = 'none';
             document.getElementById('userPanel').style.display = 'flex';
             document.getElementById('userHandle').innerText = email;
         }
-
         function logout() { localStorage.removeItem('studio_email'); window.location.reload(); }
 
         function setMode(mode, el) {
@@ -210,88 +225,8 @@
                 const data = await res.json();
                 userCredits = data.credits || 0;
                 document.getElementById('liveCredits').innerText = userCredits;
-            } catch(e) { console.log("Sync..."); }
+            } catch(e) {}
         }
 
         async function startProduction() {
             if(!userEmail) return openLogin();
-            const cost = parseInt(document.getElementById('costDisplay').innerText);
-            if(userCredits < cost) return alert("Low credits.");
-
-            const out = document.getElementById('studioOutput');
-            const resultBox = document.getElementById('resultContainer');
-            const dl = document.getElementById('downloadBtn');
-            const standby = document.getElementById('standbyText');
-            const rendering = document.getElementById('activeRender');
-            
-            standby.style.display = 'none';
-            resultBox.innerHTML = '';
-            dl.style.display = 'none';
-            rendering.style.display = 'block';
-            
-            try {
-                const file = document.getElementById('assetFile').files[0];
-                let b64 = null;
-                if(file) {
-                    b64 = await new Promise((res) => {
-                        const r = new FileReader();
-                        r.onload = () => res(r.result);
-                        r.readAsDataURL(file);
-                    });
-                }
-                const res = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        tool: currentMode,
-                        modelId: document.getElementById('engineSelect').value,
-                        prompt: document.getElementById('studioPrompt').value,
-                        image: b64,
-                        email: userEmail,
-                        prompt_strength: parseFloat(document.getElementById('promptStrength').value)
-                    })
-                });
-                const job = await res.json();
-                poll(job.id);
-            } catch (err) {
-                alert("Error: " + err.message);
-                rendering.style.display = 'none';
-                standby.style.display = 'block';
-            }
-        }
-
-        function poll(id) {
-            const resultBox = document.getElementById('resultContainer');
-            const dl = document.getElementById('downloadBtn');
-            const rendering = document.getElementById('activeRender');
-            
-            const timer = setInterval(async () => {
-                try {
-                    const res = await fetch(`/api/status?id=${id}`);
-                    const data = await res.json();
-                    if (data.status === 'succeeded') {
-                        clearInterval(timer);
-                        rendering.style.display = 'none';
-                        const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
-                        const isVideo = resUrl.includes('.mp4') || resUrl.includes('.webm');
-                        resultBox.innerHTML = isVideo 
-                            ? `<video src="${resUrl}" controls autoplay loop></video>`
-                            : `<img src="${resUrl}">`;
-                        dl.href = resUrl;
-                        dl.style.display = 'inline-block';
-                        updateCredits();
-                    } else if (data.status === 'failed') {
-                        clearInterval(timer);
-                        rendering.style.display = 'none';
-                        resultBox.innerHTML = '<p style="color:red;">FAILED</p>';
-                    }
-                } catch (e) {}
-            }, 3000);
-        }
-
-        updateEngineDropdown();
-        if(userEmail) { loginUI(userEmail); updateCredits(); }
-    </script>
-</body>
-</html>
-
