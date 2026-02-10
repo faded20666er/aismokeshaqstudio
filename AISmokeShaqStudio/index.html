@@ -385,11 +385,12 @@
             <!-- RIGHT AUTH UNIT -->
             <div class="auth-status">
                 <button id="authBtn" class="login-btn" onclick="openLogin()">SIGN IN / JOIN VIP</button>
-                <div id="userPanel" style="display:none; align-items:center; gap:15px; background:rgba(212,175,55,0.1); padding:8px 20px; border-radius:50px; border:1px solid rgba(212,175,55,0.2);">
-                    <span id="userHandle" style="font-size: 0.65rem; opacity: 0.5;"></span>
-                    <span style="color:var(--gold); font-weight:900; font-size:0.9rem;">
+               <div id="userPanel" style="display:none; align-items:center; gap:15px; background:rgba(212,175,55,0.1); padding:8px 25px; border-radius:50px; border:1px solid rgba(212,175,55,0.2);">
+                    <span id="userHandle" style="font-size: 0.65rem; opacity: 0.5; font-weight: 900;"></span>
+                    <span style="color:var(--gold); font-weight:900; font-size:0.9rem; border-left: 1px solid #333; padding-left: 15px;">
                         <span id="liveCredits">0</span> CREDITS
                     </span>
+                    <button onclick="logout()" style="background:transparent; border:none; color:#555; font-size:0.6rem; cursor:pointer; text-decoration:underline; font-weight:900; margin-left:10px; transition: 0.3s;" onmouseover="this.style.color='#D4AF37'" onmouseout="this.style.color='#555'">LOGOUT</button>
                 </div>
             </div>
         </header>
@@ -687,6 +688,7 @@
     </script>
 </body>
 </html>
+
 
 
 
