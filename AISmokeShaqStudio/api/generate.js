@@ -10,37 +10,45 @@ export default async function handler(req, res) {
 
     try {
         const { modelId, prompt, image, email } = req.body;
-        if (!email) return res.status(400).json({ error: "Sign in required." });
+        const userEmail = (email || "").toLowerCase().trim();
 
-        // 1. Credit Check Logic
+        if (!userEmail) return res.status(400).json({ error: "Sign in required." });
+
+        // 1. CREDIT SYSTEM
         const costMap = { 'flux-pro': 5, 'kling-video': 15, 'omni-human': 20 };
         const cost = costMap[modelId] || 5;
 
-        if (email !== 'faded206@yahoo.com') {
-            const userCredits = await redis.get(`credits_${email.toLowerCase().trim()}`) || 0;
-            if (Number(userCredits) < cost) return res.status(402).json({ error: "Insufficient credits." });
-            await redis.set(`credits_${email.toLowerCase().trim()}`, Number(userCredits) - cost);
+        // Bypass for owner
+        if (userEmail !== 'faded206@yahoo.com') {
+            const currentCredits = await redis.get(`credits_${userEmail}`) || 0;
+            if (Number(currentCredits) < cost) {
+                return res.status(402).json({ error: `Insufficient Credits. You need ${cost} but have ${currentCredits}.` });
+            }
+            await redis.set(`credits_${userEmail}`, Number(currentCredits) - cost);
         }
 
-        // 2. Map modelId to actual Replicate Version IDs
-        let version = "";
+        // 2. MODEL MAPPING (Using full Replicate paths)
+        let apiUrl = "";
         let input = { prompt: prompt };
 
         if (modelId === 'flux-pro') {
-            // Flux 1.1 Pro
-            version = "black-forest-labs/flux-1.1-pro"; 
+            apiUrl = "https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions";
+            input = { prompt: prompt, aspect_ratio: "1:1" };
         } else if (modelId === 'kling-video') {
-            // Kling V2.5
-            version = "kwaivgi/kling-v2.5-turbo-pro";
+            apiUrl = "https://api.replicate.com/v1/models/kwaivgi/kling-v2.5-turbo-pro/predictions";
             input = { prompt: prompt, start_image: image };
         } else if (modelId === 'omni-human') {
-            // Omni-Human Lip Sync
-            version = "bytedance/omni-human-1";
-            input = { image_path: image, audio_path: prompt }; // Note: Lip sync needs an audio URL in the prompt field usually
+            apiUrl = "https://api.replicate.com/v1/models/bytedance/omni-human-1/predictions";
+            input = { image: image, audio: prompt }; // Using prompt as audio URL for now
+        } else {
+            // Default Fallback
+            apiUrl = "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions";
         }
 
-        // 3. Absolute URL fetch to Replicate
-        const replicateRes = await fetch(`https://api.replicate.com/v1/models/${version}/predictions`, {
+        console.log("Calling Replicate at:", apiUrl); // This will show in Vercel Logs
+
+        // 3. EXECUTE API CALL
+        const response = await fetch(apiUrl, {
             method: "POST",
             headers: {
                 "Authorization": `Token ${process.env.REPLICATE_API_TOKEN}`,
@@ -49,17 +57,17 @@ export default async function handler(req, res) {
             body: JSON.stringify({ input: input }),
         });
 
-        const data = await replicateRes.json();
-        
-        if (!replicateRes.ok) {
-            console.error("Replicate Error:", data);
-            return res.status(500).json({ error: data.detail || "AI Engine Error" });
+        const result = await response.json();
+
+        if (!response.ok) {
+            console.error("Replicate API Error:", result);
+            return res.status(response.status).json({ error: result.detail || "AI Engine Error" });
         }
 
-        return res.status(200).json({ id: data.id });
+        return res.status(200).json({ id: result.id });
 
     } catch (err) {
-        console.error("Server Error:", err);
+        console.error("CRITICAL ERROR:", err);
         return res.status(500).json({ error: err.message });
     }
 }
