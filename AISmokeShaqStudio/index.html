@@ -64,7 +64,7 @@
             background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.85) 70%, #000 100%); 
         }
 
-        /* HEADER & PENDANT */
+        /* HEADER & PENDANT FIX */
         .header-container { 
             width: 100%; 
             position: sticky; 
@@ -75,47 +75,54 @@
         }
 
         .top-rocker { 
-            max-width: 1600px; 
+            max-width: 1400px; 
             margin: 0 auto; 
-            height: 110px; 
+            height: 120px; 
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
-            padding: 0 40px; 
-            position: relative; 
+            padding: 0 20px; 
         }
 
         .logo-group { 
             display: flex; 
+            flex-direction: column;
             align-items: center; 
-            position: relative; 
+            position: relative;
+            padding-top: 25px;
+            flex: 1;
         }
 
         .logo-text { 
             color: var(--gold); 
             font-weight: 900; 
-            font-size: 1.8rem; 
-            letter-spacing: 3px; 
+            font-size: 1.6rem; 
+            letter-spacing: 4px; 
             text-transform: uppercase; 
-            z-index: 5; 
+            z-index: 5;
+            text-align: center;
         }
 
         .pendant-box { 
             position: absolute; 
-            left: 260px; 
-            top: -10px; 
-            height: 160px; 
+            top: -45px; 
+            height: 140px; 
             pointer-events: none; 
             z-index: 10; 
+            display: flex;
+            justify-content: center;
+            width: 100%;
         }
 
         .pendant-img { 
             height: 100%; 
-            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)); 
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8)); 
         }
 
         .auth-status { 
+            min-width: 250px;
             display: flex; 
+            justify-content: flex-end;
             align-items: center; 
             gap: 20px; 
             z-index: 5; 
@@ -125,23 +132,24 @@
             background: transparent; 
             border: 1px solid var(--gold); 
             color: var(--gold); 
-            padding: 8px 20px; 
+            padding: 10px 20px; 
             border-radius: 4px; 
             font-weight: 700; 
             cursor: pointer; 
             text-transform: uppercase; 
-            font-size: 0.75rem; 
+            font-size: 0.7rem; 
             transition: 0.3s; 
+            white-space: nowrap;
         }
 
         .login-btn:hover { background: var(--gold); color: black; }
 
-        /* NAVIGATION */
+        /* NAVIGATION CLEANUP */
         .nav-bar { 
-            background: rgba(0,0,0,0.8); 
+            background: rgba(10,10,10,0.95); 
             backdrop-filter: blur(10px); 
-            padding: 15px 0; 
-            border-bottom: 1px solid #222; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #111; 
         }
 
         .page-nav { 
@@ -164,6 +172,7 @@
             color: var(--gold); 
             text-shadow: 0 0 10px rgba(212,175,55,0.4); 
         }
+
 
         /* LAYOUT */
         .main-layout { 
@@ -650,3 +659,4 @@
     </script>
 </body>
 </html>
+
