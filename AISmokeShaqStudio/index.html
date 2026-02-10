@@ -615,23 +615,35 @@
             area.value = enhanced; 
         }
         
-        async function startProduction() {
+  async function startProduction() {
             if(!userEmail) return openLogin();
             const cost = parseInt(document.getElementById('costDisplay').innerText);
-            if(userCredits < cost) return alert("Refill credits!");
+            
+            if(userCredits < cost) {
+                return alert("Insufficient Credits. Please refill to continue production.");
+            }
+
+            // UI Feedback
             document.getElementById('standbyText').style.display = 'none';
             document.getElementById('activeRender').style.display = 'block';
             document.getElementById('resultContainer').innerHTML = '';
+            
+            console.log("Starting Production for email:", userEmail);
+
             try {
                 const file = document.getElementById('assetFile').files[0];
                 let b64 = null;
                 if(file) { 
-                    b64 = await new Promise((res) => { 
+                    console.log("Encoding asset...");
+                    b64 = await new Promise((res, rej) => { 
                         const r = new FileReader(); 
                         r.onload = () => res(r.result); 
+                        r.onerror = (e) => rej(e);
                         r.readAsDataURL(file); 
                     }); 
                 }
+
+                console.log("Sending request to production engine...");
                 const res = await fetch('/api/generate', { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
@@ -645,26 +657,63 @@
                         script: document.getElementById('scriptText').value 
                     }) 
                 });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.error || "Server connection failed");
+                }
+
                 const job = await res.json(); 
+                console.log("Job Created. ID:", job.id);
                 poll(job.id);
+
             } catch (err) { 
+                console.error("PRODUCTION CRITICAL ERROR:", err);
+                alert("PRODUCTION FAILED: " + err.message);
                 document.getElementById('activeRender').style.display = 'none'; 
                 document.getElementById('standbyText').style.display = 'block'; 
             }
         }
 
         function poll(id) {
+            console.log("Polling for results...");
             const timer = setInterval(async () => {
-                const res = await fetch(`/api/status?id=${id}`);
-                const data = await res.json();
-                if (data.status === 'succeeded') {
-                    clearInterval(timer);
-                    document.getElementById('activeRender').style.display = 'none';
-                    const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
-                    document.getElementById('resultContainer').innerHTML = resUrl.includes('.mp4') 
-                        ? `<video src="${resUrl}" controls autoplay loop></video>` 
-                        : `<img src="${resUrl}">`;
-                    updateCredits();
+                try {
+                    const res = await fetch(`/api/status?id=${id}`);
+                    if (!res.ok) return; // Keep trying if network blips
+
+                    const data = await res.json();
+                    console.log("Current Status:", data.status);
+
+                    if (data.status === 'succeeded') {
+                        clearInterval(timer);
+                        console.log("Production Succeeded!");
+                        document.getElementById('activeRender').style.display = 'none';
+                        
+                        const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
+                        
+                        if (resUrl.includes('.mp4') || resUrl.includes('.webm')) {
+                            document.getElementById('resultContainer').innerHTML = `
+                                <video src="${resUrl}" controls autoplay loop style="width:100%; border-radius:10px;"></video>
+                                <div style="padding:15px; text-align:center;">
+                                    <a href="${resUrl}" download class="login-btn" style="text-decoration:none; display:inline-block;">DOWNLOAD MASTER VIDEO</a>
+                                </div>`;
+                        } else {
+                            document.getElementById('resultContainer').innerHTML = `
+                                <img src="${resUrl}" style="width:100%; border-radius:10px;">
+                                <div style="padding:15px; text-align:center;">
+                                    <a href="${resUrl}" download class="login-btn" style="text-decoration:none; display:inline-block;">DOWNLOAD MASTER IMAGE</a>
+                                </div>`;
+                        }
+                        updateCredits();
+                    } else if (data.status === 'failed') {
+                        clearInterval(timer);
+                        alert("The AI Engine failed to generate this specific prompt. Credits were not deducted.");
+                        document.getElementById('activeRender').style.display = 'none';
+                        document.getElementById('standbyText').style.display = 'block';
+                    }
+                } catch (e) {
+                    console.warn("Polling encounterd a minor error, retrying...", e);
                 }
             }, 3000);
         }
@@ -678,3 +727,4 @@
     </script>
 </body>
 </html>
+
