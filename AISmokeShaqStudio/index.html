@@ -85,7 +85,7 @@
             padding: 0 20px; 
         }
 
-        .logo-group { 
+      .logo-group { 
             display: flex; 
             flex-direction: column;
             align-items: center; 
@@ -93,6 +93,7 @@
             position: relative;
             padding-top: 25px; 
             flex: 1;
+            pointer-events: none; /* This lets clicks "pass through" the logo area to the buttons behind it */
         }
 
         .logo-text { 
@@ -106,7 +107,7 @@
             text-shadow: 0 0 20px rgba(212,175,55,0.3);
         }
 
-        .pendant-box { 
+       .pendant-box { 
             position: absolute; 
             top: -50px; 
             height: 150px; 
@@ -114,9 +115,10 @@
             z-index: 10; 
             display: flex;
             justify-content: center;
-            width: 100%;
+            width: auto; /* Changed from 100% to auto so it doesn't block the right side */
+            left: 50%;
+            transform: translateX(-50%);
         }
-
         .pendant-img { 
             height: 100%; 
             filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9)); 
@@ -128,9 +130,10 @@
             justify-content: flex-end;
             align-items: center; 
             gap: 20px; 
-            z-index: 5; 
+            z-index: 5000; /* Set very high to ensure it is in the front */
+            position: relative;
+            pointer-events: auto; /* Ensures the button is definitely clickable */
         }
-
         .login-btn { 
             background: transparent; 
             border: 1px solid var(--gold); 
@@ -685,6 +688,7 @@
     </script>
 </body>
 </html>
+
 
 
 
