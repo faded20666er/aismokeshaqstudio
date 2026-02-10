@@ -7,28 +7,51 @@
     <style>
         :root { --gold: #D4AF37; --diamond: #E5E4E2; --black: #050505; --dark-glass: rgba(0,0,0,0.85); }
         body { background: #000; color: white; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow-x: hidden; }
+        
+        /* BACKGROUND LAYERS */
         .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('diamindbackgroud.jpeg') center/cover; filter: brightness(1.5) contrast(1.2); z-index: -2; }
         .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 10%, rgba(0,0,0,0.92) 85%); z-index: -1; }
+        
+        /* HEADER */
         .top-rocker { width: 100%; height: 100px; background: #000; border-bottom: 2px solid var(--gold); display: flex; align-items: center; justify-content: space-between; padding: 0 60px; box-sizing: border-box; position: sticky; top: 0; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
-        .logo-text { color: var(--gold); font-weight: 900; font-size: 1.8rem; letter-spacing: 3px; text-transform: uppercase; }
+        .logo-text { color: var(--gold); font-weight: 900; font-size: 1.8rem; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 15px rgba(212,175,55,0.4); }
+        
+        /* AUTH UI */
         .auth-status { display: flex; align-items: center; gap: 30px; }
-        .login-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 10px 25px; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        .login-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 10px 25px; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .login-btn:hover { background: var(--gold); color: black; }
         .credit-display { display: none; align-items: center; gap: 15px; background: rgba(212,175,55,0.1); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(212,175,55,0.3); }
-        .page-nav { display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.7); padding: 15px 0; border-bottom: 1px solid #222; }
-        .nav-item { cursor: pointer; color: #777; font-weight: 900; font-size: 0.85rem; text-transform: uppercase; }
-        .nav-item.active { color: var(--gold); }
+        .credit-val { color: var(--gold); font-weight: 900; font-size: 1.1rem; }
+
+        /* NAV */
+        .page-nav { display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.7); padding: 15px 0; border-bottom: 1px solid #222; backdrop-filter: blur(10px); }
+        .nav-item { cursor: pointer; color: #777; font-weight: 900; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
+        .nav-item.active { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+
+        /* STUDIO LAYOUT */
         .main-layout { display: flex; justify-content: center; padding: 50px; gap: 40px; }
         .sidebar { width: 180px; }
-        .studio-card { flex: 1; max-width: 900px; background: var(--dark-glass); border: 1px solid #333; border-radius: 24px; padding: 50px; }
-        .cost-badge { background: #111; border-left: 4px solid var(--gold); padding: 12px 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
-        label { color: var(--gold); font-size: 0.65rem; font-weight: 900; display: block; margin-bottom: 8px; text-transform: uppercase; }
-        select, textarea, input[type="file"] { width: 100%; background: #000; border: 1px solid #222; color: white; padding: 18px; border-radius: 12px; margin-bottom: 25px; box-sizing: border-box; }
-        .render-btn { width: 100%; padding: 25px; border: none; border-radius: 12px; background: linear-gradient(135deg, #D4AF37, #F9D976, #D4AF37); color: black; font-weight: 900; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; }
-        #studioOutput { margin-top: 50px; width: 100%; min-height: 500px; background: #000; border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid #111; }
+        .studio-card { flex: 1; max-width: 900px; background: var(--dark-glass); border: 1px solid #333; border-radius: 24px; padding: 50px; box-shadow: 0 0 100px rgba(0,0,0,1); }
+        
+        .cost-badge { background: #111; border-left: 4px solid var(--gold); padding: 12px 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
+        label { color: var(--gold); font-size: 0.65rem; font-weight: 900; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        select, textarea, input[type="file"] { width: 100%; background: #000; border: 1px solid #222; color: white; padding: 18px; border-radius: 12px; margin-bottom: 25px; box-sizing: border-box; font-size: 0.9rem; }
+        
+        .render-btn { width: 100%; padding: 25px; border: none; border-radius: 12px; background: linear-gradient(135deg, #D4AF37, #F9D976, #D4AF37); color: black; font-weight: 900; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; letter-spacing: 4px; box-shadow: 0 10px 30px rgba(212,175,55,0.2); }
+        
+        /* OUTPUT AREA */
+        #studioOutput { margin-top: 50px; width: 100%; min-height: 500px; background: #000; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #111; position: relative; overflow: hidden; }
+        #studioOutput img, #studioOutput video { width: 100%; max-height: 700px; object-fit: contain; }
+        
+        .dl-btn { margin-top: 20px; padding: 15px 30px; background: transparent; border: 2px solid var(--gold); color: var(--gold); font-weight: 900; text-decoration: none; border-radius: 8px; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px; transition: 0.3s; display: none; }
+        .dl-btn:hover { background: var(--gold); color: black; }
+
         .ad-box { background: #000; border: 1px solid #222; border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 20px; }
-        .ad-box img { width: 100%; border-radius: 8px; }
+        .ad-box img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
+
+        /* MODAL */
         #loginModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: #0a0a0a; border: 1px solid var(--gold); padding: 50px; border-radius: 20px; text-align: center; width: 400px; }
+        .modal-content { background: #0a0a0a; border: 1px solid var(--gold); padding: 50px; border-radius: 20px; text-align: center; width: 400px; box-shadow: 0 0 50px var(--gold); }
         .modal-input { width: 100%; padding: 15px; background: #000; border: 1px solid #333; color: white; margin: 20px 0; border-radius: 5px; }
     </style>
 </head>
@@ -67,18 +90,41 @@
                 <span class="cost-label">Estimated Production Cost:</span>
                 <span class="cost-amount"><span id="costDisplay">5</span> CREDITS</span>
             </div>
+            
             <label>CHOOSE PRODUCTION ENGINE</label>
             <select id="engineSelect" onchange="updateCost()"></select>
+            
             <label>UPLOAD REFERENCE ASSET</label>
             <input type="file" id="assetFile">
+            
             <div id="timelineContainer" style="display:none; border-left: 2px solid var(--gold); padding-left: 20px; margin-bottom: 25px;">
                 <label>SCENE SCRIPT / DIALOGUE</label>
                 <textarea id="scriptText" rows="3" placeholder="Enter dialogue..."></textarea>
             </div>
+            
             <label>ARTISTIC DIRECTION / PROMPT</label>
             <textarea id="studioPrompt" rows="4" placeholder="Describe your vision..."></textarea>
+            
             <button class="render-btn" onclick="startProduction()">EXECUTE PRODUCTION</button>
-            <div id="studioOutput"><p style="color:#111; font-weight:900; letter-spacing:10px;">STUDIO STANDBY</p></div>
+            
+            <div id="studioOutput">
+                <p id="standbyText" style="color:#111; font-weight:900; letter-spacing:10px; font-size:1.5rem;">STUDIO STANDBY</p>
+                <a id="downloadBtn" href="#" download="smoke-shaq-production.png" class="dl-btn">DOWNLOAD ASSET</a>
+            </div>
+
+            <!-- BUY OPTIONS -->
+            <div style="display:flex; gap:20px; margin-top:50px;">
+                <div style="flex:1; border:1px solid #222; padding:20px; text-align:center; border-radius:15px;">
+                    <h3 style="color:var(--gold); margin:0;">100 CREDITS</h3>
+                    <p>$10.00</p>
+                    <a href="https://buy.stripe.com/6oU8wRfbO4wqdQueDE8N200" style="color:white; text-decoration:none; font-size:0.8rem; border:1px solid var(--gold); padding:10px; display:block; border-radius:5px;">BUY NOW</a>
+                </div>
+                <div style="flex:1; border:1px solid var(--gold); padding:20px; text-align:center; border-radius:15px; background:rgba(212,175,55,0.05);">
+                    <h3 style="color:var(--gold); margin:0;">550 CREDITS</h3>
+                    <p>$45.00</p>
+                    <a href="https://buy.stripe.com/bJe7sNd3GbYS7s61QS8N201" style="color:black; background:var(--gold); text-decoration:none; font-size:0.8rem; padding:10px; display:block; border-radius:5px; font-weight:bold;">BEST VALUE</a>
+                </div>
+            </div>
         </main>
 
         <aside class="sidebar">
@@ -89,6 +135,7 @@
         </aside>
     </div>
 
+    <!-- CAM WIDGET -->
     <div style="padding: 60px 20px; background: #000; border-top: 3px solid var(--gold); text-align: center;">
         <h2 style="color:var(--gold); letter-spacing:10px; margin-bottom:40px; text-transform:uppercase;">LIVE TALENT FEED</h2>
         <div style="max-width:1200px; margin:0 auto;">
@@ -96,154 +143,159 @@
         </div>
     </div>
 
+    <!-- MODAL -->
     <div id="loginModal">
         <div class="modal-content">
-            <h2 style="color:var(--gold); margin-top:0;">VIP LOGIN</h2>
-            <input type="email" id="loginEmail" class="modal-input" placeholder="Your VIP Email">
-            <button class="render-btn" style="padding:15px;" onclick="processLogin()">AUTHENTICATE</button>
+            <h2 style="color:var(--gold); margin-top:0;">VIP STUDIO LOGIN</h2>
+            <input type="email" id="loginEmail" class="modal-input" placeholder="Your VIP Email Address">
+            <button class="render-btn" style="padding:15px; font-size:1rem;" onclick="processLogin()">AUTHENTICATE</button>
             <p onclick="closeLogin()" style="margin-top:20px; cursor:pointer; color:var(--gold); text-decoration:underline;">CANCEL</p>
         </div>
     </div>
 
- <script>
-    console.log("Smoke Shaq System: INITIALIZING...");
+    <script>
+        let currentMode = 'img-to-img';
+        let userEmail = localStorage.getItem('studio_email') || null;
 
-    let currentMode = 'img-to-img';
-    let userEmail = localStorage.getItem('studio_email') || null;
+        const modelLibrary = {
+            'img-to-img': [
+                { id: 'flux-pro', name: 'FLUX 1.1 PRO (Masterpiece Stills)', cost: 5 },
+                { id: 'flux-schnell', name: 'FLUX SCHNELL (High-Speed Draft)', cost: 5 }
+            ],
+            'img-to-video': [
+                { id: 'kling-video', name: 'KLING 2.5 (High Motion Cinema)', cost: 15 },
+                { id: 'luma-ray', name: 'LUMA RAY (Fluid Motion)', cost: 15 }
+            ],
+            'lip-sync': [
+                { id: 'omni-human', name: 'OMNI-HUMAN (Digital Soul Sync)', cost: 20 },
+                { id: 'cog-wav2lip', name: 'WAV2LIP (Performance Sync)', cost: 20 }
+            ]
+        };
 
-    const modelLibrary = {
-        'img-to-img': [
-            { id: 'flux-pro', name: 'FLUX 1.1 PRO (Masterpiece Stills)', cost: 5 },
-            { id: 'flux-schnell', name: 'FLUX SCHNELL (High-Speed Draft)', cost: 5 }
-        ],
-        'img-to-video': [
-            { id: 'kling-video', name: 'KLING 2.5 (High Motion Cinema)', cost: 15 },
-            { id: 'luma-ray', name: 'LUMA RAY (Fluid Motion)', cost: 15 }
-        ],
-        'lip-sync': [
-            { id: 'omni-human', name: 'OMNI-HUMAN (Digital Soul Sync)', cost: 20 },
-            { id: 'cog-wav2lip', name: 'WAV2LIP (Performance Sync)', cost: 20 }
-        ]
-    };
+        function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
+        function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
 
-    // --- AUTH LOGIC ---
-    function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
-    function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
-
-    function processLogin() {
-        const email = document.getElementById('loginEmail').value.toLowerCase().trim();
-        if(!email.includes('@')) return alert("Enter valid email.");
-        localStorage.setItem('studio_email', email);
-        userEmail = email;
-        loginUI(email);
-        updateCredits();
-        closeLogin();
-    }
-
-    function loginUI(email) {
-        document.getElementById('authBtn').style.display = 'none';
-        document.getElementById('userPanel').style.display = 'flex';
-        document.getElementById('userHandle').innerText = email;
-    }
-
-    function logout() {
-        localStorage.removeItem('studio_email');
-        window.location.reload();
-    }
-
-    // --- STUDIO NAVIGATION ---
-    function setMode(mode, el) {
-        currentMode = mode;
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('timelineContainer').style.display = (mode === 'lip-sync') ? 'block' : 'none';
-        updateEngineDropdown();
-    }
-
-    function updateEngineDropdown() {
-        const select = document.getElementById('engineSelect');
-        select.innerHTML = modelLibrary[currentMode].map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-        updateCost();
-    }
-
-    function updateCost() {
-        const select = document.getElementById('engineSelect');
-        const model = modelLibrary[currentMode].find(m => m.id === select.value);
-        if(model) document.getElementById('costDisplay').innerText = model.cost;
-    }
-
-    async function updateCredits() {
-        if(!userEmail) return;
-        try {
-            const res = await fetch(`/api/credits?email=${userEmail}`);
-            const data = await res.json();
-            document.getElementById('liveCredits').innerText = data.credits || 0;
-        } catch(e) { console.log("Credit sync pending..."); }
-    }
-
-    // --- PRODUCTION ENGINE (THE BRAINS) ---
-    async function startProduction() {
-        if(!userEmail) return openLogin();
-        const out = document.getElementById('studioOutput');
-        out.innerHTML = '<div style="color:var(--gold); font-size:1.5rem; animation: pulse 1.5s infinite;">PRODUCTION IN PROGRESS...</div>';
-        
-        try {
-            const file = document.getElementById('assetFile').files[0];
-            let b64 = null;
-            if(file) {
-                b64 = await new Promise((res) => {
-                    const r = new FileReader();
-                    r.onload = () => res(r.result);
-                    r.readAsDataURL(file);
-                });
-            }
-            const res = await fetch('/api/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tool: currentMode,
-                    modelId: document.getElementById('engineSelect').value,
-                    prompt: document.getElementById('studioPrompt').value,
-                    image: b64,
-                    email: userEmail
-                })
-            });
-            const job = await res.json();
-            if (job.error) throw new Error(job.error);
-            poll(job.id);
-        } catch (err) {
-            alert("Studio Error: " + err.message);
-            out.innerHTML = '<p style="color:red;">PRODUCTION FAILED: ' + err.message + '</p>';
+        function processLogin() {
+            const email = document.getElementById('loginEmail').value.toLowerCase().trim();
+            if(!email.includes('@')) return alert("Enter valid email.");
+            localStorage.setItem('studio_email', email);
+            userEmail = email;
+            loginUI(email);
+            updateCredits();
+            closeLogin();
         }
-    }
 
-    function poll(id) {
-        const out = document.getElementById('studioOutput');
-        const timer = setInterval(async () => {
+        function loginUI(email) {
+            document.getElementById('authBtn').style.display = 'none';
+            document.getElementById('userPanel').style.display = 'flex';
+            document.getElementById('userHandle').innerText = email;
+        }
+
+        function logout() {
+            localStorage.removeItem('studio_email');
+            window.location.reload();
+        }
+
+        function setMode(mode, el) {
+            currentMode = mode;
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('timelineContainer').style.display = (mode === 'lip-sync') ? 'block' : 'none';
+            updateEngineDropdown();
+        }
+
+        function updateEngineDropdown() {
+            const select = document.getElementById('engineSelect');
+            select.innerHTML = modelLibrary[currentMode].map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+            updateCost();
+        }
+
+        function updateCost() {
+            const select = document.getElementById('engineSelect');
+            const model = modelLibrary[currentMode].find(m => m.id === select.value);
+            if(model) document.getElementById('costDisplay').innerText = model.cost;
+        }
+
+        async function updateCredits() {
+            if(!userEmail) return;
             try {
-                const res = await fetch(`/api/status?id=${id}`);
+                const res = await fetch(`/api/credits?email=${userEmail}`);
                 const data = await res.json();
-                if (data.status === 'succeeded') {
-                    clearInterval(timer);
-                    const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
-                    const isVideo = resUrl.includes('.mp4') || resUrl.includes('.webm');
-                    out.innerHTML = isVideo 
-                        ? `<video src="${resUrl}" controls autoplay loop style="width:100%"></video>`
-                        : `<img src="${resUrl}" style="width:100%">`;
-                    updateCredits();
-                } else if (data.status === 'failed') {
-                    clearInterval(timer);
-                    out.innerHTML = '<p style="color:red;">GENERATION FAILED</p>';
-                }
-            } catch (e) { console.log("Polling..."); }
-        }, 3000);
-    }
+                document.getElementById('liveCredits').innerText = data.credits || 0;
+            } catch(e) { console.log("Credit sync pending..."); }
+        }
 
-    // Initial Load
-    updateEngineDropdown();
-    if(userEmail) { loginUI(userEmail); updateCredits(); }
-    console.log("Smoke Shaq System: ONLINE.");
-</script>
+        async function startProduction() {
+            if(!userEmail) return openLogin();
+            const out = document.getElementById('studioOutput');
+            const dl = document.getElementById('downloadBtn');
+            const standby = document.getElementById('standbyText');
+            
+            standby.style.display = 'none';
+            dl.style.display = 'none';
+            out.innerHTML = '<div style="color:var(--gold); font-size:1.5rem; animation: pulse 1.5s infinite;">PRODUCTION IN PROGRESS...</div>';
+            
+            try {
+                const file = document.getElementById('assetFile').files[0];
+                let b64 = null;
+                if(file) {
+                    b64 = await new Promise((res) => {
+                        const r = new FileReader();
+                        r.onload = () => res(r.result);
+                        r.readAsDataURL(file);
+                    });
+                }
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tool: currentMode,
+                        modelId: document.getElementById('engineSelect').value,
+                        prompt: document.getElementById('studioPrompt').value,
+                        image: b64,
+                        email: userEmail
+                    })
+                });
+                const job = await res.json();
+                if (job.error) throw new Error(job.error);
+                poll(job.id);
+            } catch (err) {
+                alert("Studio Error: " + err.message);
+                out.innerHTML = '<p style="color:red;">PRODUCTION FAILED</p>';
+                standby.style.display = 'block';
+            }
+        }
+
+        function poll(id) {
+            const out = document.getElementById('studioOutput');
+            const dl = document.getElementById('downloadBtn');
+            const timer = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/status?id=${id}`);
+                    const data = await res.json();
+                    if (data.status === 'succeeded') {
+                        clearInterval(timer);
+                        const resUrl = Array.isArray(data.output) ? data.output[0] : data.output;
+                        const isVideo = resUrl.includes('.mp4') || resUrl.includes('.webm');
+                        
+                        out.innerHTML = isVideo 
+                            ? `<video src="${resUrl}" controls autoplay loop></video>`
+                            : `<img src="${resUrl}">`;
+                        
+                        dl.href = resUrl;
+                        dl.style.display = 'inline-block';
+                        updateCredits();
+                    } else if (data.status === 'failed') {
+                        clearInterval(timer);
+                        out.innerHTML = '<p style="color:red;">GENERATION FAILED</p>';
+                    }
+                } catch (e) { console.log("Polling..."); }
+            }, 3000);
+        }
+
+        // Init
+        updateEngineDropdown();
+        if(userEmail) { loginUI(userEmail); updateCredits(); }
+    </script>
 </body>
 </html>
-
