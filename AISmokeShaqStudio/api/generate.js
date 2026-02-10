@@ -12,45 +12,50 @@ export default async function handler(req, res) {
         const { modelId, prompt, image, email } = req.body;
         const userEmail = (email || "").toLowerCase().trim();
 
-        if (!userEmail) return res.status(400).json({ error: "Sign in required." });
+        // 1. Check for the Owner Bypass (Updated to match your screenshot email)
+        const isOwner = userEmail === 'faded206@yahoo.com' || userEmail === 'faded20666@gmail.com';
 
-        // 1. Credit Check (Bypass for you)
-        if (userEmail !== 'faded206@yahoo.com') {
+        if (!isOwner) {
             const costMap = { 'flux-pro': 5, 'kling-video': 15, 'omni-human': 20 };
             const cost = costMap[modelId] || 5;
-            const currentCredits = await redis.get(`credits_${userEmail}`) || 0;
-            if (Number(currentCredits) < cost) return res.status(402).json({ error: "Insufficient credits." });
-            await redis.set(`credits_${userEmail}`, Number(currentCredits) - cost);
+            const credits = await redis.get(`credits_${userEmail}`) || 0;
+            if (Number(credits) < cost) return res.status(402).json({ error: "Insufficient credits." });
+            await redis.set(`credits_${userEmail}`, Number(credits) - cost);
         }
 
-        // 2. ABSOLUTE URL MAPPING (Fixes the /pipeline error)
-        let apiUrl = "https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions";
-        let input = { prompt: prompt };
+        // 2. The Direct API Call (No library, no /pipeline error possible)
+        const modelMap = {
+            'flux-pro': 'black-forest-labs/flux-1.1-pro',
+            'kling-video': 'kwaivgi/kling-v2.5-turbo-pro',
+            'omni-human': 'bytedance/omni-human-1'
+        };
 
-        if (modelId === 'kling-video') {
-            apiUrl = "https://api.replicate.com/v1/models/kwaivgi/kling-v2.5-turbo-pro/predictions";
-            input = { prompt: prompt, start_image: image };
-        } else if (modelId === 'omni-human') {
-            apiUrl = "https://api.replicate.com/v1/models/bytedance/omni-human-1/predictions";
-            input = { image_path: image, audio_path: prompt };
-        }
+        const targetModel = modelMap[modelId] || 'black-forest-labs/flux-1.1-pro';
+        const apiUrl = `https://api.replicate.com/v1/models/${targetModel}/predictions`;
 
-        // 3. Direct Fetch (No SDK)
         const response = await fetch(apiUrl, {
             method: "POST",
             headers: {
                 "Authorization": `Token ${process.env.REPLICATE_API_TOKEN}`,
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ input: input }),
+            body: JSON.stringify({ 
+                input: { 
+                    prompt: prompt, 
+                    image: image,
+                    image_path: image, // Support for different model naming
+                    start_image: image
+                } 
+            }),
         });
 
         const result = await response.json();
-        if (!response.ok) throw new Error(result.detail || "AI Engine Error");
+        if (!response.ok) throw new Error(`v4 Engine Error: ${result.detail || "Check Replicate Balance"}`);
 
         return res.status(200).json({ id: result.id });
 
     } catch (err) {
-        return res.status(500).json({ error: err.message });
+        console.error("v4 Failure:", err.message);
+        return res.status(500).json({ error: "v4 Error: " + err.message });
     }
 }
