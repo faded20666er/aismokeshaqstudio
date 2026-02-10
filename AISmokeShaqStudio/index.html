@@ -28,19 +28,20 @@
 
         /* STUDIO LAYOUT */
         .main-layout { display: flex; justify-content: center; padding: 50px 20px; gap: 40px; max-width: 1600px; margin: 0 auto; }
-        .sidebar { width: 220px; }
-        .studio-card { flex: 1; max-width: 900px; background: var(--dark-glass); border: 1px solid #222; border-radius: 24px; padding: 40px; box-shadow: 0 0 100px rgba(0,0,0,1); }
+        .sidebar { width: 250px; }
+        .studio-card { flex: 1; max-width: 850px; background: var(--dark-glass); border: 1px solid #222; border-radius: 24px; padding: 40px; box-shadow: 0 0 100px rgba(0,0,0,1); }
         
+        /* DYNAMIC GUIDE BOX */
+        .guide-box { background: rgba(212,175,55,0.05); border: 1px solid var(--gold); border-radius: 15px; padding: 20px; margin-top: 20px; }
+        .guide-box h3 { color: var(--gold); font-size: 0.8rem; margin-top: 0; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 10px; }
+        .guide-text { font-size: 0.75rem; color: #ccc; line-height: 1.6; }
+        .guide-text b { color: var(--gold); }
+
         .cost-badge { background: #000; border: 1px solid #222; border-left: 4px solid var(--gold); padding: 15px 25px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; }
         label { color: var(--gold); font-size: 0.7rem; font-weight: 900; display: block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1.5px; }
         select, textarea, input[type="file"], input[type="range"] { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 18px; border-radius: 12px; margin-bottom: 25px; box-sizing: border-box; font-size: 0.95rem; }
         
-        /* MAGIC BUTTON */
-        .magic-btn {
-            background: #111; border: 1px solid #444; color: var(--gold); padding: 8px 15px; border-radius: 6px;
-            font-size: 0.65rem; font-weight: 900; cursor: pointer; float: right; margin-top: -45px; position: relative;
-            z-index: 10; text-transform: uppercase; transition: 0.3s;
-        }
+        .magic-btn { background: #111; border: 1px solid #444; color: var(--gold); padding: 8px 15px; border-radius: 6px; font-size: 0.65rem; font-weight: 900; cursor: pointer; float: right; margin-top: -45px; position: relative; z-index: 10; text-transform: uppercase; transition: 0.3s; }
         .magic-btn:hover { background: var(--gold); color: #000; border-color: var(--gold); }
 
         .slider-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.6rem; color: #888; font-weight: 900; }
@@ -59,9 +60,6 @@
 
         #loginModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; justify-content: center; align-items: center; }
         .modal-content { background: #080808; border: 1px solid var(--gold); padding: 60px; border-radius: 30px; text-align: center; width: 450px; }
-        .modal-input { width: 100%; padding: 18px; background: #000; border: 1px solid #333; color: white; margin: 25px 0; border-radius: 10px; text-align: center; }
-        
-        .pro-tip { background: rgba(212,175,55,0.05); border: 1px dashed var(--gold); padding: 15px; border-radius: 10px; margin-bottom: 25px; font-size: 0.75rem; color: #ccc; }
         
         @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
     </style>
@@ -89,10 +87,15 @@
     </nav>
 
     <div class="main-layout">
+        <!-- LEFT SIDEBAR: ADS -->
         <aside class="sidebar">
             <div class="ad-box">
                 <img src="banner.png">
                 <a href="https://t.vlmai-3.com/396104/6924?aff_sub5=SF_006OG000004lmDN" style="color:var(--gold); font-weight:900; text-decoration:none; font-size:0.75rem; text-transform:uppercase;">Join Elite Club</a>
+            </div>
+            <div class="ad-box">
+                <img src="banner.png">
+                <a href="https://t.vlmai-3.com/396104/7477?aff_sub5=SF_006OG000004lmDN" style="color:var(--gold); font-weight:900; text-decoration:none; font-size:0.75rem; text-transform:uppercase;">Elite Rewards</a>
             </div>
         </aside>
 
@@ -101,10 +104,6 @@
                 <span style="color:#888; font-size:0.75rem; font-weight:900;">PRODUCTION COST:</span>
                 <span style="color:var(--gold); font-weight:900;"><span id="costDisplay">5</span> CREDITS</span>
             </div>
-
-            <div class="pro-tip">
-                <b style="color:var(--gold);">PRO TIP:</b> Keep the Preservation slider high (0.85) to keep your logo exact. Use the ✨ Magic button to optimize your description!
-            </div>
             
             <label>Select Production Engine</label>
             <select id="engineSelect" onchange="updateCost()"></select>
@@ -112,9 +111,11 @@
             <label>Upload Reference Logo/Image</label>
             <input type="file" id="assetFile">
 
-            <label>Logo Preservation (Image Influence)</label>
-            <div class="slider-label"><span>MORE CREATIVE</span> <span>STAY TRUE TO LOGO</span></div>
-            <input type="range" id="promptStrength" min="0.1" max="0.9" step="0.05" value="0.85">
+            <div id="sliderControl">
+                <label>Logo Preservation (Image Influence)</label>
+                <div class="slider-label"><span>MORE CREATIVE</span> <span>STAY TRUE TO LOGO</span></div>
+                <input type="range" id="promptStrength" min="0.1" max="0.9" step="0.05" value="0.85">
+            </div>
             
             <div id="timelineContainer" style="display:none; border-left: 2px solid var(--gold); padding-left: 25px; margin-bottom: 25px;">
                 <label>Script / Dialogue</label>
@@ -139,10 +140,18 @@
             </div>
         </main>
 
+        <!-- RIGHT SIDEBAR: DYNAMIC PRO GUIDE -->
         <aside class="sidebar">
-            <div class="ad-box">
-                <img src="banner.png">
-                <a href="https://t.vlmai-3.com/396104/7477?aff_sub5=SF_006OG000004lmDN" style="color:var(--gold); font-weight:900; text-decoration:none; font-size:0.75rem; text-transform:uppercase;">Elite Rewards</a>
+            <div class="guide-box">
+                <h3>Elite Studio Guide</h3>
+                <div id="dynamicGuide" class="guide-text">
+                    <!-- Text injected by JS -->
+                </div>
+            </div>
+            <div style="margin-top:20px; border:1px solid #222; border-radius:15px; padding:20px; text-align:center;">
+                <h4 style="color:var(--gold); margin:0 0 10px 0;">REFILL CREDITS</h4>
+                <a href="https://buy.stripe.com/6oU8wRfbO4wqdQueDE8N200" style="color:white; font-size:0.7rem; text-decoration:none; display:block; border:1px solid #444; padding:10px; border-radius:5px; margin-bottom:10px;">100 Credits - $10</a>
+                <a href="https://buy.stripe.com/bJe7sNd3GbYS7s61QS8N201" style="color:black; font-weight:900; background:var(--gold); font-size:0.7rem; text-decoration:none; display:block; padding:10px; border-radius:5px;">550 Credits - $45</a>
             </div>
         </aside>
     </div>
@@ -170,11 +179,19 @@
         let userEmail = localStorage.getItem('studio_email') || null;
         let userCredits = 0;
 
+        const guides = {
+            'img-to-img': `<b>IMAGE STUDIO TIPS:</b><br><br>1. <b>Logo Preservation:</b> Keep slider at <b>0.85</b> for exact logos. Drop to <b>0.4</b> for artistic remixes.<br><br>2. <b>Magic Button:</b> Always click ✨ Pimp My Prompt to add cinematic lighting and textures.<br><br>3. <b>Assets:</b> Use high-contrast images for the best results.`,
+            'img-to-video': `<b>VIDEO ENGINE TIPS:</b><br><br>1. <b>Base Image:</b> Start with a high-res image for the best video quality.<br><br>2. <b>Movement:</b> Describe motion in the prompt (e.g., "slow zoom", "smoke rising", "neon lights flickering").<br><br>3. <b>Text:</b> Complex text can warp in video; keep logo prompts simple.`,
+            'lip-sync': `<b>LIP SYNC TIPS:</b><br><br>1. <b>Facial Clarity:</b> Use a headshot where the person is looking directly at the camera.<br><br>2. <b>Audio:</b> Ensure your script is clear. The AI will sync facial muscles to every syllable.<br><br>3. <b>Lighting:</b> Avoid shadows on the face for professional-grade realism.`
+        };
+
         const modelLibrary = {
             'img-to-img': [{ id: 'flux-pro', name: 'FLUX 1.1 PRO (Masterpiece Stills)', cost: 5 }],
             'img-to-video': [{ id: 'kling-video', name: 'KLING 2.5 (Cinema Grade Motion)', cost: 15 }],
             'lip-sync': [{ id: 'omni-human', name: 'OMNI-HUMAN (Digital Soul Sync)', cost: 20 }]
         };
+
+        function updateGuide() { document.getElementById('dynamicGuide').innerHTML = guides[currentMode]; }
 
         function pimpPrompt() {
             const promptArea = document.getElementById('studioPrompt');
@@ -187,7 +204,6 @@
 
         function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
         function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
-        
         function processLogin() {
             const email = document.getElementById('loginEmail').value.toLowerCase().trim();
             if(!email.includes('@')) return alert("Enter valid email.");
@@ -197,13 +213,11 @@
             updateCredits();
             closeLogin();
         }
-
         function loginUI(email) {
             document.getElementById('authBtn').style.display = 'none';
             document.getElementById('userPanel').style.display = 'flex';
             document.getElementById('userHandle').innerText = email;
         }
-
         function logout() { localStorage.removeItem('studio_email'); window.location.reload(); }
 
         function setMode(mode, el) {
@@ -211,7 +225,9 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('timelineContainer').style.display = (mode === 'lip-sync') ? 'block' : 'none';
+            document.getElementById('sliderControl').style.display = (mode === 'img-to-img') ? 'block' : 'none';
             updateEngineDropdown();
+            updateGuide();
         }
 
         function updateEngineDropdown() {
@@ -271,7 +287,8 @@
                         prompt: document.getElementById('studioPrompt').value,
                         image: b64,
                         email: userEmail,
-                        prompt_strength: parseFloat(document.getElementById('promptStrength').value)
+                        prompt_strength: parseFloat(document.getElementById('promptStrength').value),
+                        script: document.getElementById('scriptText').value
                     })
                 });
                 const job = await res.json();
@@ -312,6 +329,7 @@
         }
 
         updateEngineDropdown();
+        updateGuide();
         if(userEmail) { loginUI(userEmail); updateCredits(); }
     </script>
 </body>
