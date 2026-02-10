@@ -123,13 +123,16 @@
     <div class="bg-layer"></div>
     <div class="overlay-layer"></div>
 
-    <header class="top-rocker">
+      <header class="top-rocker">
         <div class="logo-text">SMOKE SHAQ STUDIO</div>
         <div class="auth-status">
             <button id="authBtn" class="login-btn" onclick="openLogin()">SIGN IN / JOIN VIP</button>
-            <div id="userPanel" class="credit-display">
+            <!-- Added style="display:none;" here so it doesn't show empty credits on load -->
+            <div id="userPanel" class="credit-display" style="display:none;">
                 <span id="userHandle" style="font-size: 0.8rem; opacity: 0.6;"></span>
                 <div class="credit-val"><span id="liveCredits">0</span> CREDITS</div>
+                <!-- This is your new Sign Out button -->
+                <button onclick="logout()" style="background:none; border:none; color:var(--gold); cursor:pointer; font-size:0.6rem; text-decoration:underline; margin-left:15px; font-weight:900; text-transform:uppercase;">[ Sign Out ]</button>
             </div>
         </div>
     </header>
@@ -364,5 +367,6 @@
     </script>
 </body>
 </html>
+
 
 
