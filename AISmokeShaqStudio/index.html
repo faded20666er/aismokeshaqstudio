@@ -588,15 +588,30 @@
             if(m) document.getElementById('costDisplay').innerText = m.cost; 
         }
 
-        async function updateCredits() { 
+           async function updateCredits() { 
             if(!userEmail) return; 
             try { 
                 const res = await fetch(`/api/credits?email=${userEmail}`); 
                 const data = await res.json(); 
+                
+                // Get credits from database, or default to 0
                 userCredits = data.credits || 0; 
+
+                // NEW: Welcome Gift Logic for your Ads
+                // If a new user has 0 credits, we give them 50 to start
+                const giftKey = 'gift_claimed_' + userEmail;
+                if(userCredits === 0 && !localStorage.getItem(giftKey)) {
+                    userCredits = 50; 
+                    // This tells the browser they've received their starter pack
+                    localStorage.setItem(giftKey, 'true'); 
+                }
+
                 document.getElementById('liveCredits').innerText = userCredits; 
-            } catch(e) {} 
+            } catch(e) {
+                console.log("Credit sync standby...");
+            } 
         }
+
 
         function pimpPrompt() { 
             const area = document.getElementById('studioPrompt'); 
@@ -670,6 +685,7 @@
     </script>
 </body>
 </html>
+
 
 
 
