@@ -1,137 +1,313 @@
-// api.js
-// Handles: startProduction(), poll(), file encoding, output rendering, credit updates
 
-// ---------- FILE → BASE64 ENCODING ----------
-async function encodeFile(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = e => reject(e);
-        reader.readAsDataURL(file);
+// ===== DOM HOOKS =====
+const modeSelect = document.getElementById("modeSelect");
+const modelSelect = document.getElementById("modelSelect");
+const voiceSelect = document.getElementById("voiceSelect");
+const promptInput = document.getElementById("promptInput");
+const scriptInput = document.getElementById("scriptInput");
+const imageInput = document.getElementById("imageInput");
+const videoInput = document.getElementById("videoInput");
+const audioInput = document.getElementById("audioInput");
+const generateBtn = document.getElementById("generateBtn");
+const outputContainer = document.getElementById("outputContainer");
+const statusMessage = document.getElementById("statusMessage");
+const creditsDisplay = document.getElementById("creditsDisplay");
+
+const panelImage = document.getElementById("panelImage");
+const panelVideo = document.getElementById("panelVideo");
+const panelAudio = document.getElementById("panelAudio");
+const panelScript = document.getElementById("panelScript");
+const panelVoice = document.getElementById("panelVoice");
+
+// ===== STATE =====
+let pollingInterval = null;
+
+// ===== UTIL =====
+function setStatus(text) {
+  if (statusMessage) statusMessage.textContent = text || "";
+}
+
+function setLoading(isLoading) {
+  if (!generateBtn) return;
+  generateBtn.disabled = isLoading;
+  generateBtn.textContent = isLoading ? "Generating..." : "Generate";
+}
+
+function setCredits(value) {
+  if (creditsDisplay && typeof value === "number") {
+    creditsDisplay.textContent = value;
+  }
+}
+
+function clearOutput() {
+  if (!outputContainer) return;
+  outputContainer.innerHTML = "";
+}
+
+function createMediaElement(url) {
+  const lower = (url || "").toLowerCase();
+  if (lower.match(/\.(png|jpg|jpeg|webp)$/)) {
+    const img = document.createElement("img");
+    img.src = url;
+    img.className = "dn-output-media";
+    return img;
+  }
+  if (lower.match(/\.(mp4|webm|mov)$/)) {
+    const video = document.createElement("video");
+    video.src = url;
+    video.controls = true;
+    video.loop = true;
+    video.className = "dn-output-media";
+    return video;
+  }
+  if (lower.match(/\.(mp3|wav|ogg)$/)) {
+    const audio = document.createElement("audio");
+    audio.src = url;
+    audio.controls = true;
+    audio.className = "dn-output-media";
+    return audio;
+  }
+  const link = document.createElement("a");
+  link.href = url;
+  link.target = "_blank";
+  link.textContent = "Download result";
+  return link;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ===== MODE UI =====
+function updateModeUI() {
+  const mode = modeSelect ? modeSelect.value : "text2img";
+
+  [panelImage, panelVideo, panelAudio, panelScript, panelVoice].forEach(p => {
+    if (p) p.style.display = "none";
+  });
+
+  switch (mode) {
+    case "text2img":
+      break;
+
+    case "img2img":
+      if (panelImage) panelImage.style.display = "block";
+      break;
+
+    case "img2video":
+      if (panelImage) panelImage.style.display = "block";
+      break;
+
+    case "video2video":
+      if (panelVideo) panelVideo.style.display = "block";
+      break;
+
+    case "lipsync_upload_audio":
+      if (panelVideo) panelVideo.style.display = "block";
+      if (panelAudio) panelAudio.style.display = "block";
+      if (panelScript) panelScript.style.display = "block";
+      break;
+
+    case "lipsync_tts":
+      if (panelVideo) panelVideo.style.display = "block";
+      if (panelScript) panelScript.style.display = "block";
+      if (panelVoice) panelVoice.style.display = "block";
+      break;
+
+    case "tts_only":
+      if (panelScript) panelScript.style.display = "block";
+      if (panelVoice) panelVoice.style.display = "block";
+      break;
+  }
+}
+
+// ===== CREDITS =====
+async function updateCredits(userId = "guest") {
+  try {
+    const res = await fetch("/api/credits", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: userId })
     });
+    const data = await res.json();
+    if (typeof data.credits === "number") setCredits(data.credits);
+  } catch (err) {
+    console.error("Credits error:", err);
+  }
 }
 
-// ---------- START PRODUCTION ----------
-async function startProduction() {
-    if (!userEmail) {
-        openLogin();
-        return;
-    }
+// ===== STATUS POLLING =====
+async function pollStatus(id) {
+  if (!id) return;
 
-    const cost = parseInt(document.getElementById('costDisplay').innerText);
-    if (userCredits < cost) {
-        alert("Insufficient Credits. Please refill to continue production.");
-        return;
-    }
+  if (pollingInterval) clearInterval(pollingInterval);
 
-    // UI feedback
-    document.getElementById('standbyText').classList.add('hidden');
-    document.getElementById('activeRender').classList.remove('hidden');
-    document.getElementById('resultContainer').innerHTML = '';
-
+  pollingInterval = setInterval(async () => {
     try {
-        const file = document.getElementById('assetFile').files[0];
-        let b64 = null;
+      const res = await fetch(`/api/status?id=${encodeURIComponent(id)}`);
+      const data = await res.json();
 
-        if (file) {
-            b64 = await encodeFile(file);
+      const status = data.status || data.state || "processing";
+
+      if (["succeeded", "failed", "canceled"].includes(status)) {
+        clearInterval(pollingInterval);
+        setLoading(false);
+
+        if (status === "succeeded") {
+          renderOutput(data.output);
+          setStatus("Done.");
+          await updateCredits("guest");
+        } else {
+          setStatus(`Job ${status}`);
         }
-
-        const payload = {
-            tool: currentMode,
-            modelId: document.getElementById('engineSelect').value,
-            prompt: document.getElementById('studioPrompt').value,
-            image: b64,
-            email: userEmail,
-            prompt_strength: parseFloat(document.getElementById('promptStrength').value),
-            script: document.getElementById('scriptText').value
-        };
-
-        const res = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || "Server connection failed");
-        }
-
-        const job = await res.json();
-        poll(job.id);
-
+      } else {
+        setStatus(`Status: ${status}...`);
+      }
     } catch (err) {
-        console.error("PRODUCTION ERROR:", err);
-        alert("PRODUCTION FAILED: " + err.message);
-
-        document.getElementById('activeRender').classList.add('hidden');
-        document.getElementById('standbyText').classList.remove('hidden');
+      console.error("Status polling error:", err);
+      clearInterval(pollingInterval);
+      setLoading(false);
+      setStatus("Status check failed.");
     }
+  }, 3000);
 }
 
-// ---------- POLLING ----------
-function poll(jobId) {
-    const timer = setInterval(async () => {
-        try {
-            const res = await fetch(`/api/status?id=${jobId}`);
-            if (!res.ok) return;
-
-            const data = await res.json();
-
-            if (data.status === 'succeeded') {
-                clearInterval(timer);
-                renderOutput(data.output);
-                updateCredits();
-            }
-
-            if (data.status === 'failed') {
-                clearInterval(timer);
-                alert("The AI Engine failed to generate this prompt. Credits were not deducted.");
-
-                document.getElementById('activeRender').classList.add('hidden');
-                document.getElementById('standbyText').classList.remove('hidden');
-            }
-
-        } catch (err) {
-            console.warn("Polling error, retrying...", err);
-        }
-    }, 3000);
-}
-
-// ---------- RENDER OUTPUT ----------
+// ===== OUTPUT RENDER =====
 function renderOutput(output) {
-    const container = document.getElementById('resultContainer');
-    const active = document.getElementById('activeRender');
+  clearOutput();
+  if (!outputContainer) return;
 
-    active.classList.add('hidden');
+  if (!output) {
+    setStatus("No output received.");
+    return;
+  }
 
-    const url = Array.isArray(output) ? output[0] : output;
-
-    if (!url) {
-        container.innerHTML = `<p style="color:red;">No output returned.</p>`;
-        return;
-    }
-
-    // Video output
-    if (url.includes('.mp4') || url.includes('.webm')) {
-        container.innerHTML = `
-            <video src="${url}" controls autoplay loop style="width:100%; border-radius:10px;"></video>
-            <div style="padding:15px; text-align:center;">
-                <a href="${url}" download class="btn-outline" style="display:inline-block;">DOWNLOAD MASTER VIDEO</a>
-            </div>
-        `;
-        return;
-    }
-
-    // Image output
-    container.innerHTML = `
-        <img src="${url}" style="width:100%; border-radius:10px;">
-        <div style="padding:15px; text-align:center;">
-            <a href="${url}" download class="btn-outline" style="display:inline-block;">DOWNLOAD MASTER IMAGE</a>
-        </div>
-    `;
+  const urls = Array.isArray(output) ? output : [output];
+  urls.forEach(u => {
+    if (!u) return;
+    const el = createMediaElement(u);
+    outputContainer.appendChild(el);
+  });
 }
 
-// ---------- EXPOSE FUNCTIONS ----------
-window.startProduction = startProduction;
+// ===== MAIN GENERATE =====
+async function handleGenerate() {
+  const mode = modeSelect ? modeSelect.value : "text2img";
+  const prompt = promptInput ? promptInput.value.trim() : "";
+  const script = scriptInput ? scriptInput.value.trim() : "";
+  const engine = modelSelect ? modelSelect.value : "";
+  const voiceId = voiceSelect ? voiceSelect.value : "";
+
+  if (!prompt && ["text2img", "img2img", "img2video", "video2video"].includes(mode)) {
+    alert("Please enter a prompt.");
+    return;
+  }
+
+  if (["lipsync_upload_audio", "lipsync_tts", "tts_only"].includes(mode) && !script) {
+    alert("Please enter dialog / script.");
+    return;
+  }
+
+  clearOutput();
+  setStatus("Preparing...");
+  setLoading(true);
+
+  try {
+    const imageFile = imageInput && imageInput.files[0] ? imageInput.files[0] : null;
+    const videoFile = videoInput && videoInput.files[0] ? videoInput.files[0] : null;
+    const audioFile = audioInput && audioInput.files[0] ? audioInput.files[0] : null;
+
+    const [imageBase64, videoBase64, audioBase64] = await Promise.all([
+      fileToBase64(imageFile),
+      fileToBase64(videoFile),
+      fileToBase64(audioFile)
+    ]);
+
+    const body = {
+      mode,
+      prompt,
+      script,
+      engine,
+      voiceId,
+      image: imageBase64,
+      video: videoBase64,
+      audio: audioBase64
+    };
+
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Generate error:", data);
+      setStatus(data.error || "Generation failed.");
+      setLoading(false);
+      return;
+    }
+
+    if (data.id) {
+      setStatus("Job started. Polling status...");
+      await pollStatus(data.id);
+    } else if (data.output) {
+      renderOutput(data.output);
+      setStatus("Done.");
+      setLoading(false);
+      await updateCredits("guest");
+    } else {
+      setStatus("No output received.");
+      setLoading(false);
+    }
+  } catch (err) {
+    console.error("Generate exception:", err);
+    setStatus("Unexpected error during generation.");
+    setLoading(false);
+  }
+}
+
+// ===== VOICE PRESETS =====
+function initVoices() {
+  if (!voiceSelect) return;
+
+  const voices = [
+    { id: "coqui_female_1", label: "Coqui – Cinematic Female" },
+    { id: "coqui_male_1", label: "Coqui – Cinematic Male" },
+    { id: "openai_female_1", label: "OpenAI – Studio Female" },
+    { id: "openai_male_1", label: "OpenAI – Studio Male" }
+  ];
+
+  voiceSelect.innerHTML = "";
+  voices.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v.id;
+    opt.textContent = v.label;
+    voiceSelect.appendChild(opt);
+  });
+}
+
+// ===== INIT =====
+function init() {
+  if (modeSelect) {
+    modeSelect.addEventListener("change", updateModeUI);
+    updateModeUI();
+  }
+
+  if (generateBtn) {
+    generateBtn.addEventListener("click", handleGenerate);
+  }
+
+  initVoices();
+  updateCredits("guest");
+  setStatus("");
+}
+
+document.addEventListener("DOMContentLoaded", init);
