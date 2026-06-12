@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AISmokeShaqStudio – Lipsync Timeline</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="lipsync.css" />
+</head>
+
+<body class="dn-body">
+  <header class="dn-header">
+    <div class="dn-logo-wrap">
+      <img src="assets/logo.png" class="dn-logo" alt="Logo" />
+      <div class="dn-logo-text">
+        <span class="dn-logo-title">AISmokeShaqStudio</span>
+        <span class="dn-logo-sub">Lipsync Timeline</span>
+      </div>
+    </div>
+    <nav class="dn-nav">
+      <a href="index.html" class="dn-nav-link">Home</a>
+      <a href="studio.html" class="dn-nav-link">Studio</a>
+    </nav>
+  </header>
+
+  <main class="ls-main">
+    <!-- TOP CONTROLS -->
+    <section class="ls-topbar">
+      <div class="ls-top-left">
+        <h1 class="ls-title">Multi‑Character Lipsync Timeline</h1>
+        <p class="ls-subtitle">
+          Five character tracks. Upload audio or generate voices. Arrange dialog blocks on a visual timeline.
+        </p>
+      </div>
+      <div class="ls-top-right">
+        <button id="lsPlayBtn" class="dn-btn dn-btn-secondary">Play</button>
+        <button id="lsStopBtn" class="dn-btn dn-btn-secondary">Stop</button>
+        <button id="lsExportBtn" class="dn-btn dn-btn-primary">Export & Send to Backend</button>
+      </div>
+    </section>
+
+    <!-- GLOBAL VIDEO / REFERENCE -->
+    <section class="ls-reference">
+      <div class="ls-ref-left">
+        <label class="dn-label">Reference Video (optional)</label>
+        <input type="file" id="lsVideoInput" class="dn-file" accept="video/*" />
+        <small class="ls-hint">
+          Use this if you already have a base video you want to lipsync to.
+        </small>
+      </div>
+      <div class="ls-ref-right">
+        <video id="lsPreviewVideo" class="ls-preview-video" controls></video>
+      </div>
+    </section>
+
+    <!-- TIMELINE WRAPPER -->
+    <section class="ls-timeline-wrapper">
+      <div class="ls-timeline-header">
+        <div class="ls-track-label-col">Character</div>
+        <div class="ls-track-timeline-col">
+          <div class="ls-time-ruler" id="lsTimeRuler"></div>
+        </div>
+      </div>
+
+      <!-- TRACKS -->
+      <div class="ls-tracks" id="lsTracks">
+        <!-- Character 1 -->
+        <div class="ls-track" data-track-index="0">
+          <div class="ls-track-label">
+            <input type="text" class="ls-char-name" value="Character 1" />
+            <select class="ls-voice-select">
+              <option value="coqui_female_1">Coqui – Cinematic Female</option>
+              <option value="coqui_male_1">Coqui – Cinematic Male</option>
+              <option value="openai_female_1">OpenAI – Studio Female</option>
+              <option value="openai_male_1">OpenAI – Studio Male</option>
+            </select>
+            <input type="file" class="ls-audio-input" accept="audio/*" />
+            <textarea class="ls-script-input" placeholder="Dialog for Character 1"></textarea>
+            <button class="dn-btn dn-btn-secondary ls-generate-voice-btn">
+              Generate Voice
+            </button>
+            <button class="dn-btn dn-btn-secondary ls-add-block-btn">
+              Add Block
+            </button>
+          </div>
+          <div class="ls-track-timeline">
+            <!-- Blocks will be injected here -->
+          </div>
+        </div>
+
+        <!-- Character 2 -->
+        <div class="ls-track" data-track-index="1">
+          <div class="ls-track-label">
+            <input type="text" class="ls-char-name" value="Character 2" />
+            <select class="ls-voice-select">
+              <option value="coqui_female_1">Coqui – Cinematic Female</option>
+              <option value="coqui_male_1">Coqui – Cinematic Male</option>
+              <option value="openai_female_1">OpenAI – Studio Female</option>
+              <option value="openai_male_1">OpenAI – Studio Male</option>
+            </select>
+            <input type="file" class="ls-audio-input" accept="audio/*" />
+            <textarea class="ls-script-input" placeholder="Dialog for Character 2"></textarea>
+            <button class="dn-btn dn-btn-secondary ls-generate-voice-btn">
+              Generate Voice
+            </button>
+            <button class="dn-btn dn-btn-secondary ls-add-block-btn">
+              Add Block
+            </button>
+          </div>
+          <div class="ls-track-timeline"></div>
+        </div>
+
+        <!-- Character 3 -->
+        <div class="ls-track" data-track-index="2">
+          <div class="ls-track-label">
+            <input type="text" class="ls-char-name" value="Character 3" />
+            <select class="ls-voice-select">
+              <option value="coqui_female_1">Coqui – Cinematic Female</option>
+              <option value="coqui_male_1">Coqui – Cinematic Male</option>
+              <option value="openai_female_1">OpenAI – Studio Female</option>
+              <option value="openai_male_1">OpenAI – Studio Male</option>
+            </select>
+            <input type="file" class="ls-audio-input" accept="audio/*" />
+            <textarea class="ls-script-input" placeholder="Dialog for Character 3"></textarea>
+            <button class="dn-btn dn-btn-secondary ls-generate-voice-btn">
+              Generate Voice
+            </button>
+            <button class="dn-btn dn-btn-secondary ls-add-block-btn">
+              Add Block
+            </button>
+          </div>
+          <div class="ls-track-timeline"></div>
+        </div>
+
+        <!-- Character 4 -->
+        <div class="ls-track" data-track-index="3">
+          <div class="ls-track-label">
+            <input type="text" class="ls-char-name" value="Character 4" />
+            <select class="ls-voice-select">
+              <option value="coqui_female_1">Coqui – Cinematic Female</option>
+              <option value="coqui_male_1">Coqui – Cinematic Male</option>
+              <option value="openai_female_1">OpenAI – Studio Female</option>
+              <option value="openai_male_1">OpenAI – Studio Male</option>
+            </select>
+            <input type="file" class="ls-audio-input" accept="audio/*" />
+            <textarea class="ls-script-input" placeholder="Dialog for Character 4"></textarea>
+            <button class="dn-btn dn-btn-secondary ls-generate-voice-btn">
+              Generate Voice
+            </button>
+            <button class="dn-btn dn-btn-secondary ls-add-block-btn">
+              Add Block
+            </button>
+          </div>
+          <div class="ls-track-timeline"></div>
+        </div>
+
+        <!-- Character 5 -->
+        <div class="ls-track" data-track-index="4">
+          <div class="ls-track-label">
+            <input type="text" class="ls-char-name" value="Character 5" />
+            <select class="ls-voice-select">
+              <option value="coqui_female_1">Coqui – Cinematic Female</option>
+              <option value="coqui_male_1">Coqui – Cinematic Male</option>
+              <option value="openai_female_1">OpenAI – Studio Female</option>
+              <option value="openai_male_1">OpenAI – Studio Male</option>
+            </select>
+            <input type="file" class="ls-audio-input" accept="audio/*" />
+            <textarea class="ls-script-input" placeholder="Dialog for Character 5"></textarea>
+            <button class="dn-btn dn-btn-secondary ls-generate-voice-btn">
+              Generate Voice
+            </button>
+            <button class="dn-btn dn-btn-secondary ls-add-block-btn">
+              Add Block
+            </button>
+          </div>
+          <div class="ls-track-timeline"></div>
+        </div>
+      </div>
+
+      <!-- SCRUBBER -->
+      <div class="ls-scrubber" id="lsScrubber"></div>
+    </section>
+
+    <!-- EXPORT OUTPUT -->
+    <section class="ls-export-section">
+      <h2 class="ls-export-title">Timeline JSON (Preview)</h2>
+      <textarea id="lsExportOutput" class="ls-export-output" readonly></textarea>
+      <div id="lsStatus" class="ls-status"></div>
+    </section>
+  </main>
+
+  <script src="lipsync.js"></script>
+</body>
+</html>
