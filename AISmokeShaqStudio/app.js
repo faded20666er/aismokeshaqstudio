@@ -1,174 +1,326 @@
-// app.js
-// Core UI logic: modes, engines, guides, cost, initial setup
 
-let currentMode = 'img-to-img';
-let userEmail = localStorage.getItem('studio_email') || null;
-let userCredits = 0;
+// ====== BASIC DOM HOOKS ======
+const modeSelect = document.getElementById("modeSelect");          // <select>
+const modelSelect = document.getElementById("modelSelect");        // optional <select> for engine/model
+const voiceSelect = document.getElementById("voiceSelect");        // <select> for voice
+const promptInput = document.getElementById("promptInput");        // textarea / input
+const scriptInput = document.getElementById("scriptInput");        // textarea for dialog
+const imageInput = document.getElementById("imageInput");          // <input type="file">
+const videoInput = document.getElementById("videoInput");          // <input type="file">
+const audioInput = document.getElementById("audioInput");          // <input type="file">
+const generateBtn = document.getElementById("generateBtn");        // main CTA
+const outputContainer = document.getElementById("outputContainer");// div for result
+const statusMessage = document.getElementById("statusMessage");    // small status text
+const creditsDisplay = document.getElementById("creditsDisplay");  // span for credits
 
-// Guides per mode
-const guides = {
-    'img-to-img': `<b>IMAGE TIPS:</b><br>1. Use 0.85 Preservation.<br>2. Use 'Logo' for branding results.<br>3. Upload clean, high-res assets.`,
-    'img-to-video': `<b>VIDEO TIPS:</b><br>1. Mention camera motion (pan, dolly, zoom).<br>2. Describe mood + lighting.<br>3. Short, clear prompts work best.`,
-    'lip-sync': `<b>LIP SYNC TIPS:</b><br>1. Use clear, front-facing headshots.<br>2. Keep audio clean and dry.<br>3. Match script timing to speech pace.`
-};
+// Panels you can show/hide per mode
+const panelImage = document.getElementById("panelImage");
+const panelVideo = document.getElementById("panelVideo");
+const panelAudio = document.getElementById("panelAudio");
+const panelScript = document.getElementById("panelScript");
+const panelVoice = document.getElementById("panelVoice");
 
-// Engine library per mode
-const modelLibrary = {
-    'img-to-img': [
-        { id: 'flux-pro', name: 'FLUX 1.1 PRO', cost: 5 }
-    ],
-    'img-to-video': [
-        { id: 'kling-video', name: 'KLING 2.5', cost: 15 }
-    ],
-    'lip-sync': [
-        { id: 'omni-human', name: 'OMNI-HUMAN', cost: 20 }
-    ]
-};
+// ====== STATE ======
+let currentPredictionId = null;
+let pollingInterval = null;
 
-// ---------- MODE HANDLING ----------
+// ====== UTILITIES ======
+function setStatus(text) {
+  if (statusMessage) statusMessage.textContent = text || "";
+}
 
-function setMode(mode) {
-    currentMode = mode;
+function setLoading(isLoading) {
+  if (!generateBtn) return;
+  generateBtn.disabled = isLoading;
+  generateBtn.textContent = isLoading ? "Generating..." : "Generate";
+}
 
-    // Nav active state
-    document.querySelectorAll('.nav-item').forEach(item => {
-        const m = item.getAttribute('data-mode');
-        if (m === mode) item.classList.add('active');
-        else item.classList.remove('active');
+function setCredits(value) {
+  if (creditsDisplay && typeof value === "number") {
+    creditsDisplay.textContent = value;
+  }
+}
+
+function clearOutput() {
+  if (!outputContainer) return;
+  outputContainer.innerHTML = "";
+}
+
+function createMediaElement(url) {
+  const lower = url.toLowerCase();
+  if (lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".webp")) {
+    const img = document.createElement("img");
+    img.src = url;
+    img.className = "output-media";
+    return img;
+  }
+  if (lower.endsWith(".mp4") || lower.endsWith(".webm") || lower.endsWith(".mov")) {
+    const video = document.createElement("video");
+    video.src = url;
+    video.controls = true;
+    video.loop = true;
+    video.className = "output-media";
+    return video;
+  }
+  if (lower.endsWith(".mp3") || lower.endsWith(".wav") || lower.endsWith(".ogg")) {
+    const audio = document.createElement("audio");
+    audio.src = url;
+    audio.controls = true;
+    audio.className = "output-media";
+    return audio;
+  }
+  const link = document.createElement("a");
+  link.href = url;
+  link.textContent = "Download result";
+  link.target = "_blank";
+  return link;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ====== MODE UI HANDLING ======
+function updateModeUI() {
+  const mode = modeSelect ? modeSelect.value : "text2img";
+
+  // Hide all panels by default
+  [panelImage, panelVideo, panelAudio, panelScript, panelVoice].forEach(p => {
+    if (p) p.style.display = "none";
+  });
+
+  // Turn on what each mode needs
+  switch (mode) {
+    case "text2img":
+      if (panelImage) panelImage.style.display = "none";
+      if (panelScript) panelScript.style.display = "none";
+      if (panelAudio) panelAudio.style.display = "none";
+      if (panelVoice) panelVoice.style.display = "none";
+      break;
+
+    case "img2img":
+      if (panelImage) panelImage.style.display = "block";
+      break;
+
+    case "img2video":
+      if (panelImage) panelImage.style.display = "block";
+      break;
+
+    case "video2video":
+      if (panelVideo) panelVideo.style.display = "block";
+      break;
+
+    case "lipsync_upload_audio":
+      if (panelVideo) panelVideo.style.display = "block";
+      if (panelAudio) panelAudio.style.display = "block";
+      if (panelScript) panelScript.style.display = "block";
+      break;
+
+    case "lipsync_tts":
+      if (panelVideo) panelVideo.style.display = "block";
+      if (panelScript) panelScript.style.display = "block";
+      if (panelVoice) panelVoice.style.display = "block";
+      break;
+
+    case "tts_only":
+      if (panelScript) panelScript.style.display = "block";
+      if (panelVoice) panelVoice.style.display = "block";
+      break;
+
+    default:
+      break;
+  }
+}
+
+// ====== BACKEND CALLS ======
+async function updateCredits(userId = "guest") {
+  try {
+    const res = await fetch("/api/credits", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: userId })
     });
-
-    // Show/hide controls based on mode
-    const sliderControl = document.getElementById('sliderControl');
-    const timelineContainer = document.getElementById('timelineContainer');
-
-    if (mode === 'img-to-img') {
-        sliderControl.classList.remove('hidden');
-        timelineContainer.classList.add('hidden');
-    } else if (mode === 'img-to-video') {
-        sliderControl.classList.add('hidden');
-        timelineContainer.classList.add('hidden');
-    } else if (mode === 'lip-sync') {
-        sliderControl.classList.add('hidden');
-        timelineContainer.classList.remove('hidden');
+    const data = await res.json();
+    if (data && typeof data.credits === "number") {
+      setCredits(data.credits);
     }
-
-    // Update guide + engines
-    updateGuide();
-    updateEngineDropdown();
+  } catch (err) {
+    console.error("Credits error:", err);
+  }
 }
 
-function updateGuide() {
-    const guideBox = document.getElementById('dynamicGuide');
-    if (!guideBox) return;
-    guideBox.innerHTML = guides[currentMode] || '';
-}
+async function pollStatus(id) {
+  if (!id) return;
+  currentPredictionId = id;
 
-function updateEngineDropdown() {
-    const select = document.getElementById('engineSelect');
-    if (!select) return;
+  if (pollingInterval) clearInterval(pollingInterval);
 
-    const models = modelLibrary[currentMode] || [];
-    select.innerHTML = models
-        .map(m => `<option value="${m.id}">${m.name}</option>`)
-        .join('');
-
-    updateCost();
-}
-
-function updateCost() {
-    const select = document.getElementById('engineSelect');
-    const costDisplay = document.getElementById('costDisplay');
-    if (!select || !costDisplay) return;
-
-    const models = modelLibrary[currentMode] || [];
-    const selected = models.find(m => m.id === select.value);
-    if (selected) costDisplay.innerText = selected.cost;
-}
-
-// ---------- PROMPT UTILITIES ----------
-
-function pimpPrompt() {
-    const area = document.getElementById('studioPrompt');
-    if (!area) return;
-
-    let base = area.value || 'Professional masterpiece';
-    let lower = base.toLowerCase();
-
-    let enhanced = lower.includes('logo')
-        ? `${base}, 3D metallic logo, smoke, 8k --no human --no face`
-        : `${base}, hyper-realistic, cinematic lighting, 8k, detailed, studio-grade`;
-
-    area.value = enhanced;
-}
-
-// ---------- CREDITS (UI SIDE ONLY, API IN api.js) ----------
-
-async function updateCredits() {
-    if (!userEmail) return;
+  pollingInterval = setInterval(async () => {
     try {
-        const res = await fetch(`/api/credits?email=${encodeURIComponent(userEmail)}`);
-        const data = await res.json();
-        userCredits = data.credits || 0;
+      const res = await fetch(`/api/status?id=${encodeURIComponent(id)}`);
+      const data = await res.json();
 
-        // One-time gift
-        const giftKey = 'gift_claimed_' + userEmail;
-        if (userCredits === 0 && !localStorage.getItem(giftKey)) {
-            userCredits = 50;
-            localStorage.setItem(giftKey, 'true');
+      if (data.status === "succeeded" || data.status === "failed" || data.status === "canceled") {
+        clearInterval(pollingInterval);
+        setLoading(false);
+
+        if (data.status === "succeeded") {
+          renderOutput(data.output);
+          setStatus("Done.");
+          await updateCredits("guest");
+        } else {
+          setStatus(`Job ${data.status}`);
         }
-
-        const liveCredits = document.getElementById('liveCredits');
-        if (liveCredits) liveCredits.innerText = userCredits;
-    } catch (e) {
-        console.log('Credit sync standby...', e);
+      } else {
+        setStatus(`Status: ${data.status || "processing"}...`);
+      }
+    } catch (err) {
+      console.error("Status polling error:", err);
+      clearInterval(pollingInterval);
+      setLoading(false);
+      setStatus("Status check failed.");
     }
+  }, 3000);
 }
 
-// ---------- LOGIN UI HOOKS (logic in ui.js) ----------
+function renderOutput(output) {
+  clearOutput();
+  if (!outputContainer) return;
 
-function loginUI(email) {
-    const authBtn = document.getElementById('authBtn');
-    const userPanel = document.getElementById('userPanel');
-    const userHandle = document.getElementById('userHandle');
+  if (!output) {
+    setStatus("No output received.");
+    return;
+  }
 
-    if (authBtn) authBtn.classList.add('hidden');
-    if (userPanel) userPanel.classList.remove('hidden');
-    if (userHandle) userHandle.innerText = email;
+  // Replicate often returns array of URLs
+  const urls = Array.isArray(output) ? output : [output];
+
+  urls.forEach((u) => {
+    if (!u) return;
+    const el = createMediaElement(u);
+    outputContainer.appendChild(el);
+  });
 }
 
-function logout() {
-    localStorage.removeItem('studio_email');
-    window.location.reload();
-}
+// ====== MAIN GENERATE HANDLER ======
+async function handleGenerate() {
+  const mode = modeSelect ? modeSelect.value : "text2img";
+  const prompt = promptInput ? promptInput.value.trim() : "";
+  const script = scriptInput ? scriptInput.value.trim() : "";
+  const engine = modelSelect ? modelSelect.value : "";
+  const voiceId = voiceSelect ? voiceSelect.value : "";
 
-// ---------- INITIALIZATION ----------
+  if (!prompt && (mode === "text2img" || mode === "img2img" || mode === "img2video" || mode === "video2video")) {
+    alert("Please enter a prompt.");
+    return;
+  }
 
-function initNav() {
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const mode = item.getAttribute('data-mode');
-            if (mode) setMode(mode);
-        });
+  if ((mode === "lipsync_upload_audio" || mode === "lipsync_tts" || mode === "tts_only") && !script) {
+    alert("Please enter dialog / script.");
+    return;
+  }
+
+  clearOutput();
+  setStatus("Preparing...");
+  setLoading(true);
+
+  try {
+    const imageFile = imageInput && imageInput.files[0] ? imageInput.files[0] : null;
+    const videoFile = videoInput && videoInput.files[0] ? videoInput.files[0] : null;
+    const audioFile = audioInput && audioInput.files[0] ? audioInput.files[0] : null;
+
+    const imageBase64 = await fileToBase64(imageFile);
+    const videoBase64 = await fileToBase64(videoFile);
+    const audioBase64 = await fileToBase64(audioFile);
+
+    const body = {
+      mode,
+      prompt,
+      script,
+      engine,
+      voiceId,
+      image: imageBase64,
+      video: videoBase64,
+      audio: audioBase64
+    };
+
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
     });
-}
 
-function initApp() {
-    initNav();
-    setMode('img-to-img');      // default mode
-    updateEngineDropdown();     // populate engines
-    updateGuide();              // set initial guide
+    const data = await res.json();
 
-    if (userEmail) {
-        loginUI(userEmail);
-        updateCredits();
+    if (!res.ok) {
+      console.error("Generate error:", data);
+      setStatus(data.error || "Generation failed.");
+      setLoading(false);
+      return;
     }
+
+    // Two possibilities:
+    // 1) Synchronous output: data.output is ready
+    // 2) Async: data.id (prediction id) to poll
+    if (data.id) {
+      setStatus("Job started. Polling status...");
+      await pollStatus(data.id);
+    } else if (data.output) {
+      renderOutput(data.output);
+      setStatus("Done.");
+      setLoading(false);
+      await updateCredits("guest");
+    } else {
+      setStatus("No output received.");
+      setLoading(false);
+    }
+  } catch (err) {
+    console.error("Generate exception:", err);
+    setStatus("Unexpected error during generation.");
+    setLoading(false);
+  }
 }
 
-// Run after DOM is ready
-document.addEventListener('DOMContentLoaded', initApp);
+// ====== VOICE PRESET SETUP ======
+function initVoices() {
+  if (!voiceSelect) return;
 
-// Expose some functions globally for HTML onclick hooks
-window.pimpPrompt = pimpPrompt;
-window.logout = logout;
-window.updateCredits = updateCredits;
-window.loginUI = loginUI;
+  const voices = [
+    { id: "default_female", label: "Diamond Noir – Female" },
+    { id: "default_male", label: "Diamond Noir – Male" },
+    { id: "gritty_male", label: "Gritty Narrator" },
+    { id: "smooth_female", label: "Smooth Commercial" }
+  ];
+
+  voiceSelect.innerHTML = "";
+  voices.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v.id;
+    opt.textContent = v.label;
+    voiceSelect.appendChild(opt);
+  });
+}
+
+// ====== INIT ======
+function init() {
+  if (modeSelect) {
+    modeSelect.addEventListener("change", updateModeUI);
+    updateModeUI();
+  }
+
+  if (generateBtn) {
+    generateBtn.addEventListener("click", handleGenerate);
+  }
+
+  initVoices();
+  updateCredits("guest");
+  setStatus("");
+}
+
+document.addEventListener("DOMContentLoaded", init);
