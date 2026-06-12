@@ -1,165 +1,182 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smoke Shaq Studio — Creator AI Suite</title>
-
-    <!-- External Stylesheet -->
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>AISmokeShaqStudio – Where’d They Do That At?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
-<body>
-
-    <!-- Background System -->
-    <div class="bg-system">
-        <div class="bg-image"></div>
-        <div class="bg-dust"></div>
-        <div class="bg-overlay"></div>
+<body class="dn-body">
+  <header class="dn-header">
+    <div class="dn-logo-wrap">
+      <img src="assets/logo.png" alt="AISmokeShaqStudio" class="dn-logo" />
+      <div class="dn-logo-text">
+        <span class="dn-logo-title">AISmokeShaqStudio</span>
+        <span class="dn-logo-sub">Where’d they do that at?</span>
+      </div>
     </div>
+    <nav class="dn-nav">
+      <a href="studio.html" class="dn-nav-link">Studio</a>
+      <a href="lipsync.html" class="dn-nav-link">Lipsync Timeline</a>
+      <a href="#features" class="dn-nav-link">Features</a>
+      <a href="#pricing" class="dn-nav-link">Pricing</a>
+    </nav>
+  </header>
 
-    <!-- Header -->
-    <header class="header-container">
-        <div class="header-inner">
-
-            <!-- Left Spacer -->
-            <div class="header-left"></div>
-
-            <!-- Center Logo -->
-            <div class="logo-center">
-                <img src="pendant.png" class="logo-pendant" alt="Studio Pendant">
-            </div>
-
-            <!-- Auth Panel -->
-            <div class="auth-panel">
-                <button id="authBtn" class="btn-outline" onclick="openLogin()">SIGN IN / JOIN VIP</button>
-
-                <div id="userPanel" class="user-panel hidden">
-                    <span id="userHandle" class="user-email"></span>
-                    <span class="credit-display">
-                        <span id="liveCredits">0</span> CREDITS
-                    </span>
-                    <button class="logout-btn" onclick="logout()">LOGOUT</button>
-                </div>
-            </div>
-
+  <main>
+    <!-- HERO -->
+    <section class="dn-hero">
+      <div class="dn-hero-content">
+        <h1 class="dn-hero-title">
+          Where’d they do that at?
+        </h1>
+        <p class="dn-hero-subtitle">
+          <strong>AISmokeShaqStudio</strong> — complete AI creation tools, independently built by a creator, for creators.
+        </p>
+        <p class="dn-hero-tagline">
+          Generate cinematic AI videos, lipsync performances, voices, and animations in one high‑end studio.
+        </p>
+        <div class="dn-hero-actions">
+          <a href="studio.html" class="dn-btn dn-btn-primary">Launch Studio</a>
+          <a href="lipsync.html" class="dn-btn dn-btn-secondary">Open Lipsync Timeline</a>
         </div>
+        <div class="dn-hero-badges">
+          <span class="dn-badge">Image → Video</span>
+          <span class="dn-badge">Lipsync Timeline</span>
+          <span class="dn-badge">Voice Generation</span>
+          <span class="dn-badge">Creator‑Built</span>
+        </div>
+      </div>
+      <div class="dn-hero-visual">
+        <div class="dn-hero-orbit">
+          <img src="assets/banner.png" alt="Studio Preview" class="dn-hero-image" />
+          <div class="dn-hero-glow dn-hero-glow-gold"></div>
+          <div class="dn-hero-glow dn-hero-glow-purple"></div>
+        </div>
+      </div>
+    </section>
 
-        <!-- Navigation -->
-        <nav class="nav-bar">
-            <div class="nav-inner">
-                <div class="nav-item active" data-mode="img-to-img">Image Studio</div>
-                <div class="nav-item" data-mode="img-to-video">Video Engine</div>
-                <div class="nav-item" data-mode="lip-sync">Pro Lip Sync</div>
-            </div>
-        </nav>
-    </header>
+    <!-- FEATURES -->
+    <section id="features" class="dn-section dn-section-dark">
+      <h2 class="dn-section-title">Built Like a Creator’s Dream Studio</h2>
+      <p class="dn-section-subtitle">
+        Every tool you need to go from idea to cinematic AI content — no engineering team required.
+      </p>
+      <div class="dn-grid dn-grid-3">
+        <div class="dn-card">
+          <h3 class="dn-card-title">AI Video & Image Engine</h3>
+          <p class="dn-card-text">
+            Turn prompts into images, images into video, and refine shots with powerful AI models.
+          </p>
+        </div>
+        <div class="dn-card">
+          <h3 class="dn-card-title">Lipsync Timeline Editor</h3>
+          <p class="dn-card-text">
+            Multi‑character lipsync with a visual timeline, dialog blocks, and precise timing control.
+          </p>
+        </div>
+        <div class="dn-card">
+          <h3 class="dn-card-title">Voices for Every Character</h3>
+          <p class="dn-card-text">
+            Use free, high‑quality TTS voices or upload your own audio for perfect lipsync.
+          </p>
+        </div>
+        <div class="dn-card">
+          <h3 class="dn-card-title">Creator‑First Workflow</h3>
+          <p class="dn-card-text">
+            Designed by a creator, for creators — no bloated dashboards, just tools that get out of your way.
+          </p>
+        </div>
+        <div class="dn-card">
+          <h3 class="dn-card-title">Credit‑Based System</h3>
+          <p class="dn-card-text">
+            Simple credit system for generations, with Stripe‑powered upgrades when you’re ready to scale.
+          </p>
+        </div>
+        <div class="dn-card">
+          <h3 class="dn-card-title">Independently Built</h3>
+          <p class="dn-card-text">
+            No faceless corporation — this studio is handcrafted, iterated, and tuned by a single creator.
+          </p>
+        </div>
+      </div>
+    </section>
 
-    <!-- Main Layout -->
-    <div class="main-layout">
+    <!-- GALLERY -->
+    <section class="dn-section dn-section-gradient">
+      <h2 class="dn-section-title">What It Feels Like in Motion</h2>
+      <p class="dn-section-subtitle">
+        A glimpse of the kind of content you can build inside AISmokeShaqStudio.
+      </p>
+      <div class="dn-grid dn-grid-3 dn-gallery">
+        <div class="dn-gallery-item">
+          <div class="dn-gallery-thumb dn-gallery-thumb-1"></div>
+          <span class="dn-gallery-label">Cinematic Character Shot</span>
+        </div>
+        <div class="dn-gallery-item">
+          <div class="dn-gallery-thumb dn-gallery-thumb-2"></div>
+          <span class="dn-gallery-label">Lipsync Performance</span>
+        </div>
+        <div class="dn-gallery-item">
+          <div class="dn-gallery-thumb dn-gallery-thumb-3"></div>
+          <span class="dn-gallery-label">Stylized AI Sequence</span>
+        </div>
+      </div>
+    </section>
 
-        <!-- Left Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-card">
-                <img src="banner.png" class="sidebar-banner">
-                <a href="#" class="sidebar-link">Join Elite Club</a>
-            </div>
+    <!-- PRICING -->
+    <section id="pricing" class="dn-section dn-section-dark">
+      <h2 class="dn-section-title">Start Free. Grow When You’re Ready.</h2>
+      <p class="dn-section-subtitle">
+        Built to let you experiment without friction — and scale when your ideas start hitting.
+      </p>
+      <div class="dn-grid dn-grid-3 dn-pricing">
+        <div class="dn-card dn-card-outline">
+          <h3 class="dn-card-title">Creator Free</h3>
+          <p class="dn-price-tag">€0</p>
+          <ul class="dn-list">
+            <li>Core AI image & video modes</li>
+            <li>Basic TTS voices</li>
+            <li>Limited credits per month</li>
+          </ul>
+          <a href="studio.html" class="dn-btn dn-btn-secondary">Start Creating</a>
+        </div>
+        <div class="dn-card dn-card-featured">
+          <h3 class="dn-card-title">Creator Plus</h3>
+          <p class="dn-price-tag">Coming Soon</p>
+          <ul class="dn-list">
+            <li>More credits & faster queues</li>
+            <li>Advanced voices & lipsync tools</li>
+            <li>Priority generation</li>
+          </ul>
+          <button class="dn-btn dn-btn-primary" disabled>In Development</button>
+        </div>
+        <div class="dn-card dn-card-outline">
+          <h3 class="dn-card-title">Studio Pro</h3>
+          <p class="dn-price-tag">Coming Soon</p>
+          <ul class="dn-list">
+            <li>Team access</li>
+            <li>Custom pipelines</li>
+            <li>Premium support</li>
+          </ul>
+          <button class="dn-btn dn-btn-secondary" disabled>In Development</button>
+        </div>
+      </div>
+    </section>
+  </main>
 
-            <div class="sidebar-card">
-                <h4 class="sidebar-title">Elite Guide</h4>
-                <div id="dynamicGuide" class="guide-box"></div>
-            </div>
-
-            <div class="sidebar-card">
-                <h4 class="sidebar-title">Refill Credits</h4>
-                <a href="#" class="credit-btn">100 — $10</a>
-                <a href="#" class="credit-btn gold">550 — $45</a>
-            </div>
-        </aside>
-
-        <!-- Studio Card -->
-        <main class="studio-card">
-
-            <div class="cost-badge">
-                <span>UNIT COST:</span>
-                <span class="cost-value"><span id="costDisplay">5</span> CREDITS</span>
-            </div>
-
-            <label>Studio Engine</label>
-            <select id="engineSelect"></select>
-
-            <label>Reference Asset</label>
-            <input type="file" id="assetFile">
-
-            <div id="sliderControl">
-                <label>Asset Preservation</label>
-                <input type="range" id="promptStrength" min="0.1" max="0.9" step="0.05" value="0.85">
-            </div>
-
-            <div id="timelineContainer" class="hidden">
-                <label>Voice Script</label>
-                <textarea id="scriptText" rows="3"></textarea>
-            </div>
-
-            <label>Creative Prompt</label>
-            <button class="magic-btn" onclick="pimpPrompt()">✨ Pimp My Prompt</button>
-            <textarea id="studioPrompt" rows="4"></textarea>
-
-            <button class="render-btn" onclick="startProduction()">Execute Production</button>
-
-            <!-- Output -->
-            <div id="studioOutput">
-                <p id="standbyText" class="standby-text">STUDIO STANDBY</p>
-                <div id="activeRender" class="active-render hidden">PROCESSING DIGITAL ASSETS...</div>
-                <div id="resultContainer"></div>
-            </div>
-
-        </main>
-
+  <footer class="dn-footer">
+    <div class="dn-footer-left">
+      <span class="dn-footer-brand">AISmokeShaqStudio</span>
+      <span class="dn-footer-tagline">Independently built by a creator, for creators.</span>
     </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-        POWERED BY GEMINI 3.0 FLASH PREVIEW & SMOKE SHAQ PRODUCTIONS
-    </footer>
-
-    <!-- Chat FAB -->
-    <div class="ai-fab-container">
-        <div class="ai-label">PROMPT HELP</div>
-        <div class="ai-fab" onclick="toggleChat()">✨</div>
+    <div class="dn-footer-links">
+      <a href="studio.html" class="dn-footer-link">Studio</a>
+      <a href="lipsync.html" class="dn-footer-link">Lipsync Timeline</a>
+      <a href="#features" class="dn-footer-link">Features</a>
+      <a href="#pricing" class="dn-footer-link">Pricing</a>
     </div>
-
-    <!-- Chat Window -->
-    <div id="aiChatWindow" class="chat-window hidden">
-        <div class="chat-header">
-            <span>SHAQ-AI ARCHITECT</span>
-            <span class="chat-close" onclick="toggleChat()">×</span>
-        </div>
-
-        <div id="chatBody" class="chat-body">
-            <div class="ai-msg">I am SHAQ-AI. I help with branding and scenes. Ask for a logo prompt.</div>
-        </div>
-
-        <div class="chat-input-row">
-            <input id="chatInput" type="text" placeholder="Ask for a prompt...">
-            <button onclick="sendChat()">GO</button>
-        </div>
-    </div>
-
-    <!-- Login Modal -->
-    <div id="loginModal" class="login-modal hidden">
-        <div class="login-box">
-            <h2>VIP ACCESS</h2>
-            <input type="email" id="loginEmail" placeholder="VIP Email">
-            <button class="render-btn" onclick="processLogin()">AUTHENTICATE</button>
-            <p class="cancel-login" onclick="closeLogin()">CANCEL</p>
-        </div>
-    </div>
-
-    <!-- External Scripts -->
-    <script src="app.js"></script>
-    <script src="api.js"></script>
-    <script src="ui.js"></script>
-
+  </footer>
 </body>
 </html>
