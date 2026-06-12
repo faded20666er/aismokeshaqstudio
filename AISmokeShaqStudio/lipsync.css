@@ -1,0 +1,210 @@
+/* ===== GLOBAL ===== */
+.ls-main {
+  padding: 40px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+}
+
+.ls-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #f5d37d;
+}
+
+.ls-subtitle {
+  font-size: 16px;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+/* ===== TOP BAR ===== */
+.ls-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+/* ===== REFERENCE VIDEO ===== */
+.ls-reference {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.ls-ref-left {
+  flex: 1;
+}
+
+.ls-ref-right {
+  flex: 1;
+}
+
+.ls-preview-video {
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid #f5d37d33;
+}
+
+/* ===== TIMELINE WRAPPER ===== */
+.ls-timeline-wrapper {
+  background: #0d0d0f;
+  border: 1px solid #f5d37d33;
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  overflow-x: auto;
+}
+
+.ls-timeline-header {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  margin-bottom: 10px;
+}
+
+.ls-track-label-col {
+  font-weight: 600;
+  color: #f5d37d;
+}
+
+.ls-track-timeline-col {
+  position: relative;
+}
+
+/* ===== TIME RULER ===== */
+.ls-time-ruler {
+  height: 20px;
+  border-bottom: 1px solid #f5d37d33;
+  position: relative;
+}
+
+.ls-time-ruler::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #f5d37d55, transparent);
+  top: 50%;
+}
+
+/* ===== TRACKS ===== */
+.ls-tracks {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  row-gap: 20px;
+}
+
+.ls-track {
+  display: contents;
+}
+
+.ls-track-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 10px;
+}
+
+.ls-char-name {
+  background: #1a1a1d;
+  border: 1px solid #f5d37d44;
+  color: #fff;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.ls-voice-select,
+.ls-audio-input,
+.ls-script-input {
+  background: #1a1a1d;
+  border: 1px solid #f5d37d33;
+  color: #fff;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.ls-script-input {
+  height: 60px;
+  resize: vertical;
+}
+
+.ls-add-block-btn,
+.ls-generate-voice-btn {
+  margin-top: 4px;
+}
+
+/* ===== TRACK TIMELINE ===== */
+.ls-track-timeline {
+  position: relative;
+  height: 80px;
+  background: #111113;
+  border: 1px solid #f5d37d22;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ===== BLOCKS ===== */
+.ls-block {
+  position: absolute;
+  top: 10px;
+  height: 60px;
+  background: #7a4dfc;
+  border: 2px solid #f5d37d;
+  border-radius: 8px;
+  padding: 6px;
+  color: #fff;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.ls-block:active {
+  cursor: grabbing;
+}
+
+.ls-block:hover {
+  box-shadow: 0 0 12px #7a4dfc;
+}
+
+/* ===== SCRUBBER ===== */
+.ls-scrubber {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: #f5d37d;
+  box-shadow: 0 0 10px #f5d37d;
+  pointer-events: none;
+}
+
+/* ===== EXPORT SECTION ===== */
+.ls-export-section {
+  margin-top: 40px;
+}
+
+.ls-export-title {
+  font-size: 24px;
+  color: #f5d37d;
+  margin-bottom: 10px;
+}
+
+.ls-export-output {
+  width: 100%;
+  height: 200px;
+  background: #111113;
+  border: 1px solid #f5d37d33;
+  color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.ls-status {
+  margin-top: 10px;
+  color: #7a4dfc;
+  font-weight: 600;
+}
