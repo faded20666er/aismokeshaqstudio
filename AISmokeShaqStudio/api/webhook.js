@@ -1,21 +1,50 @@
-import { kv } from "@vercel/kv";
+
+import Stripe from "stripe";
+
+export const config = {
+  api: {
+    bodyParser: false
+  }
+};
+
+function buffer(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
 
 export default async function handler(req, res) {
-    const event = req.body;
+  if (req.method !== "POST") {
+    return res.status(405).send("Method Not Allowed");
+  }
 
-    if (event.type === 'checkout.session.completed') {
-        const session = event.data.object;
-        const email = session.customer_details.email.toLowerCase();
-        const amount = session.amount_total;
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const sig = req.headers["stripe-signature"];
+  const buf = await buffer(req);
 
-        let creditsToAdd = 0;
-        if (amount >= 5000) creditsToAdd = 500;      // $50
-        else if (amount >= 2500) creditsToAdd = 200; // $25
-        else if (amount >= 1000) creditsToAdd = 50;  // $10
+  let event;
 
-        const current = await kv.get(`credits_${email}`) || 0;
-        await kv.set(`credits_${email}`, current + creditsToAdd);
-    }
+  try {
+    event = stripe.webhooks.constructEvent(
+      buf,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error("WEBHOOK VERIFY ERROR:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
 
-    res.status(200).json({ received: true });
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+
+    console.log("Payment success for:", session.customer_email);
+
+    // Add credits here (expand later)
+  }
+
+  res.json({ received: true });
 }
