@@ -1,9 +1,12 @@
+// /api/lipsync.js
+import { checkAndDeductCredits } from "./creditCheck";
+
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: "50mb"
-    }
-  }
+      sizeLimit: "20mb",
+    },
+  },
 };
 
 export default async function handler(req, res) {
@@ -13,53 +16,57 @@ export default async function handler(req, res) {
 
   try {
     const {
+      email,
       timeline,
-      referenceVideo,
-      characterAudio
+      referenceVideoUrl,
+      characterAudioUrl,
+      model,
     } = req.body;
 
-    if (!timeline || !Array.isArray(timeline)) {
-      return res.status(400).json({ error: "Missing or invalid timeline" });
+    if (!email || !timeline || !referenceVideoUrl || !characterAudioUrl) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // ===== LOG INPUT =====
-    console.log("Received timeline with", timeline.length, "tracks");
+    // 1. Determine cost for lipsync
+    const cost = model === "pro" ? 5 : 3;
 
-    // ===== VALIDATE AUDIO =====
-    if (!characterAudio || typeof characterAudio !== "object") {
-      console.log("No character audio provided (TTS-only or silent blocks)");
-    } else {
-      console.log("Character audio keys:", Object.keys(characterAudio));
+    // 2. CHECK & DEDUCT CREDITS
+    const creditResult = await checkAndDeductCredits(email, cost);
+
+    if (!creditResult.ok) {
+      return res.status(402).json({
+        error: "Not enough credits",
+        remaining: creditResult.remaining,
+      });
     }
 
-    // ===== VALIDATE REFERENCE VIDEO =====
-    if (!referenceVideo) {
-      console.log("No reference video uploaded — generating from scratch");
-    }
-
-    // ===== PREPARE PAYLOAD FOR YOUR MODEL =====
-    const payload = {
-      timeline,
-      referenceVideo,
-      characterAudio
-    };
-
-    // ===== PLACEHOLDER: CALL YOUR LIPSYNC MODEL =====
-    // Example:
-    // const result = await replicate.run("your-model", { input: payload });
-
-    // For now, return a mock output so the front-end works:
-    const mockOutputUrl =
-      "https://samplelib.com/lib/preview/mp4/sample-5s.mp4";
-
-    return res.status(200).json({
-      status: "processing",
-      message: "Timeline received. Video generation started.",
-      output: mockOutputUrl
+    // 3. Call your lipsync backend / Replicate / custom service
+    const response = await fetch(process.env.LIPSYNC_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.LIPSYNC_API_KEY}`,
+      },
+      body: JSON.stringify({
+        timeline,
+        referenceVideoUrl,
+        characterAudioUrl,
+        model,
+      }),
     });
 
-  } catch (err) {
-    console.error("LIPSYNC API ERROR:", err);
-    return res.status(500).json({ error: "Lipsync generation failed" });
+    if (!response.ok) {
+      return res.status(500).json({ error: "Lipsync service failed" });
+    }
+
+    const result = await response.json();
+
+    return res.status(200).json({
+      result,
+      remainingCredits: creditResult.remaining,
+    });
+  } catch (error) {
+    console.error("Lipsync error:", error);
+    return res.status(500).json({ error: "Server error" });
   }
 }
