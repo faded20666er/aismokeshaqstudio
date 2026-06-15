@@ -1,11 +1,13 @@
+// /api/voice.js
 import { Readable } from "stream";
+import { checkAndDeductCredits } from "./creditCheck";
 
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: "10mb"
-    }
-  }
+      sizeLimit: "10mb",
+    },
+  },
 };
 
 export default async function handler(req, res) {
@@ -14,77 +16,82 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { script, voiceId } = req.body;
+    const { text, email, provider = "coqui", voiceId } = req.body;
 
-    if (!script || !voiceId) {
-      return res.status(400).json({ error: "Missing script or voiceId" });
+    if (!text || !email) {
+      return res.status(400).json({ error: "Missing text or email" });
     }
 
-    console.log("VOICE REQUEST:", voiceId);
+    // 1. Determine cost for voice generation
+    const cost = 2; // you can tweak this
 
-    // ====== COQUI TTS (FREE) ======
-    if (voiceId.startsWith("coqui_")) {
-      const coquiUrl = "https://api.coqui.ai/v1/generate"; // Example endpoint
+    // 2. CHECK & DEDUCT CREDITS
+    const creditResult = await checkAndDeductCredits(email, cost);
 
-      const response = await fetch(coquiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          text: script,
-          voice: voiceId.replace("coqui_", "")
-        })
-      });
-
-      const audioBuffer = Buffer.from(await response.arrayBuffer());
-      const base64Audio = audioBuffer.toString("base64");
-
-      return res.status(200).json({
-        provider: "coqui",
-        voiceId,
-        audioBase64: base64Audio,
-        audioUrl: `data:audio/wav;base64,${base64Audio}`
+    if (!creditResult.ok) {
+      return res.status(402).json({
+        error: "Not enough credits",
+        remaining: creditResult.remaining,
       });
     }
 
-    // ====== OPENAI TTS (FREE TIER) ======
-    if (voiceId.startsWith("openai_")) {
-      if (!process.env.OPENAI_API_KEY) {
-        return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
-      }
-
-      const openaiVoice = voiceId.replace("openai_", "");
-
+    // 3. Voice generation logic
+    if (provider === "openai") {
       const response = await fetch("https://api.openai.com/v1/audio/speech", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           model: "gpt-4o-mini-tts",
-          voice: openaiVoice,
-          input: script
-        })
+          voice: voiceId || "alloy",
+          input: text,
+        }),
       });
+
+      if (!response.ok) {
+        return res.status(500).json({ error: "OpenAI TTS failed" });
+      }
 
       const audioBuffer = Buffer.from(await response.arrayBuffer());
-      const base64Audio = audioBuffer.toString("base64");
 
-      return res.status(200).json({
-        provider: "openai",
-        voiceId,
-        audioBase64: base64Audio,
-        audioUrl: `data:audio/mp3;base64,${base64Audio}`
-      });
+      res.setHeader("Content-Type", "audio/mpeg");
+      res.setHeader("Content-Length", audioBuffer.length);
+      res.setHeader("X-Remaining-Credits", creditResult.remaining);
+
+      const stream = Readable.from(audioBuffer);
+      stream.pipe(res);
+      return;
     }
 
-    // ====== UNKNOWN VOICE ======
-    return res.status(400).json({ error: "Unknown voiceId" });
+    // Default: Coqui or other provider
+    const coquiResponse = await fetch(process.env.COQUI_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.COQUI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text,
+        voice_id: voiceId,
+      }),
+    });
 
-  } catch (err) {
-    console.error("VOICE API ERROR:", err);
-    return res.status(500).json({ error: "Voice generation failed" });
+    if (!coquiResponse.ok) {
+      return res.status(500).json({ error: "Coqui TTS failed" });
+    }
+
+    const coquiBuffer = Buffer.from(await coquiResponse.arrayBuffer());
+
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Content-Length", coquiBuffer.length);
+    res.setHeader("X-Remaining-Credits", creditResult.remaining);
+
+    const stream = Readable.from(coquiBuffer);
+    stream.pipe(res);
+  } catch (error) {
+    console.error("Voice error:", error);
+    return res.status(500).json({ error: "Server error" });
   }
 }
