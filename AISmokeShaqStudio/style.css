@@ -39,7 +39,7 @@ html, body {
     min-height: 100vh;
     background: var(--black);
     color: var(--platinum);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', Comic Sans;
     overflow-x: hidden;
 }
 
