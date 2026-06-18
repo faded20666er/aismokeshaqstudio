@@ -1,72 +1,117 @@
-// /api/lipsync.js
-import { checkAndDeductCredits } from "./creditCheck";
+// AISmokeShaqStudio/api/lipsync.js
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "20mb",
+import { MODELS } from "../models/index.js";
+import { checkCredits } from "../middleware/creditCheck.js";
+import { deductCredits } from "../middleware/creditsStore.js";
+import Replicate from "replicate";
+import fetch from "node-fetch";
+
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN,
+});
+
+// -------------------------------------------------------------
+// Helper: Find model in lipsync category
+// -------------------------------------------------------------
+function findLipsyncModel(modelId) {
+  return MODELS.lipsync.find((m) => m.id === modelId);
+}
+
+// -------------------------------------------------------------
+// HuggingFace request
+// -------------------------------------------------------------
+async function runHuggingFace(modelId, inputs) {
+  const url = `https://api-inference.huggingface.co/models/${modelId}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.HF_API_KEY}`,
+      "Content-Type": "application/json",
     },
-  },
-};
+    body: JSON.stringify(inputs),
+  });
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (!response.ok) {
+    throw new Error(`HF Error: ${response.statusText}`);
   }
 
-  try {
-    const {
-      email,
-      timeline,
-      referenceVideoUrl,
-      characterAudioUrl,
-      model,
-    } = req.body;
+  return await response.json();
+}
 
-    if (!email || !timeline || !referenceVideoUrl || !characterAudioUrl) {
-      return res.status(400).json({ error: "Missing required fields" });
+// -------------------------------------------------------------
+// MAIN HANDLER
+// -------------------------------------------------------------
+export default async function handler(req, res) {
+  try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
     }
 
-    // 1. Determine cost for lipsync
-    const cost = model === "pro" ? 5 : 3;
+    const { modelId, inputs, userId, nsfwEnabled } = req.body;
 
-    // 2. CHECK & DEDUCT CREDITS
-    const creditResult = await checkAndDeductCredits(email, cost);
+    if (!modelId) {
+      return res.status(400).json({ error: "Missing modelId" });
+    }
 
-    if (!creditResult.ok) {
-      return res.status(402).json({
-        error: "Not enough credits",
-        remaining: creditResult.remaining,
+    const model = findLipsyncModel(modelId);
+
+    if (!model) {
+      return res.status(404).json({ error: "Lipsync model not found" });
+    }
+
+    // ---------------------------------------------------------
+    // NSFW LOCK CHECK
+    // ---------------------------------------------------------
+    if (model.nsfw && model.locked && !nsfwEnabled) {
+      return res.status(403).json({
+        error: "NSFW model locked. Enable NSFW mode to use this model.",
       });
     }
 
-    // 3. Call your lipsync backend / Replicate / custom service
-    const response = await fetch(process.env.LIPSYNC_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.LIPSYNC_API_KEY}`,
-      },
-      body: JSON.stringify({
-        timeline,
-        referenceVideoUrl,
-        characterAudioUrl,
-        model,
-      }),
-    });
+    // ---------------------------------------------------------
+    // CREDIT CHECK
+    // ---------------------------------------------------------
+    const hasCredits = await checkCredits(userId, model.credits);
 
-    if (!response.ok) {
-      return res.status(500).json({ error: "Lipsync service failed" });
+    if (!hasCredits) {
+      return res.status(402).json({
+        error: "Not enough credits",
+      });
     }
 
-    const result = await response.json();
+    // ---------------------------------------------------------
+    // RUN MODEL (Replicate or HuggingFace)
+    // ---------------------------------------------------------
+    let output;
 
+    if (model.provider === "replicate") {
+      output = await replicate.run(model.id, { input: inputs });
+    } else if (model.provider === "huggingface") {
+      output = await runHuggingFace(model.id, inputs);
+    } else {
+      return res.status(500).json({ error: "Unknown provider" });
+    }
+
+    // ---------------------------------------------------------
+    // DEDUCT CREDITS
+    // ---------------------------------------------------------
+    await deductCredits(userId, model.credits);
+
+    // ---------------------------------------------------------
+    // SUCCESS
+    // ---------------------------------------------------------
     return res.status(200).json({
-      result,
-      remainingCredits: creditResult.remaining,
+      success: true,
+      model: model.id,
+      creditsUsed: model.credits,
+      output,
     });
-  } catch (error) {
-    console.error("Lipsync error:", error);
-    return res.status(500).json({ error: "Server error" });
+  } catch (err) {
+    console.error("lipsync.js error:", err);
+    return res.status(500).json({
+      error: "Lipsync generation failed",
+      details: err.message,
+    });
   }
 }
