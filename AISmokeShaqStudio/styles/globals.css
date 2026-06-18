@@ -1,0 +1,20 @@
+/* GLOBAL FONT */
+body, button, input, textarea {
+  font-family: "Poppins", sans-serif;
+  color: #d9d9d9;
+}
+
+/* SILVER TEXT WITH RED OUTLINE/GLOW */
+.text-silver-red {
+  color: #d9d9d9;
+  text-shadow:
+    0 0 2px #ff2a2a,
+    0 0 4px #ff2a2a,
+    0 0 6px rgba(255, 0, 0, 0.6);
+  letter-spacing: 0.5px;
+}
+
+/* ROOT VARIABLES */
+:root {
+  --bg-main: #0a0a0c;
+}
