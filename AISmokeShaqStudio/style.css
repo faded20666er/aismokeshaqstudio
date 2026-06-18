@@ -5,9 +5,21 @@
 --------------------------------------------------------- */
 
 /* FONT IMPORTS */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;600;700&display=swap');
+@ibody, button, input, textarea {
+  font-family: "Poppins", sans-serif;
+}
+mport url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;600;700&display=swap');
 
 /* ROOT VARIABLES */
+
+.text-silver-red {
+  color: #d9d9d9; /* bright silver */
+  text-shadow:
+    0 0 2px #ff2a2a,
+    0 0 4px #ff2a2a,
+    0 0 6px rgba(255, 0, 0, 0.6);
+  letter-spacing: 0.5px;
+}
 :root {
   --bg-main: #0a0a0c;          /* Deep obsidian background */
   --bg-surface: #141419;       /* Card & container background */
