@@ -1,85 +1,57 @@
+// AISmokeShaqStudio/api/credits.js
+
+import { getUserCredits, addCredits, setUserCredits } from "../middleware/creditsStore.js";
+
 export default async function handler(req, res) {
   try {
-    const { user } = req.body;
+    const { method } = req;
 
-    if (!user) return res.status(400).json({ error: "Missing user" });
+    if (method === "GET") {
+      const { userId } = req.query;
 
-    // Local credit store (expand later)
-    let credits = parseInt(process.env.DEFAULT_CREDITS || "20");
+      if (!userId) {
+        return res.status(400).json({ error: "Missing userId" });
+      }
 
-    // Deduct 1 credit per production
-    credits = Math.max(credits - 1, 0);
+      const credits = await getUserCredits(userId);
 
-    res.status(200).json({ credits });
-  } catch (err) {
-    console.error("CREDITS ERROR:", err);
-    res.status(500).json({ error: "Credit system failed" });
-  export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "5mb"
+      return res.status(200).json({
+        success: true,
+        userId,
+        credits,
+      });
     }
-  }
-};
 
-let users = {}; 
-// In production: replace with database (Supabase, MongoDB, Firebase)
+    if (method === "POST") {
+      const { userId, amount, set } = req.body;
 
-const TRIAL_CREDITS = {
-  images: 2,
-  videos: 1,
-  talkingPhotos: 1
-};
+      if (!userId) {
+        return res.status(400).json({ error: "Missing userId" });
+      }
 
-const SUBSCRIPTION_CREDITS = {
-  basic: 50,
-  plus: 200,
-  pro: 600
-};
+      let updated;
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
+      if (typeof set === "number") {
+        updated = await setUserCredits(userId, set);
+      } else if (typeof amount === "number") {
+        updated = await addCredits(userId, amount);
+      } else {
+        return res.status(400).json({ error: "Missing amount or set value" });
+      }
+
+      return res.status(200).json({
+        success: true,
+        userId,
+        credits: updated,
+      });
+    }
+
     return res.status(405).json({ error: "Method not allowed" });
+  } catch (err) {
+    console.error("credits.js error:", err);
+    return res.status(500).json({
+      error: "Failed to process credit request",
+      details: err.message,
+    });
   }
-
-  const { user } = req.body;
-
-  if (!user) {
-    return res.status(400).json({ error: "Missing user ID" });
-  }
-
-  // Create user if not exists
-  if (!users[user]) {
-    users[user] = {
-      tier: "trial",
-      credits: {
-        images: TRIAL_CREDITS.images,
-        videos: TRIAL_CREDITS.videos,
-        talkingPhotos: TRIAL_CREDITS.talkingPhotos
-      },
-      lastReset: Date.now()
-    };
-  }
-
-  // Monthly reset for paid tiers
-  const now = Date.now();
-  const month = 30 * 24 * 60 * 60 * 1000;
-
-  if (now - users[user].lastReset > month) {
-    if (users[user].tier !== "trial") {
-      users[user].credits = {
-        images: SUBSCRIPTION_CREDITS[users[user].tier],
-        videos: SUBSCRIPTION_CREDITS[users[user].tier],
-        talkingPhotos: SUBSCRIPTION_CREDITS[users[user].tier]
-      };
-    }
-    users[user].lastReset = now;
-  }
-
-  return res.status(200).json({
-    user,
-    tier: users[user].tier,
-    credits: users[user].credits
-  });
 }
-
