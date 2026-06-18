@@ -18,6 +18,7 @@ const panelVideo = document.getElementById("panelVideo");
 const panelAudio = document.getElementById("panelAudio");
 const panelScript = document.getElementById("panelScript");
 const panelVoice = document.getElementById("panelVoice");
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 // ===== STATE =====
 let pollingInterval = null;
