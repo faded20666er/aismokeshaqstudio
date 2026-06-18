@@ -1,50 +1,56 @@
+// AISmokeShaqStudio/api/webhook.js
 
-import Stripe from "stripe";
-
-export const config = {
-  api: {
-    bodyParser: false
-  }
-};
-
-function buffer(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    req.on("data", (chunk) => chunks.push(chunk));
-    req.on("end", () => resolve(Buffer.concat(chunks)));
-    req.on("error", reject);
-  });
-}
+import Replicate from "replicate";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).send("Method Not Allowed");
-  }
-
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  const sig = req.headers["stripe-signature"];
-  const buf = await buffer(req);
-
-  let event;
-
   try {
-    event = stripe.webhooks.constructEvent(
-      buf,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    // Replicate sends the prediction payload in req.body
+    const event = req.body;
+
+    if (!event || !event.id) {
+      return res.status(400).json({ error: "Invalid webhook payload" });
+    }
+
+    const {
+      id,
+      status,
+      output,
+      logs,
+      error,
+      metrics,
+      created_at,
+      completed_at,
+    } = event;
+
+    // ---------------------------------------------------------
+    // OPTIONAL: Save job status to your database
+    // (Redis, MongoDB, Supabase, etc.)
+    //
+    // Example:
+    // await saveJobStatus(id, { status, output, error });
+    //
+    // Leaving this commented because you may choose your own DB.
+    // ---------------------------------------------------------
+
+    console.log("Webhook received for job:", id, "status:", status);
+
+    // ---------------------------------------------------------
+    // Respond immediately so Replicate knows we received it
+    // ---------------------------------------------------------
+    return res.status(200).json({
+      received: true,
+      jobId: id,
+      status,
+    });
   } catch (err) {
-    console.error("WEBHOOK VERIFY ERROR:", err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    console.error("webhook.js error:", err);
+    return res.status(500).json({
+      error: "Webhook processing failed",
+      details: err.message,
+    });
   }
-
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-
-    console.log("Payment success for:", session.customer_email);
-
-    // Add credits here (expand later)
-  }
-
-  res.json({ received: true });
 }
