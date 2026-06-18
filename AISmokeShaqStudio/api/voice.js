@@ -1,97 +1,117 @@
-// /api/voice.js
-import { Readable } from "stream";
-import { checkAndDeductCredits } from "./creditCheck";
+// AISmokeShaqStudio/api/voice.js
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "10mb",
+import { MODELS } from "../models/index.js";
+import { checkCredits } from "../middleware/creditCheck.js";
+import { deductCredits } from "../middleware/creditsStore.js";
+import Replicate from "replicate";
+import fetch from "node-fetch";
+
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN,
+});
+
+// -------------------------------------------------------------
+// Helper: Find TTS model
+// -------------------------------------------------------------
+function findTTSModel(modelId) {
+  return MODELS.tts.find((m) => m.id === modelId);
+}
+
+// -------------------------------------------------------------
+// HuggingFace request
+// -------------------------------------------------------------
+async function runHuggingFace(modelId, inputs) {
+  const url = `https://api-inference.huggingface.co/models/${modelId}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.HF_API_KEY}`,
+      "Content-Type": "application/json",
     },
-  },
-};
+    body: JSON.stringify(inputs),
+  });
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (!response.ok) {
+    throw new Error(`HF Error: ${response.statusText}`);
   }
 
-  try {
-    const { text, email, provider = "coqui", voiceId } = req.body;
+  return await response.json();
+}
 
-    if (!text || !email) {
-      return res.status(400).json({ error: "Missing text or email" });
+// -------------------------------------------------------------
+// MAIN HANDLER
+// -------------------------------------------------------------
+export default async function handler(req, res) {
+  try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
     }
 
-    // 1. Determine cost for voice generation
-    const cost = 2; // you can tweak this
+    const { modelId, inputs, userId, nsfwEnabled } = req.body;
 
-    // 2. CHECK & DEDUCT CREDITS
-    const creditResult = await checkAndDeductCredits(email, cost);
+    if (!modelId) {
+      return res.status(400).json({ error: "Missing modelId" });
+    }
 
-    if (!creditResult.ok) {
+    const model = findTTSModel(modelId);
+
+    if (!model) {
+      return res.status(404).json({ error: "TTS model not found" });
+    }
+
+    // ---------------------------------------------------------
+    // NSFW LOCK CHECK
+    // ---------------------------------------------------------
+    if (model.nsfw && model.locked && !nsfwEnabled) {
+      return res.status(403).json({
+        error: "NSFW model locked. Enable NSFW mode to use this model.",
+      });
+    }
+
+    // ---------------------------------------------------------
+    // CREDIT CHECK
+    // ---------------------------------------------------------
+    const hasCredits = await checkCredits(userId, model.credits);
+
+    if (!hasCredits) {
       return res.status(402).json({
         error: "Not enough credits",
-        remaining: creditResult.remaining,
       });
     }
 
-    // 3. Voice generation logic
-    if (provider === "openai") {
-      const response = await fetch("https://api.openai.com/v1/audio/speech", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini-tts",
-          voice: voiceId || "alloy",
-          input: text,
-        }),
-      });
+    // ---------------------------------------------------------
+    // RUN MODEL (Replicate or HuggingFace)
+    // ---------------------------------------------------------
+    let output;
 
-      if (!response.ok) {
-        return res.status(500).json({ error: "OpenAI TTS failed" });
-      }
-
-      const audioBuffer = Buffer.from(await response.arrayBuffer());
-
-      res.setHeader("Content-Type", "audio/mpeg");
-      res.setHeader("Content-Length", audioBuffer.length);
-      res.setHeader("X-Remaining-Credits", creditResult.remaining);
-
-      const stream = Readable.from(audioBuffer);
-      stream.pipe(res);
-      return;
+    if (model.provider === "replicate") {
+      output = await replicate.run(model.id, { input: inputs });
+    } else if (model.provider === "huggingface") {
+      output = await runHuggingFace(model.id, inputs);
+    } else {
+      return res.status(500).json({ error: "Unknown provider" });
     }
 
-    // Default: Coqui or other provider
-    const coquiResponse = await fetch(process.env.COQUI_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.COQUI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        text,
-        voice_id: voiceId,
-      }),
+    // ---------------------------------------------------------
+    // DEDUCT CREDITS
+    // ---------------------------------------------------------
+    await deductCredits(userId, model.credits);
+
+    // ---------------------------------------------------------
+    // SUCCESS
+    // ---------------------------------------------------------
+    return res.status(200).json({
+      success: true,
+      model: model.id,
+      creditsUsed: model.credits,
+      output,
     });
-
-    if (!coquiResponse.ok) {
-      return res.status(500).json({ error: "Coqui TTS failed" });
-    }
-
-    const coquiBuffer = Buffer.from(await coquiResponse.arrayBuffer());
-
-    res.setHeader("Content-Type", "audio/mpeg");
-    res.setHeader("Content-Length", coquiBuffer.length);
-    res.setHeader("X-Remaining-Credits", creditResult.remaining);
-
-    const stream = Readable.from(coquiBuffer);
-    stream.pipe(res);
-  } catch (error) {
-    console.error("Voice error:", error);
-    return res.status(500).json({ error: "Server error" });
+  } catch (err) {
+    console.error("voice.js error:", err);
+    return res.status(500).json({
+      error: "TTS generation failed",
+      details: err.message,
+    });
   }
 }
