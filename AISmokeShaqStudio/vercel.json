@@ -1,9 +1,4 @@
 {
-  "type": "module",
-  "scripts": {
-    "build": "next build",
-    "start": "next start"
-  },
   "buildCommand": "next build",
   "outputDirectory": ".next",
   "framework": "nextjs",
