@@ -640,4 +640,11 @@ export const MODELS = {
       id: "wan-video/wan-2.2-s2v",
       name: "WAN 2.2 S2V (WAN-Video)",
       provider: "replicate",
-      nsfw: false,
+     nsfw: false,
+      locked: false,
+      credits: 3,
+    },
+  ],
+};
+
+// END OF FILE — ALL BRACKETS CLOSED
