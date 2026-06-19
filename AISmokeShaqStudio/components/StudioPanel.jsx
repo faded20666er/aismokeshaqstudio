@@ -11,37 +11,60 @@ export default function StudioPanel() {
   const [output, setOutput] = useState(null);
   const [loading, setLoading] = useState(false);
   const [nsfwEnabled, setNsfwEnabled] = useState(false);
+  const [error, setError] = useState(null);
+
+  // helper: convert File -> data URL (base64)
+  async function fileToDataUrl(file) {
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+  }
 
   async function handleGenerate() {
     if (!selectedModel) return;
 
     setLoading(true);
     setOutput(null);
+    setError(null);
 
-    const formData = {
-      modelId: selectedModel.id,
-      userId: "demo-user",
-      nsfwEnabled,
-      inputs: {
-        prompt,
-      },
-    };
+    try {
+      const inputs = { prompt };
 
-    if (file) {
-      formData.inputs.image = file;
-    }
+      if (file) {
+        // convert to base64 data URL so it can be sent in JSON
+        const dataUrl = await fileToDataUrl(file);
+        inputs.image = dataUrl;
+      }
 
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
+      const payload = {
+        modelId: selectedModel.id,
+        userId: "demo-user",
+        nsfwEnabled,
+        inputs,
+      };
 
-    const data = await res.json();
-    setLoading(false);
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (data.output) {
-      setOutput(data.output);
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || `Server returned ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.output) setOutput(data.output);
+      if (data.error) setError(data.error);
+    } catch (err) {
+      setError(err.message || 'Something went wrong');
+      console.error('generate error', err);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -152,6 +175,15 @@ export default function StudioPanel() {
       </div>
 
       {/* OUTPUT */}
+      {error && (
+        <div className="section-block">
+          <div className="section-header">
+            <span className="section-label text-silver-red">Error</span>
+          </div>
+          <pre style={{ color: 'salmon' }}>{error}</pre>
+        </div>
+      )}
+
       {output && (
         <div className="section-block output-section">
           <div className="section-header">
@@ -161,7 +193,10 @@ export default function StudioPanel() {
           {Array.isArray(output) ? (
             output.map((item, i) => (
               <div key={i} className="output-item">
-                {typeof item === "string" && item.startsWith("http") ? (
+                {typeof item === "string" && item.startsWith("data:") ? (
+                  // For data URLs show the image
+                  <img src={item} alt="output" />
+                ) : typeof item === "string" && item.startsWith("http") ? (
                   <img src={item} alt="output" />
                 ) : (
                   <pre>{JSON.stringify(item, null, 2)}</pre>
