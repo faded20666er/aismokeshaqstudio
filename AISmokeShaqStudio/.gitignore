@@ -1,0 +1,11 @@
+# Local environment file (ignored)
+# DO NOT commit secrets to the repository.
+# Create a local AISmokeShaqStudio/.env from .env.example and fill with your keys.
+
+# Example (do not commit real keys):
+# REPLICATE_API_KEY=your_real_key_here
+# HF_API_KEY=your_real_key_here
+# KV_REST_API_URL=your_url_here
+# KV_REST_API_TOKEN=your_token_here
+# STRIPE_SECRET=your_stripe_secret_here
+# PORT=3000
