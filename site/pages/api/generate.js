@@ -1,18 +1,12 @@
-// pages/api/generate.js
-//
-// Main image/video generation endpoint. This used to live at
-// /api/generate.js (a folder Next.js never reads — only /pages/api/*
-// is wired up to real URLs). Moving it here is what actually makes
-// fetch('/api/generate') from the studio UI work.
-
+// pages/api/generate.js (modified to prefer NextAuth session when available)
 import { put } from "@vercel/blob";
 import { findModelById } from "../../models/index.js";
 import { checkCredits } from "../../middleware/creditCheck.js";
 import { deductCredits } from "../../middleware/creditsStore.js";
 import { runModel } from "../../utils/runModel.js";
+import { getServerSession } from "next-auth/next";
+import authOptions from "../../lib/nextauthOptions.js";
 
-// Raise the body limit above Next.js's 1MB default — a base64-encoded
-// reference image easily exceeds that on its own.
 export const config = {
   api: {
     bodyParser: {
@@ -40,7 +34,14 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { modelId, inputs, userId, nsfwEnabled } = req.body || {};
+    const { modelId, inputs, userId: bodyUserId, nsfwEnabled } = req.body || {};
+
+    // Prefer authenticated session user when available
+    const session = await getServerSession(req, res, authOptions);
+    const sessionUserId = session?.user?.id;
+    const sessionEmail = session?.user?.email;
+
+    const userId = sessionUserId ?? bodyUserId;
 
     if (!userId) {
       return res.status(400).json({ error: "Missing userId" });
@@ -56,19 +57,14 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Model not found" });
     }
 
-    // ---------------------------------------------------------
-    // NSFW LOCK CHECK
-    // ---------------------------------------------------------
     if (model.nsfw && model.locked && !nsfwEnabled) {
       return res.status(403).json({
         error: "NSFW model locked. Enable NSFW mode to use this model.",
       });
     }
 
-    // ---------------------------------------------------------
-    // CREDIT CHECK
-    // ---------------------------------------------------------
-    const hasCredits = await checkCredits(userId, model.credits);
+    // CREDIT CHECK - pass sessionEmail so verified users get the verified starting credits
+    const hasCredits = await checkCredits(userId, model.credits, sessionEmail);
 
     if (!hasCredits) {
       return res.status(402).json({
@@ -76,28 +72,20 @@ export default async function handler(req, res) {
       });
     }
 
-    // ---------------------------------------------------------
-    // UPLOAD ANY FILE INPUT (optional reference image) TO BLOB
-    // ---------------------------------------------------------
     if (inputs?.image) {
       inputs.image = await uploadFileInput(inputs.image, "generate-ref");
     }
 
-    // ---------------------------------------------------------
-    // RUN MODEL
-    // ---------------------------------------------------------
     const output = await runModel(model, inputs);
 
-    // ---------------------------------------------------------
     // DEDUCT CREDITS (only after a successful generation)
-    // ---------------------------------------------------------
-    const remaining = await deductCredits(userId, model.credits);
+    const remaining = await deductCredits(userId, model.credits, sessionEmail);
 
     return res.status(200).json({
       success: true,
       model: model.id,
       creditsUsed: model.credits,
-      creditsRemaining: remaining,
+      creditsRemaining: remaining === Infinity ? null : remaining,
       output,
     });
   } catch (err) {

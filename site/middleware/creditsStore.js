@@ -1,38 +1,35 @@
-// middleware/creditsStore.js
-//
-// SINGLE SOURCE OF TRUTH for user credits. Backed by Upstash Redis
-// (via @upstash/redis), so balances persist across serverless restarts
-// and deploys — unlike the old in-memory version, which reset to 50
-// every time Vercel spun up a fresh instance.
-//
-// Users are keyed by userId (a stable internal user id — wire this to
-// your auth system's user id once Stripe/auth is fully connected. Until
-// then, the studio falls back to a per-browser anonymous id (see
-// utils/getUserId.js) so credits at least persist on the SAME user's
-// requests instead of always resetting to a hardcoded "demo-user".
-
+// Upstash-backed credits helper with OWNER override and verified-email starting credits
 import { Redis } from "@upstash/redis";
 
 const redis = new Redis({
-  url: process.env.KV_REST_API_URL,
-  token: process.env.KV_REST_API_TOKEN,
+  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
 const CREDITS_KEY = (userId) => `credits:${userId}`;
-const FREE_STARTING_CREDITS = 20; // small free allotment for new/unpaid users
+const ANON_STARTING_CREDITS = Number(process.env.ANON_STARTING_CREDITS || 20);
+const VERIFIED_STARTING_CREDITS = Number(process.env.VERIFIED_STARTING_CREDITS || 45);
+const OWNER_EMAIL = process.env.OWNER_EMAIL;
 
-export async function getUserCredits(userId) {
+export async function getUserCredits(userId, email = null) {
   if (!userId) return 0;
 
-  const value = await redis.get(CREDITS_KEY(userId));
+  const key = CREDITS_KEY(userId);
+  const value = await redis.get(key);
 
   if (value === null || value === undefined) {
-    // First time we've seen this user — give them a small free balance
-    // and persist it so it doesn't reset to a new free balance every call.
-    await redis.set(CREDITS_KEY(userId), FREE_STARTING_CREDITS);
-    return FREE_STARTING_CREDITS;
+    // First time: decide starting credits based on whether the user has an email (signed-in)
+    if (OWNER_EMAIL && email && email.toLowerCase() === OWNER_EMAIL.toLowerCase()) {
+      await redis.set(key, "UNLIMITED");
+      return Infinity;
+    }
+
+    const start = email ? VERIFIED_STARTING_CREDITS : ANON_STARTING_CREDITS;
+    await redis.set(key, start);
+    return start;
   }
 
+  if (value === "UNLIMITED") return Infinity;
   return Number(value) || 0;
 }
 
@@ -47,15 +44,24 @@ export async function addCredits(userId, amount) {
   if (!userId) throw new Error("Missing userId");
   const toAdd = Math.max(0, Number(amount) || 0);
   const current = await getUserCredits(userId);
+  if (current === Infinity) return Infinity;
   const updated = current + toAdd;
   await redis.set(CREDITS_KEY(userId), updated);
   return updated;
 }
 
 // Returns the new balance, or null if the user doesn't have enough credits.
-export async function deductCredits(userId, cost) {
+export async function deductCredits(userId, cost, email = null) {
   if (!userId) throw new Error("Missing userId");
-  const current = await getUserCredits(userId);
+
+  // If owner, ensure UNLIMITED marker and never decrement
+  if (OWNER_EMAIL && email && email.toLowerCase() === OWNER_EMAIL.toLowerCase()) {
+    await redis.set(CREDITS_KEY(userId), "UNLIMITED");
+    return Infinity;
+  }
+
+  const current = await getUserCredits(userId, email);
+  if (current === Infinity) return Infinity;
 
   if (current < cost) {
     return null;
@@ -66,7 +72,8 @@ export async function deductCredits(userId, cost) {
   return updated;
 }
 
-export async function hasEnoughCredits(userId, cost) {
-  const current = await getUserCredits(userId);
+export async function hasEnoughCredits(userId, cost, email = null) {
+  const current = await getUserCredits(userId, email);
+  if (current === Infinity) return true;
   return current >= cost;
 }
