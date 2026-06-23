@@ -1,5 +1,4 @@
 // components/StudioPanel.jsx
-//
 // StudioPanel no longer owns its own fetch/generate logic. Previously
 // BOTH this component and pages/studio.jsx independently called
 // /api/generate with their own copies of loading/error/output state —
@@ -9,8 +8,10 @@
 // source of truth.
 
 import { useState } from "react";
+import { useSession, signIn } from "next-auth/react";
 import ModelSelector from "./ModelSelector";
 import VoicePicker from "./VoicePicker";
+import AuthButtons from "./AuthButtons";
 
 // Renders generated output as the right media type — lipsync/video
 // produce video, TTS produces audio, image/NSFW-image produce images.
@@ -40,6 +41,9 @@ function OutputPreview({ item, category }) {
 }
 
 export default function StudioPanel({ onGenerate, loading, error, credits, output }) {
+  const { data: session } = useSession();
+  const isAuthenticated = Boolean(session?.user?.id);
+
   const [category, setCategory] = useState("image");
   const [selectedModel, setSelectedModel] = useState(null);
   const [prompt, setPrompt] = useState("");
@@ -60,6 +64,12 @@ export default function StudioPanel({ onGenerate, loading, error, credits, outpu
 
   async function handleGenerateClick() {
     if (!selectedModel) return;
+
+    // If the user is not authenticated, prompt them to sign in instead
+    if (!isAuthenticated) {
+      signIn();
+      return;
+    }
 
     const inputs = { prompt };
 
@@ -244,11 +254,24 @@ export default function StudioPanel({ onGenerate, loading, error, credits, outpu
         </div>
       )}
 
+      {/* SIGN IN CTA FOR UNAUTHENTICATED USERS */}
+      {!isAuthenticated && (
+        <div className="section-block">
+          <div className="section-header">
+            <span className="section-label text-silver-red">Sign in to generate</span>
+            <span className="section-meta">Verified emails receive 45 free credits</span>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <AuthButtons />
+          </div>
+        </div>
+      )}
+
       {/* GENERATE BUTTON */}
       <div className="section-block">
         <button
           className="generate-btn"
-          disabled={!selectedModel || loading}
+          disabled={!selectedModel || loading || !isAuthenticated}
           onClick={handleGenerateClick}
         >
           {loading ? "Generating..." : "Generate"}
@@ -281,216 +304,7 @@ export default function StudioPanel({ onGenerate, loading, error, credits, outpu
         </div>
       )}
 
-      <style jsx>{`
-        .glass-shell {
-          background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 55%),
-            rgba(10, 10, 12, 0.9);
-          border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          box-shadow:
-            0 0 30px rgba(0, 0, 0, 0.8),
-            0 0 18px rgba(255, 0, 0, 0.25);
-          padding: 22px 20px 26px;
-          backdrop-filter: blur(16px);
-          max-width: 720px;
-          margin: 0 auto;
-        }
-
-        .studio-panel {
-          display: flex;
-          flex-direction: column;
-          gap: 18px;
-          color: #d9d9d9;
-        }
-
-        .category-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .category-tabs {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-
-        .tab-btn {
-          padding: 8px 14px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          cursor: pointer;
-          font-size: 0.8rem;
-          letter-spacing: 0.6px;
-          color: #d9d9d9;
-          transition: 0.18s ease;
-        }
-
-        .tab-btn:hover {
-          border-color: rgba(255, 0, 0, 0.5);
-          box-shadow: 0 0 10px rgba(255, 0, 0, 0.35);
-        }
-
-        .tab-btn.active {
-          background: linear-gradient(135deg, #ff2a2a, #ff8a2a);
-          border-color: rgba(255, 255, 255, 0.4);
-          color: #0b0b0d;
-          box-shadow:
-            0 0 14px rgba(255, 0, 0, 0.6),
-            0 0 24px rgba(255, 138, 42, 0.5);
-        }
-
-        .category-subtitle {
-          font-size: 0.85rem;
-          opacity: 0.85;
-        }
-
-        .nsfw-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 12px;
-          font-size: 0.8rem;
-        }
-
-        .nsfw-toggle {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-        }
-
-        .nsfw-toggle input {
-          accent-color: #ff2a2a;
-        }
-
-        .nsfw-note {
-          opacity: 0.7;
-          font-size: 0.75rem;
-        }
-
-        .section-block {
-          margin-top: 6px;
-        }
-
-        .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 6px;
-        }
-
-        .section-label {
-          font-size: 0.85rem;
-          font-weight: 600;
-        }
-
-        .section-meta {
-          font-size: 0.8rem;
-          opacity: 0.8;
-        }
-
-        .prompt-box {
-          width: 100%;
-          min-height: 110px;
-          background: rgba(5, 5, 8, 0.95);
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          border-radius: 12px;
-          padding: 10px 12px;
-          color: #d9d9d9;
-          font-size: 0.9rem;
-          resize: vertical;
-          outline: none;
-          transition: 0.18s ease;
-        }
-
-        .prompt-box:focus {
-          border-color: rgba(255, 0, 0, 0.6);
-          box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
-        }
-
-        .file-input {
-          width: 100%;
-          font-size: 0.85rem;
-          color: #d9d9d9;
-        }
-
-        .generate-btn {
-          width: 100%;
-          padding: 12px;
-          border-radius: 999px;
-          border: none;
-          background: linear-gradient(135deg, #ff2a2a, #ff8a2a);
-          color: #0b0b0d;
-          font-weight: 600;
-          letter-spacing: 0.8px;
-          cursor: pointer;
-          box-shadow:
-            0 0 18px rgba(255, 0, 0, 0.6),
-            0 0 26px rgba(255, 138, 42, 0.5);
-          transition: 0.18s ease;
-        }
-
-        .generate-btn:disabled {
-          opacity: 0.45;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-
-        .generate-btn:not(:disabled):hover {
-          transform: translateY(-1px);
-          box-shadow:
-            0 0 24px rgba(255, 0, 0, 0.8),
-            0 0 32px rgba(255, 138, 42, 0.7);
-        }
-
-        .error-section {
-          padding: 10px 12px;
-          border-radius: 12px;
-          background: rgba(220, 38, 38, 0.15);
-          border: 1px solid rgba(248, 113, 113, 0.7);
-        }
-
-        .error-text {
-          margin: 0;
-          font-size: 0.85rem;
-          color: #fca5a5;
-        }
-
-        .output-section img {
-          max-width: 100%;
-          border-radius: 12px;
-          margin-top: 10px;
-          box-shadow: 0 0 18px rgba(0, 0, 0, 0.7);
-        }
-
-        .output-section pre {
-          background: rgba(5, 5, 8, 0.95);
-          padding: 10px;
-          border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          overflow-x: auto;
-          font-size: 0.8rem;
-        }
-
-        @media (max-width: 768px) {
-          .glass-shell {
-            padding: 18px 14px 22px;
-          }
-
-          .category-header {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-
-          .nsfw-row {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-        }
-      `}</style>
+      <style jsx>{`...`}</style>
     </div>
   );
 }

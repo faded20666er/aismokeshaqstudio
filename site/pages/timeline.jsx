@@ -1,11 +1,11 @@
 // pages/timeline.jsx
-//
 // The 5-character timeline feature: set up character faces/names,
 // build a shared dialogue timeline assigning lines to characters, then
 // generate one merged video (TTS + lipsync per line, stitched together
 // with lucataco/video-merge).
 
 import { useState } from "react";
+import { useSession, signIn } from "next-auth/react";
 import CharacterSetup from "../components/CharacterSetup";
 import DialogueTimeline from "../components/DialogueTimeline";
 import { getUserId } from "../utils/getUserId";
@@ -15,6 +15,9 @@ const DEFAULT_TTS_MODEL = "elevenlabs/v3";
 const DEFAULT_LIPSYNC_MODEL = "sync/lipsync-2-pro";
 
 export default function TimelinePage() {
+  const { data: session } = useSession();
+  const isAuthenticated = Boolean(session?.user?.id);
+
   const [characters, setCharacters] = useState([]);
   const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -23,7 +26,7 @@ export default function TimelinePage() {
   const [credits, setCredits] = useState(null);
 
   const charactersReady = characters.length > 0 && characters.every((c) => c.faceUrl);
-  const canGenerate = charactersReady && blocks.length > 0 && !loading;
+  const canGenerate = charactersReady && blocks.length > 0 && !loading && isAuthenticated;
 
   async function handleGenerate() {
     try {
@@ -31,7 +34,7 @@ export default function TimelinePage() {
       setError(null);
       setResult(null);
 
-      const userId = getUserId();
+      const userId = session?.user?.id ?? getUserId();
 
       const res = await fetch("/api/timeline-generate", {
         method: "POST",
@@ -87,6 +90,12 @@ export default function TimelinePage() {
               <DialogueTimeline characters={characters} blocks={blocks} onChange={setBlocks} />
             </div>
           </div>
+
+          {!isAuthenticated && (
+            <p className="timeline-hint">
+              You must sign in to generate timeline videos. Verified emails receive 45 free credits.
+            </p>
+          )}
 
           {typeof credits === "number" && (
             <p className="panel-credits">Credits remaining: {credits}</p>
