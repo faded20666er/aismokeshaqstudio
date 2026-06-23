@@ -7,7 +7,7 @@ const redis = new Redis({
 });
 
 const CREDITS_KEY = (userId) => `credits:${userId}`;
-const ANON_STARTING_CREDITS = Number(process.env.ANON_STARTING_CREDITS || 20);
+const ANON_STARTING_CREDITS = Number(process.env.ANON_STARTING_CREDITS || 0); // visitors get 0 credits
 const VERIFIED_STARTING_CREDITS = Number(process.env.VERIFIED_STARTING_CREDITS || 45);
 const OWNER_EMAIL = process.env.OWNER_EMAIL;
 

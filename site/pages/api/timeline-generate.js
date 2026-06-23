@@ -1,32 +1,19 @@
 // pages/api/timeline-generate.js
-//
-// The multi-character timeline feature. Takes the character roster +
-// the ordered dialogue blocks from the timeline UI, and:
-//   1. Generates TTS audio for each line
-//   2. Lipsyncs that character's face to that audio -> one clip per line
-//   3. Merges all clips (in timeline order) into one final video using
-//      lucataco/video-merge on Replicate
-//
-// This is intentionally a slower, multi-step endpoint (it can take a
-// while for 5+ lines) — the frontend should show a progress/loading
-// state rather than expecting an instant response.
+// Updated to use NextAuth session when available for credits and deductions
 
 import { findModelById } from "../../models/index.js";
 import { checkCredits } from "../../middleware/creditCheck.js";
 import { deductCredits } from "../../middleware/creditsStore.js";
 import { runModel, replicate } from "../../utils/runModel.js";
+import { getServerSession } from "next-auth/next";
+import authOptions from "../../lib/nextauthOptions";
 
 const VIDEO_MERGE_MODEL = "lucataco/video-merge";
 
-// Merge an ordered list of video URLs into one file. video-merge takes
-// repeatable `video_files` inputs — if your Replicate account's version
-// of this model only accepts exactly two inputs, this falls back to
-// merging pairwise (1+2, then result+3, then result+4, ...).
 async function mergeClips(videoUrls) {
   if (videoUrls.length === 1) return videoUrls[0];
 
   try {
-    // Try sending the whole list at once first.
     const merged = await replicate.run(VIDEO_MERGE_MODEL, {
       input: { video_files: videoUrls },
     });
@@ -37,7 +24,6 @@ async function mergeClips(videoUrls) {
       err.message
     );
 
-    // Pairwise fallback: merge clips two at a time, left to right.
     let current = videoUrls[0];
     for (let i = 1; i < videoUrls.length; i++) {
       const merged = await replicate.run(VIDEO_MERGE_MODEL, {
@@ -55,7 +41,13 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { userId, characters, blocks, ttsModelId, lipsyncModelId } = req.body || {};
+    const { userId: bodyUserId, characters, blocks, ttsModelId, lipsyncModelId } = req.body || {};
+
+    const session = await getServerSession(req, res, authOptions);
+    const sessionUserId = session?.user?.id;
+    const sessionEmail = session?.user?.email;
+
+    const userId = sessionUserId ?? bodyUserId;
 
     if (!userId) {
       return res.status(400).json({ error: "Missing userId" });
@@ -80,16 +72,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Invalid lipsync model" });
     }
 
-    // ---------------------------------------------------------
-    // COST ESTIMATE UP FRONT — charge once for the whole timeline,
-    // not per-block, so a failure partway through doesn't leave the
-    // user double-charged across retries. One TTS + one lipsync per
-    // block, plus the (effectively free) merge step.
-    // ---------------------------------------------------------
     const costPerBlock = ttsModel.credits + lipsyncModel.credits;
     const totalCost = costPerBlock * blocks.length;
 
-    const hasCredits = await checkCredits(userId, totalCost);
+    const hasCredits = await checkCredits(userId, totalCost, sessionEmail);
     if (!hasCredits) {
       return res.status(402).json({
         error: "Not enough credits for this timeline",
@@ -98,9 +84,6 @@ export default async function handler(req, res) {
     }
 
     const characterById = (id) => characters.find((c) => c.id === id);
-
-    // Sort blocks by startTime to guarantee correct merge order, even
-    // if the frontend sends them out of order.
     const orderedBlocks = [...blocks].sort((a, b) => a.startTime - b.startTime);
 
     const clipUrls = [];
@@ -114,11 +97,9 @@ export default async function handler(req, res) {
         );
       }
 
-      // Step 1: TTS for this line
       const audioOutput = await runModel(ttsModel, { text: block.text });
       const audioUrl = Array.isArray(audioOutput) ? audioOutput[0] : audioOutput;
 
-      // Step 2: Lipsync that character's face to the generated audio
       const videoOutput = await runModel(lipsyncModel, {
         face: character.faceUrl,
         audio: audioUrl,
@@ -128,17 +109,14 @@ export default async function handler(req, res) {
       clipUrls.push(videoUrl);
     }
 
-    // ---------------------------------------------------------
-    // Step 3: merge all per-line clips into one final video
-    // ---------------------------------------------------------
     const finalVideoUrl = await mergeClips(clipUrls);
 
-    const remaining = await deductCredits(userId, totalCost);
+    const remaining = await deductCredits(userId, totalCost, sessionEmail);
 
     return res.status(200).json({
       success: true,
       creditsUsed: totalCost,
-      creditsRemaining: remaining,
+      creditsRemaining: remaining === Infinity ? null : remaining,
       clips: clipUrls,
       output: finalVideoUrl,
     });

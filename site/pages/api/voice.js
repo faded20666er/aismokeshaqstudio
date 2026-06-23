@@ -1,17 +1,12 @@
 // pages/api/voice.js
-//
-// TTS / voice generation endpoint. Moved here from the dead /api
-// folder for the same reason as generate.js and lipsync.js.
-//
-// When a specific ElevenLabs voiceId is provided (from the live voice
-// picker), we call ElevenLabs' API directly instead of going through
-// Replicate's wrapped elevenlabs/v3 model — Replicate's wrapper doesn't
-// expose voice selection, only their own default voice.
+// Prefer NextAuth session when available for credits logic
 
 import { findModelById } from "../../models/index.js";
 import { checkCredits } from "../../middleware/creditCheck.js";
 import { deductCredits } from "../../middleware/creditsStore.js";
 import { runModel } from "../../utils/runModel.js";
+import { getServerSession } from "next-auth/next";
+import authOptions from "../../lib/nextauthOptions";
 
 async function runElevenLabsDirect(voiceId, text) {
   const response = await fetch(
@@ -45,7 +40,13 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { modelId, inputs, userId, nsfwEnabled } = req.body || {};
+    const { modelId, inputs, userId: bodyUserId, nsfwEnabled } = req.body || {};
+
+    const session = await getServerSession(req, res, authOptions);
+    const sessionUserId = session?.user?.id;
+    const sessionEmail = session?.user?.email;
+
+    const userId = sessionUserId ?? bodyUserId;
 
     if (!userId) {
       return res.status(400).json({ error: "Missing userId" });
@@ -67,7 +68,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const hasCredits = await checkCredits(userId, model.credits);
+    const hasCredits = await checkCredits(userId, model.credits, sessionEmail);
 
     if (!hasCredits) {
       return res.status(402).json({
@@ -81,13 +82,13 @@ export default async function handler(req, res) {
       ? await runElevenLabsDirect(inputs.voiceId, text)
       : await runModel(model, inputs);
 
-    const remaining = await deductCredits(userId, model.credits);
+    const remaining = await deductCredits(userId, model.credits, sessionEmail);
 
     return res.status(200).json({
       success: true,
       model: model.id,
       creditsUsed: model.credits,
-      creditsRemaining: remaining,
+      creditsRemaining: remaining === Infinity ? null : remaining,
       output,
     });
   } catch (err) {
