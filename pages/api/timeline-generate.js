@@ -40,6 +40,7 @@ import { createJob, generateJobId } from "../../middleware/jobStore.js";
 import { startJobInBackground } from "../../utils/runModelAsync.js";
 import { runModel } from "../../utils/runModel.js";
 import { generateMaskFromBox, getImageDimensions } from "../../utils/generateMask.js";
+import { getByokKey } from "../../middleware/byokStore.js";
 
 const MAX_CHARACTERS = 3;
 const FALLBACK_TTS_MODEL_ID = "elevenlabs/v3";
@@ -54,7 +55,7 @@ export const config = {
 
 export const maxDuration = 60;
 
-async function resolveCharacterAudio(character, blocks) {
+async function resolveCharacterAudio(character, blocks, userId) {
   const characterBlocks = blocks
     .filter((b) => b.characterId === character.id)
     .sort((a, b) => a.startTime - b.startTime);
@@ -71,7 +72,13 @@ async function resolveCharacterAudio(character, blocks) {
     const voiceId = character.voice?.voiceId || character.voice?.id;
 
     if (voiceId) {
-      const apiKey = process.env.ELEVENLABS_API_KEY;
+      // Pro/Premium subscribers who've saved their own ElevenLabs key
+      // (see middleware/byokStore.js, same pattern as pages/api/voice.js
+      // and pages/api/elevenlabs-voices.js) bill ElevenLabs directly on
+      // their own account/plan, bypassing the platform key's free-tier
+      // "library voices not available via API" restriction.
+      const byokKey = userId ? await getByokKey(userId, "elevenlabs") : null;
+      const apiKey = byokKey || process.env.ELEVENLABS_API_KEY;
       const response = await fetch(
         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
         {
@@ -106,9 +113,9 @@ async function resolveCharacterAudio(character, blocks) {
 // inside the background job — covers solo, 2-character, and
 // 3-character (with masked layering) paths exactly as before, just
 // moved out of the synchronous request/response cycle.
-async function runTimelineGeneration({ scene, characters, blocks, soloModel, multiModel, layerModel }) {
+async function runTimelineGeneration({ scene, characters, blocks, soloModel, multiModel, layerModel, userId }) {
   if (characters.length === 1) {
-    const audioUrl = await resolveCharacterAudio(characters[0], blocks);
+    const audioUrl = await resolveCharacterAudio(characters[0], blocks, userId);
     if (!audioUrl) {
       throw new Error(`No dialogue found for "${characters[0].name}"`);
     }
@@ -128,8 +135,8 @@ async function runTimelineGeneration({ scene, characters, blocks, soloModel, mul
   const [leftChar, rightChar, thirdChar] = sorted;
 
   const [leftAudio, rightAudio] = await Promise.all([
-    resolveCharacterAudio(leftChar, blocks),
-    resolveCharacterAudio(rightChar, blocks),
+    resolveCharacterAudio(leftChar, blocks, userId),
+    resolveCharacterAudio(rightChar, blocks, userId),
   ]);
 
   if (!leftAudio || !rightAudio) {
@@ -154,7 +161,7 @@ async function runTimelineGeneration({ scene, characters, blocks, soloModel, mul
     return passOneUrl;
   }
 
-  const thirdAudio = await resolveCharacterAudio(thirdChar, blocks);
+  const thirdAudio = await resolveCharacterAudio(thirdChar, blocks, userId);
   if (!thirdAudio) {
     throw new Error(`Missing dialogue for "${thirdChar.name}"`);
   }
@@ -270,7 +277,7 @@ export default async function handler(req, res) {
         category: "timeline",
         prompt: characters.map((c) => c.name).join(", "),
         customRunner: () =>
-          runTimelineGeneration({ scene, characters, blocks, soloModel, multiModel, layerModel }),
+          runTimelineGeneration({ scene, characters, blocks, soloModel, multiModel, layerModel, userId }),
       }
     );
 
