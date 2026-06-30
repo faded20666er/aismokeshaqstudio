@@ -13,7 +13,7 @@
 // clipSeconds) — this keeps the maths simple and avoids percent-of-
 // percent rounding drift while dragging.
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 
 const TRACK_COLORS = ["#ff8a2a", "#7dd3fc", "#86efac", "#f9a8d4", "#f3d98b"];
 const MIN_BLOCK_SECONDS = 1;
@@ -35,10 +35,42 @@ export default function TimelineEditor({
   const MIN_PX_PER_SECOND = 8; // zoomed all the way out
   const MAX_PX_PER_SECOND = 200; // zoomed all the way in
 
+  // Refs mirroring the latest pxPerSecond/clipSeconds/onChange/
+  // onClipSecondsChange/maxClipSeconds on every render. The global
+  // mousemove/mouseup listeners attached during a drag (below) read
+  // from these refs instead of depending on the values directly —
+  // see the [drag]/[sceneDrag]-only effects further down for why.
+  const pxPerSecondRef = useRef(pxPerSecond);
+  useEffect(() => {
+    pxPerSecondRef.current = pxPerSecond;
+  }, [pxPerSecond]);
+
+  const clipSecondsRef = useRef(clipSeconds);
+  useEffect(() => {
+    clipSecondsRef.current = clipSeconds;
+  }, [clipSeconds]);
+
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  const onClipSecondsChangeRef = useRef(onClipSecondsChange);
+  useEffect(() => {
+    onClipSecondsChangeRef.current = onClipSecondsChange;
+  }, [onClipSecondsChange]);
+
+  const maxClipSecondsRef = useRef(maxClipSeconds);
+  useEffect(() => {
+    maxClipSecondsRef.current = maxClipSeconds;
+  }, [maxClipSeconds]);
+
   function fitToScreen() {
     if (!trackAreaRef.current) return;
     const width = trackAreaRef.current.clientWidth;
-    setPxPerSecond(Math.max(MIN_PX_PER_SECOND, Math.min(MAX_PX_PER_SECOND, width / clipSeconds)));
+    setPxPerSecond(
+      Math.max(MIN_PX_PER_SECOND, Math.min(MAX_PX_PER_SECOND, width / clipSecondsRef.current))
+    );
   }
 
   function zoomIn() {
@@ -49,20 +81,19 @@ export default function TimelineEditor({
     setPxPerSecond((p) => Math.max(MIN_PX_PER_SECOND, p / 1.5));
   }
 
-  // Fit to screen once on mount and whenever the clip length itself
-  // changes (stretching the scene block) — but NOT on every render,
-  // so manual zoom adjustments the user makes afterward aren't
-  // overwritten. Window resize also re-fits, matching most editors'
-  // behavior of keeping the full clip visible when the window changes
-  // size, without fighting a zoom level the user deliberately set
-  // mid-session — acceptable trade-off, re-fitting on resize is the
-  // more common convention.
+  // Fit to screen once on mount, and again on window resize. NOT
+  // re-run on every clipSeconds change anymore — dragging the scene
+  // clip's length handle calls onClipSecondsChange on every mousemove
+  // tick, and refitting on each of those ticks reset the zoom level
+  // out from under the user mid-drag (reported as "zoom fights you /
+  // timeline gets stuck"). Click "Fit" explicitly to re-fit after
+  // resizing the clip.
   useEffect(() => {
     fitToScreen();
     window.addEventListener("resize", fitToScreen);
     return () => window.removeEventListener("resize", fitToScreen);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clipSeconds]);
+  }, []);
 
   // Simple playhead animation loop — purely visual scrubbing preview,
   // does not actually play any audio/video (there's nothing rendered
@@ -88,12 +119,16 @@ export default function TimelineEditor({
     return () => cancelAnimationFrame(raf);
   }, [isPlaying, clipSeconds]);
 
-  const secondsToPx = useCallback((s) => s * pxPerSecond, [pxPerSecond]);
-  const pxToSeconds = useCallback((px) => px / pxPerSecond, [pxPerSecond]);
+  const secondsToPx = (s) => s * pxPerSecond;
+  const pxToSeconds = (px) => px / pxPerSecond;
 
+  // Reads clipSecondsRef instead of the closed-over clipSeconds so
+  // this stays correct no matter which render's closure it's called
+  // from — needed now that the drag effect below no longer re-runs
+  // (and re-closes) on every clipSeconds change.
   function clampBlock(startTime, duration) {
     const clampedDuration = Math.max(MIN_BLOCK_SECONDS, duration);
-    const clampedStart = Math.max(0, Math.min(startTime, clipSeconds - clampedDuration));
+    const clampedStart = Math.max(0, Math.min(startTime, clipSecondsRef.current - clampedDuration));
     return { startTime: clampedStart, duration: clampedDuration };
   }
 
@@ -113,9 +148,9 @@ export default function TimelineEditor({
 
     function handleMouseMove(e) {
       const deltaPx = e.clientX - drag.startX;
-      const deltaSeconds = pxToSeconds(deltaPx);
+      const deltaSeconds = deltaPx / pxPerSecondRef.current;
 
-      onChange((prevBlocks) =>
+      onChangeRef.current((prevBlocks) =>
         prevBlocks.map((b) => {
           if (b.id !== drag.blockId) return b;
 
@@ -158,7 +193,11 @@ export default function TimelineEditor({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [drag, pxToSeconds, onChange, clipSeconds]);
+    // Deliberately only [drag]: pxPerSecondRef/onChangeRef/clampBlock
+    // (which itself reads clipSecondsRef) carry the live values, so
+    // this listener pair attaches once per drag and isn't torn down
+    // and rebuilt mid-drag by an unrelated zoom/clip-length change.
+  }, [drag]);
 
   // Scene clip block (top row) — stretching it changes clipSeconds
   // itself, which also rescales every dialogue block's visual position
@@ -176,11 +215,11 @@ export default function TimelineEditor({
 
     function handleMouseMove(e) {
       const deltaPx = e.clientX - sceneDrag.startX;
-      const deltaSeconds = pxToSeconds(deltaPx);
+      const deltaSeconds = deltaPx / pxPerSecondRef.current;
       const next = Math.round(
-        Math.max(5, Math.min(maxClipSeconds, sceneDrag.originalClipSeconds + deltaSeconds))
+        Math.max(5, Math.min(maxClipSecondsRef.current, sceneDrag.originalClipSeconds + deltaSeconds))
       );
-      onClipSecondsChange(next);
+      onClipSecondsChangeRef.current(next);
     }
 
     function handleMouseUp() {
@@ -193,7 +232,9 @@ export default function TimelineEditor({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [sceneDrag, pxToSeconds, onClipSecondsChange, maxClipSeconds]);
+    // Same reasoning as the block-drag effect above: only [sceneDrag],
+    // live values come from refs so this isn't rebuilt mid-drag.
+  }, [sceneDrag]);
 
   function handleRulerClick(e) {
     if (!trackAreaRef.current) return;
