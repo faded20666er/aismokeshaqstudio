@@ -1,25 +1,32 @@
 // pages/api/elevenlabs-voices.js
 //
-// Searches ElevenLabs' real SHARED VOICE LIBRARY — the actual
-// community catalog of 10,000+ voices — via GET /v1/shared-voices.
+// Two voice sources, picked automatically based on which API key is in
+// play:
 //
-// IMPORTANT: this used to call GET /v2/voices, which only returns
-// voices already saved to the calling account's own personal voice
-// list (a small, fixed handful) — NOT the full community library.
-// That's why the picker only ever showed ~11 voices despite the code
-// comment claiming "thousands of voices." Fixed by switching to the
-// real shared-voices endpoint, confirmed via ElevenLabs' own API docs
-// (elevenlabs.io/docs/api-reference/voices/voice-library/get-shared).
+// 1. BYOK (Pro/Premium user's own ElevenLabs key, saved via
+//    /api/byok-key) -> GET /v1/shared-voices, the full searchable
+//    community library (10,000+ voices). Whatever that user's own
+//    ElevenLabs plan allows is what they get -- their plan, their cost.
 //
-// ElevenLabs' docs note Voice Library access isn't available via API
-// to free-tier accounts — since this app's calls go through a paid
-// platform account (or the user's own BYOK key for Pro/Premium), this
-// should work, but if ATLASCLOUD_API_KEY-style "free tier" limits ever
-// apply to the shared key, this is the first place that would surface.
+// 2. No BYOK key (free-tier users, riding the platform's shared
+//    ELEVENLABS_API_KEY) -> GET /v1/voices instead. /v1/shared-voices
+//    flat-out 402s for free-tier keys ("Free users cannot use library
+//    voices via the API"); confirmed against ElevenLabs' own docs that
+//    this restriction is specifically on the *shared* library, not on
+//    /v1/voices. /v1/voices returns the calling account's own voice
+//    list, which every account -- including a brand-new free one --
+//    ships with ElevenLabs' full set of default "premade" voices
+//    already added (~20+, spanning gender/age/accent). Those ARE
+//    usable for real text-to-speech via the API on a free key. This is
+//    the actual fix for the recurring 402 during Timeline generation:
+//    it was never about which key was selected, it was about which
+//    endpoint/voice source was being hit. Switching the free path off
+//    /v1/shared-voices entirely removes the chance of a free user ever
+//    picking a voice that 402s.
 //
-// If the user (a Pro/Premium subscriber) has saved their own ElevenLabs
-// key via /api/byok-key, we use THEIR key here — meaning they search
-// their own plan's library access at zero cost to us.
+// /v1/voices doesn't support server-side search/gender/category query
+// params the way /v1/shared-voices does (it's just "list my voices"),
+// so for that path we fetch the full list once and filter in JS.
 
 import { getByokKey } from "../../middleware/byokStore.js";
 
@@ -45,6 +52,58 @@ export default async function handler(req, res) {
     const byokKey = userId ? await getByokKey(userId, "elevenlabs") : null;
     const apiKey = byokKey || process.env.ELEVENLABS_API_KEY;
 
+    // --- Path 2: no BYOK key -- free-tier-safe own-voice list ---
+    if (!byokKey) {
+      const response = await fetch("https://api.elevenlabs.io/v1/voices", {
+        headers: { "xi-api-key": apiKey },
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(`ElevenLabs error (${response.status}): ${text || response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      let voices = (data.voices || []).map((v) => ({
+        id: v.voice_id,
+        name: v.name,
+        gender: v.labels?.gender || "unspecified",
+        age: v.labels?.age || null,
+        accent: v.labels?.accent || null,
+        language: null,
+        useCase: v.labels?.use_case || null,
+        description: v.description || v.labels?.descriptive || null,
+        previewUrl: v.preview_url || null,
+        category: v.category || null,
+        freeUsersAllowed: true, // these are the account's own voices -- always usable
+        clonedByCount: 0,
+      }));
+
+      const searchLower = search.toLowerCase().trim();
+      if (searchLower) {
+        voices = voices.filter(
+          (v) =>
+            v.name.toLowerCase().includes(searchLower) ||
+            (v.useCase || "").toLowerCase().includes(searchLower) ||
+            (v.description || "").toLowerCase().includes(searchLower)
+        );
+      }
+      if (gender) voices = voices.filter((v) => v.gender === gender);
+      if (age) voices = voices.filter((v) => v.age === age);
+      if (accent) voices = voices.filter((v) => v.accent === accent);
+      if (category) voices = voices.filter((v) => v.category === category);
+
+      return res.status(200).json({
+        voices,
+        hasMore: false,
+        totalCount: voices.length,
+        usingOwnKey: false,
+        source: "account-voices", // lets the picker UI label this set if useful
+      });
+    }
+
+    // --- Path 1: BYOK key -- full community library search ---
     const params = new URLSearchParams({
       page_size: String(page_size),
       page: String(page),
@@ -75,9 +134,9 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     // Normalize to just what the frontend needs. Note the shared-voices
-    // response shape is different from /v2/voices — fields like
+    // response shape is different from /v1/voices -- fields like
     // "accent", "gender", "age" are top-level here, not nested under
-    // "labels" like the old endpoint. free_users_allowed and
+    // "labels" like the account-voices endpoint. free_users_allowed and
     // cloned_by_count are unique to this endpoint and useful for
     // sorting/filtering quality in the picker UI.
     const voices = (data.voices || []).map((v) => ({
@@ -99,7 +158,8 @@ export default async function handler(req, res) {
       voices,
       hasMore: data.has_more || false,
       totalCount: data.total_count || voices.length,
-      usingOwnKey: !!byokKey,
+      usingOwnKey: true,
+      source: "shared-library",
     });
   } catch (err) {
     console.error("elevenlabs-voices.js error:", err);
