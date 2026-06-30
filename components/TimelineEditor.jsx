@@ -134,10 +134,11 @@ export default function TimelineEditor({
 
   function handleBlockMouseDown(e, block, mode) {
     e.stopPropagation();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     setDrag({
       blockId: block.id,
       mode,
-      startX: e.clientX,
+      startX: clientX,
       originalStart: block.startTime,
       originalDuration: block.duration,
     });
@@ -146,8 +147,8 @@ export default function TimelineEditor({
   useEffect(() => {
     if (!drag) return;
 
-    function handleMouseMove(e) {
-      const deltaPx = e.clientX - drag.startX;
+    function applyMove(clientX) {
+      const deltaPx = clientX - drag.startX;
       const deltaSeconds = deltaPx / pxPerSecondRef.current;
 
       onChangeRef.current((prevBlocks) =>
@@ -183,15 +184,38 @@ export default function TimelineEditor({
       );
     }
 
-    function handleMouseUp() {
+    function handleMouseMove(e) {
+      applyMove(e.clientX);
+    }
+
+    function handleTouchMove(e) {
+      if (e.touches && e.touches[0]) applyMove(e.touches[0].clientX);
+    }
+
+    function endDrag() {
       setDrag(null);
     }
 
+    // Both mouse AND touch listeners. On a touchscreen, mousedown can
+    // fire (synthesized) without a matching window "mouseup" ever
+    // firing on release -- only "touchend" does. Without the touch
+    // listeners here, that leaves `drag` stuck set forever: the
+    // un-cleaned-up handleMouseMove keeps reacting to every later
+    // mousemove/touchmove anywhere on the page (including over
+    // unrelated controls like the zoom buttons or the Clip Length
+    // slider), which is exactly the "everything moves together /
+    // zoom and scroll get locked up" symptom reported.
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mouseup", endDrag);
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", endDrag);
+    window.addEventListener("touchcancel", endDrag);
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mouseup", endDrag);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", endDrag);
+      window.removeEventListener("touchcancel", endDrag);
     };
     // Deliberately only [drag]: pxPerSecondRef/onChangeRef/clampBlock
     // (which itself reads clipSecondsRef) carry the live values, so
@@ -207,14 +231,15 @@ export default function TimelineEditor({
 
   function handleSceneResizeStart(e) {
     e.stopPropagation();
-    setSceneDrag({ startX: e.clientX, originalClipSeconds: clipSeconds });
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    setSceneDrag({ startX: clientX, originalClipSeconds: clipSeconds });
   }
 
   useEffect(() => {
     if (!sceneDrag) return;
 
-    function handleMouseMove(e) {
-      const deltaPx = e.clientX - sceneDrag.startX;
+    function applyResize(clientX) {
+      const deltaPx = clientX - sceneDrag.startX;
       const deltaSeconds = deltaPx / pxPerSecondRef.current;
       const next = Math.round(
         Math.max(5, Math.min(maxClipSecondsRef.current, sceneDrag.originalClipSeconds + deltaSeconds))
@@ -222,15 +247,32 @@ export default function TimelineEditor({
       onClipSecondsChangeRef.current(next);
     }
 
-    function handleMouseUp() {
+    function handleMouseMove(e) {
+      applyResize(e.clientX);
+    }
+
+    function handleTouchMove(e) {
+      if (e.touches && e.touches[0]) applyResize(e.touches[0].clientX);
+    }
+
+    function endDrag() {
       setSceneDrag(null);
     }
 
+    // Same touch-support reasoning as the block-drag effect above: a
+    // touch release fires "touchend", not "mouseup" -- without this,
+    // a touch-based scene-length drag could get stuck the same way.
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mouseup", endDrag);
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", endDrag);
+    window.addEventListener("touchcancel", endDrag);
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mouseup", endDrag);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", endDrag);
+      window.removeEventListener("touchcancel", endDrag);
     };
     // Same reasoning as the block-drag effect above: only [sceneDrag],
     // live values come from refs so this isn't rebuilt mid-drag.
@@ -304,6 +346,7 @@ export default function TimelineEditor({
             <div
               className="timeline-resize-handle timeline-resize-handle-right"
               onMouseDown={handleSceneResizeStart}
+              onTouchStart={handleSceneResizeStart}
             />
           </div>
         </div>
@@ -329,10 +372,12 @@ export default function TimelineEditor({
                       background: color,
                     }}
                     onMouseDown={(e) => handleBlockMouseDown(e, block, "move")}
+                    onTouchStart={(e) => handleBlockMouseDown(e, block, "move")}
                   >
                     <div
                       className="timeline-resize-handle timeline-resize-handle-left"
                       onMouseDown={(e) => handleBlockMouseDown(e, block, "resize-left")}
+                      onTouchStart={(e) => handleBlockMouseDown(e, block, "resize-left")}
                     />
                     <span className="timeline-dialogue-block-text">
                       {block.audioSource === "upload"
@@ -351,6 +396,7 @@ export default function TimelineEditor({
                     <div
                       className="timeline-resize-handle timeline-resize-handle-right"
                       onMouseDown={(e) => handleBlockMouseDown(e, block, "resize-right")}
+                      onTouchStart={(e) => handleBlockMouseDown(e, block, "resize-right")}
                     />
                   </div>
                 ))}
