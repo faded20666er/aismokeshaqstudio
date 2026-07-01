@@ -380,6 +380,7 @@ body {
 
 .panel-full {
   flex: 1 1 100%;
+  min-width: 0;
 }
 
 .panel-label {
