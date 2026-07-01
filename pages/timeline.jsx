@@ -22,7 +22,6 @@ import { useAppUserId } from "../utils/useAppUserId";
 import { findModelById } from "../models/index.js";
 import { pollJob } from "../utils/pollJob";
 
-const MIN_CLIP_SECONDS = 5;
 const MAX_CLIP_SECONDS = 60;
 
 export default function TimelinePage() {
@@ -170,18 +169,6 @@ export default function TimelinePage() {
 
           <div className="panel-row">
             <div className="panel-col">
-              <label className="panel-label">Clip Length ({clipSeconds}s)</label>
-              <input
-                type="range"
-                min={MIN_CLIP_SECONDS}
-                max={MAX_CLIP_SECONDS}
-                value={clipSeconds}
-                onChange={(e) => setClipSeconds(Number(e.target.value))}
-                className="timeline-length-slider"
-              />
-            </div>
-
-            <div className="panel-col">
               <label className="panel-label">Quality</label>
               <select
                 className="panel-select"
@@ -242,10 +229,6 @@ export default function TimelinePage() {
       </div>
 
       <style jsx>{`
-        .timeline-length-slider {
-          width: 100%;
-        }
-
         .timeline-cost-estimate {
           margin: 0;
           font-size: 1.1rem;
