@@ -8,10 +8,11 @@
 // call and passes everything down as props, so there's exactly one
 // source of truth.
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ModelSelector from "./ModelSelector";
 import VoicePicker from "./VoicePicker";
 import ByokKeyManager from "./ByokKeyManager";
+import AgeGate from "./AgeGate";
 
 // Renders generated output as the right media type — lipsync/video
 // produce video, TTS produces audio, image/NSFW-image produce images.
@@ -44,13 +45,27 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
   const [category, setCategory] = useState("image");
   const [selectedModel, setSelectedModel] = useState(null);
   const [prompt, setPrompt] = useState("");
-  const [file, setFile] = useState([]);
+  const [uploadedFiles, setUploadedFiles] = useState([]); // [{file, previewUrl}]
   const [faceFile, setFaceFile] = useState(null);
   const [audioFile, setAudioFile] = useState(null);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [durationSeconds, setDurationSeconds] = useState(30);
   const [usingOwnKey, setUsingOwnKey] = useState(false);
   const [nsfwEnabled, setNsfwEnabled] = useState(false);
+  const [nsfwAgeVerified, setNsfwAgeVerified] = useState(false);
+  const [showNsfwAgeGate, setShowNsfwAgeGate] = useState(false);
+
+  // Check if user has already completed NSFW age verification on this browser
+  // (runs once on mount — skips the gate for returning users who already agreed)
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("smokeshaq_nsfw_age_verified") === "true") {
+        setNsfwAgeVerified(true);
+      }
+    } catch {
+      // localStorage unavailable — gate will show every session, which is the safe default
+    }
+  }, []);
 
   function fileToDataUrl(file) {
     return new Promise((resolve, reject) => {
@@ -61,13 +76,36 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
     });
   }
 
+  function handleNsfwToggle(enabling) {
+    if (enabling && !nsfwAgeVerified) {
+      // User wants to turn on NSFW but hasn't verified age yet — show the gate
+      setShowNsfwAgeGate(true);
+      return;
+    }
+    setNsfwEnabled(enabling);
+  }
+
+  function handleNsfwVerified() {
+    try {
+      window.localStorage.setItem("smokeshaq_nsfw_age_verified", "true");
+    } catch {}
+    setNsfwAgeVerified(true);
+    setNsfwEnabled(true);
+    setShowNsfwAgeGate(false);
+  }
+
+  function handleNsfwDeclined() {
+    setShowNsfwAgeGate(false);
+    // Don't change nsfwEnabled — if it was off, it stays off
+  }
+
   async function handleGenerateClick() {
     if (!selectedModel) return;
 
     const inputs = { prompt };
 
-    if (file && file.length > 0) {
-      inputs.images = await Promise.all(file.map((f) => fileToDataUrl(f)));
+    if (uploadedFiles.length > 0) {
+      inputs.images = await Promise.all(uploadedFiles.map((f) => fileToDataUrl(f.file)));
       inputs.image = inputs.images[0]; // backwards-compat for single-image models
     }
 
@@ -126,6 +164,10 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
               onClick={() => {
                 setCategory(cat);
                 setSelectedModel(null);
+                setUploadedFiles((prev) => {
+                  prev.forEach((f) => URL.revokeObjectURL(f.previewUrl));
+                  return [];
+                });
               }}
             >
               {label}
@@ -250,9 +292,12 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
       {(category === "image" || category === "video") && selectedModel?.imageInputs?.max > 0 && (
         <div className="section-block">
           <div className="section-header">
-            <span className="section-label text-silver-red">Reference images</span>
+            <span className="section-label text-silver-red">
+              Reference image{selectedModel.imageInputs.max === 1 ? "" : "s"}
+            </span>
             <span className="section-meta">
-              Up to {selectedModel.imageInputs.max} image{selectedModel.imageInputs.max === 1 ? "" : "s"} — optional
+              {selectedModel.imageInputs.min > 0 ? "Required" : "Optional"} ·{" "}
+              {uploadedFiles.length} / {selectedModel.imageInputs.max} uploaded
             </span>
           </div>
           <input
@@ -260,8 +305,42 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
             accept="image/*"
             multiple={selectedModel.imageInputs.max > 1}
             className="file-input"
-            onChange={(e) => setFile(Array.from(e.target.files).slice(0, selectedModel.imageInputs.max))}
+            onChange={(e) => {
+              const newFiles = Array.from(e.target.files).slice(0, selectedModel.imageInputs.max - uploadedFiles.length);
+              const withPreviews = newFiles.map((f) => ({
+                file: f,
+                previewUrl: URL.createObjectURL(f),
+              }));
+              setUploadedFiles((prev) => {
+                const combined = [...prev, ...withPreviews].slice(0, selectedModel.imageInputs.max);
+                return combined;
+              });
+              e.target.value = ""; // allow re-selecting same file
+            }}
           />
+          {uploadedFiles.length > 0 && (
+            <div className="upload-thumb-grid">
+              {uploadedFiles.map((f, i) => (
+                <div key={i} className="upload-thumb">
+                  <img src={f.previewUrl} alt={`ref ${i + 1}`} />
+                  <button
+                    type="button"
+                    className="upload-thumb-remove"
+                    onClick={() =>
+                      setUploadedFiles((prev) => {
+                        URL.revokeObjectURL(prev[i].previewUrl);
+                        return prev.filter((_, idx) => idx !== i);
+                      })
+                    }
+                    title="Remove"
+                  >
+                    ✕
+                  </button>
+                  <span className="upload-thumb-label">#{i + 1}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -272,7 +351,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
             <input
               type="checkbox"
               checked={nsfwEnabled}
-              onChange={(e) => setNsfwEnabled(e.target.checked)}
+              onChange={(e) => handleNsfwToggle(e.target.checked)}
             />
             <span className="nsfw-label text-silver-red">Enable NSFW Models</span>
           </label>
@@ -322,6 +401,11 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
             <OutputPreview item={output} category={category} />
           )}
         </div>
+      )}
+
+      {/* NSFW Age Gate — only shown when user tries to enable NSFW without prior verification */}
+      {showNsfwAgeGate && (
+        <AgeGate onConfirm={handleNsfwVerified} onDecline={handleNsfwDeclined} />
       )}
 
       <style jsx>{`
@@ -540,6 +624,67 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
           border: 1px solid rgba(255, 255, 255, 0.16);
           overflow-x: auto;
           font-size: 0.8rem;
+        }
+
+        .upload-thumb-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-top: 10px;
+        }
+
+        .upload-thumb {
+          position: relative;
+          width: 84px;
+          height: 84px;
+          flex-shrink: 0;
+        }
+
+        .upload-thumb img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          display: block;
+        }
+
+        .upload-thumb-remove {
+          position: absolute;
+          top: -7px;
+          right: -7px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          border: none;
+          background: rgba(220, 38, 38, 0.9);
+          color: #fff;
+          font-size: 0.65rem;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+          padding: 0;
+          box-shadow: 0 0 6px rgba(0,0,0,0.5);
+        }
+
+        .upload-thumb-remove:hover {
+          background: #dc2626;
+          transform: scale(1.15);
+        }
+
+        .upload-thumb-label {
+          position: absolute;
+          bottom: 4px;
+          left: 4px;
+          font-size: 0.62rem;
+          font-weight: 600;
+          color: #fff;
+          background: rgba(0,0,0,0.55);
+          border-radius: 4px;
+          padding: 1px 4px;
         }
 
         @media (max-width: 768px) {
