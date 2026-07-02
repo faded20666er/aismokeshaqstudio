@@ -1,9 +1,4 @@
 // pages/_app.js
-import "../styles/globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
-import AgeGate from "../components/AgeGate";
-
-export defau// pages/_app.js
 //
 // Age gate removed from here intentionally — the whole site is NOT
 // 18+, only the NSFW generation feature is. The gate now lives inside
@@ -16,15 +11,6 @@ export default function App({ Component, pageProps }) {
   return (
     <ClerkProvider {...pageProps}>
       <Component {...pageProps} />
-    </ClerkProvider>
-  );
-}
-lt function App({ Component, pageProps }) {
-  return (
-    <ClerkProvider {...pageProps}>
-      <AgeGate>
-        <Component {...pageProps} />
-      </AgeGate>
     </ClerkProvider>
   );
 }
