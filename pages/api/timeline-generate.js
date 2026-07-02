@@ -77,28 +77,45 @@ async function resolveCharacterAudio(character, blocks, userId) {
       // and pages/api/elevenlabs-voices.js) bill ElevenLabs directly on
       // their own account/plan, bypassing the platform key's free-tier
       // "library voices not available via API" restriction.
+      //
+      // For free-tier users (no BYOK key), we still try ElevenLabs direct
+      // with the platform key, but if it returns 402 (library voice blocked
+      // on a free key), we fall through to the Replicate TTS fallback below
+      // rather than failing the whole generation.
       const byokKey = userId ? await getByokKey(userId, "elevenlabs") : null;
       const apiKey = byokKey || process.env.ELEVENLABS_API_KEY;
-      const response = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-        {
-          method: "POST",
-          headers: {
-            "xi-api-key": apiKey,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ text: block.text, model_id: "eleven_multilingual_v2" }),
+
+      try {
+        const response = await fetch(
+          `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+          {
+            method: "POST",
+            headers: {
+              "xi-api-key": apiKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text: block.text, model_id: "eleven_multilingual_v2" }),
+          }
+        );
+
+        if (response.status === 402 && !byokKey) {
+          // Platform key is free-tier and this voice requires a paid plan.
+          // Fall through to Replicate TTS fallback below.
+          console.warn(`ElevenLabs 402 for voiceId ${voiceId} on platform key — falling back to Replicate TTS`);
+        } else {
+          if (!response.ok) {
+            const errText = await response.text().catch(() => "");
+            throw new Error(`ElevenLabs error (${response.status}): ${errText}`);
+          }
+          const arrayBuffer = await response.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString("base64");
+          return `data:audio/mpeg;base64,${base64}`;
         }
-      );
-
-      if (!response.ok) {
-        const errText = await response.text().catch(() => "");
-        throw new Error(`ElevenLabs error (${response.status}): ${errText}`);
+      } catch (err) {
+        if (err.message.includes("ElevenLabs error")) throw err; // real error, rethrow
+        // Network or unexpected error — fall through to Replicate TTS
+        console.warn(`ElevenLabs TTS failed, falling back to Replicate: ${err.message}`);
       }
-
-      const arrayBuffer = await response.arrayBuffer();
-      const base64 = Buffer.from(arrayBuffer).toString("base64");
-      return `data:audio/mpeg;base64,${base64}`;
     }
 
     const ttsModel = findModelById(FALLBACK_TTS_MODEL_ID);
