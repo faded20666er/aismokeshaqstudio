@@ -38,6 +38,7 @@ export const MODELS = {
       premium: true,
       credits: 3,
       description: "Best overall photorealism and fine detail. Top pick for portraits and product shots.",
+      imageInputs: { min: 0, max: 8 },
     },
     {
       id: "google/nano-banana-2",
@@ -67,6 +68,7 @@ export const MODELS = {
       // Imagen 4 Ultra rate before scaling usage of this model heavily.
       credits: 4,
       description: "Excellent text rendering and complex prompts. Strong for posters, logos, layouts.",
+      imageInputs: { min: 0, max: 0 },
     },
     {
       id: "black-forest-labs/flux-2-flex",
@@ -77,6 +79,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Fast, flexible all-rounder. Great default choice for most image prompts.",
+      imageInputs: { min: 0, max: 8 },
     },
     {
       id: "bytedance/seedream-5-lite",
@@ -87,6 +90,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Clean, balanced style. Reliable for everyday scenes and characters.",
+      imageInputs: { min: 0, max: 4 },
     },
     {
       id: "bytedance/seedream-4.5",
@@ -108,6 +112,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Older, budget-friendly Seedream version. Solid for simple compositions.",
+      imageInputs: { min: 0, max: 0 },
     },
     {
       id: "wan-video/wan-2.7-image-pro",
@@ -118,6 +123,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Sharp detail, good for character art that may later be animated to video.",
+      imageInputs: { min: 0, max: 4 },
     },
     {
       id: "ideogram-ai/ideogram-v3-turbo",
@@ -128,6 +134,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Best-in-class for text and lettering inside images. Great for logos and signage.",
+      imageInputs: { min: 0, max: 2 },
     },
     {
       id: "ideogram-ai/ideogram-v2",
@@ -138,6 +145,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Older Ideogram version. Still strong for typography-heavy designs.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "minimax/image-01",
@@ -148,6 +156,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Good general-purpose image model, dependable for everyday prompts.",
+      imageInputs: { min: 0, max: 0 },
     },
     {
       id: "comfyui/any-comfyui-workflow",
@@ -158,6 +167,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Run a custom ComfyUI workflow for advanced, highly specific control over output.",
+      imageInputs: { min: 0, max: 0 },
     },
     {
       id: "fermatresearch/sdxl-controlnet-lora",
@@ -168,6 +178,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Best for matching a specific pose or layout using a reference image.",
+      imageInputs: { min: 1, max: 1 },
     },
     {
       id: "lucataco/ssd-1b",
@@ -178,6 +189,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Lightweight and fast. Good for quick drafts and iteration.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       // Replaces gooniebloans/igoonhard, which had ZERO working
@@ -195,6 +207,7 @@ export const MODELS = {
       premium: false,
       credits: 5,
       description: "NSFW image model. Unlock NSFW mode to use.",
+      imageInputs: { min: 0, max: 0 },
     },
     {
       // Confirmed via Hugging Face Hub API to have live inference
@@ -210,6 +223,7 @@ export const MODELS = {
       premium: false,
       credits: 5,
       description: "NSFW image model. Unlock NSFW mode to use.",
+      imageInputs: { min: 0, max: 0 },
     },
   ],
 
@@ -238,6 +252,7 @@ export const MODELS = {
       premium: false,
       credits: 60,
       description: "NSFW image-to-video model. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
     },
     {
       // VERIFIED via Atlas Cloud's own published docs/pricing page:
@@ -261,6 +276,7 @@ export const MODELS = {
       maxDurationSeconds: 30,
       resolution: "480p",
       description: "Lowest-cost NSFW video model. Long-form via segmented prompts (up to 30s). Unlock NSFW mode to use.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "atlascloud/wan-2.2-turbo-spicy-infinite-720p",
@@ -275,6 +291,7 @@ export const MODELS = {
       maxDurationSeconds: 30,
       resolution: "720p",
       description: "Higher-resolution version of the lowest-cost NSFW video model. Unlock NSFW mode to use.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       // VERIFIED via Atlas Cloud's published pricing/blog page:
@@ -293,6 +310,7 @@ export const MODELS = {
       maxDurationSeconds: 15,
       resolution: "720p",
       description: "Highest-quality NSFW video model — best motion smoothness and subject coherence. Unlock NSFW mode to use.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "runwayml/gen-4.5",
@@ -303,6 +321,7 @@ export const MODELS = {
       premium: true,
       credits: 35,
       description: "Top-tier cinematic motion and camera control. Best for polished, film-like shots.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "google/veo-3.1",
@@ -313,6 +332,7 @@ export const MODELS = {
       premium: true,
       credits: 28,
       description: "Excellent realism and physics. Strong for natural movement and lighting.",
+      imageInputs: { min: 0, max: 4 },
     },
     {
       id: "bytedance/dreamactor-m2.0",
@@ -323,6 +343,7 @@ export const MODELS = {
       premium: true,
       credits: 28,
       description: "Best for character performance and expressive acting in a generated video.",
+      imageInputs: { min: 1, max: 1 },
     },
     {
       id: "xai/grok-imagine-video",
@@ -333,6 +354,7 @@ export const MODELS = {
       premium: true,
       credits: 28,
       description: "Strong creative range, handles unusual or imaginative prompts well.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "google/veo-2",
@@ -343,6 +365,7 @@ export const MODELS = {
       premium: false,
       credits: 8,
       description: "Reliable realism at a lower cost than VEO 3.1. Good everyday choice.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "kwaivgi/kling-v3-video",
@@ -353,6 +376,7 @@ export const MODELS = {
       premium: false,
       credits: 20,
       description: "Smooth motion and good consistency across frames. Popular all-rounder.",
+      imageInputs: { min: 0, max: 2 },
     },
     {
       id: "kwaivgi/kling-v3-omni-video",
@@ -363,6 +387,7 @@ export const MODELS = {
       premium: false,
       credits: 20,
       description: "Handles a wider variety of input types (image, text) flexibly.",
+      imageInputs: { min: 0, max: 4 },
     },
     {
       id: "kwaivgi/kling-v2.5-turbo-pro",
@@ -373,6 +398,7 @@ export const MODELS = {
       premium: false,
       credits: 18,
       description: "Faster turnaround than V3, still solid quality for quick iterations.",
+      imageInputs: { min: 0, max: 3 },
     },
     {
       id: "kwaivgi/kling-v2.0",
@@ -383,6 +409,7 @@ export const MODELS = {
       premium: false,
       credits: 16,
       description: "Older Kling version, dependable and budget-conscious.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "bytedance/seedance-2.0",
@@ -393,6 +420,7 @@ export const MODELS = {
       premium: false,
       credits: 8,
       description: "Good motion quality for dance, action, and dynamic movement scenes.",
+      imageInputs: { min: 0, max: 4 },
     },
     {
       id: "bytedance/seedance-1.5-pro",
@@ -403,6 +431,7 @@ export const MODELS = {
       premium: false,
       credits: 8,
       description: "Balanced quality and speed, a safe middle-ground choice.",
+      imageInputs: { min: 0, max: 2 },
     },
     {
       id: "bytedance/seedance-1-pro",
@@ -413,6 +442,7 @@ export const MODELS = {
       premium: false,
       credits: 7,
       description: "Earlier Seedance version, still capable for general video needs.",
+      imageInputs: { min: 0, max: 2 },
     },
     {
       id: "bytedance/seedance-1-lite",
@@ -423,6 +453,7 @@ export const MODELS = {
       premium: false,
       credits: 6,
       description: "Lighter, faster Seedance variant for quicker turnarounds.",
+      imageInputs: { min: 0, max: 3 },
     },
     {
       id: "wan-video/wan-2.7-t2v",
@@ -433,6 +464,7 @@ export const MODELS = {
       premium: false,
       credits: 10,
       description: "Latest WAN text-to-video, good detail retention during motion.",
+      imageInputs: { min: 0, max: 0 },
     },
     {
       id: "wan-video/wan-2.5-t2v-fast",
@@ -443,6 +475,7 @@ export const MODELS = {
       premium: false,
       credits: 9,
       description: "Speed-optimized text-to-video. Good for quick previews.",
+      imageInputs: { min: 0, max: 0 },
     },
     {
       id: "wan-video/wan-2.2-t2v-fast",
@@ -453,6 +486,7 @@ export const MODELS = {
       premium: false,
       credits: 8,
       description: "Earlier fast WAN variant, reliable and quick.",
+      imageInputs: { min: 0, max: 0 },
     },
     {
       id: "wan-video/wan-2.5-i2v-fast",
@@ -463,6 +497,7 @@ export const MODELS = {
       premium: false,
       credits: 9,
       description: "Image-to-video — animate a still photo into motion quickly.",
+      imageInputs: { min: 1, max: 1 },
     },
     {
       id: "wan-video/wan-2.2-s2v",
@@ -473,6 +508,7 @@ export const MODELS = {
       premium: false,
       credits: 8,
       description: "Speech-to-video — drives motion from an audio track.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "minimax/hailuo-2.3",
@@ -483,6 +519,7 @@ export const MODELS = {
       premium: false,
       credits: 12,
       description: "Strong character consistency across a generated clip.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "minimax/video-01",
@@ -493,6 +530,7 @@ export const MODELS = {
       premium: false,
       credits: 10,
       description: "General-purpose video generation, dependable baseline option.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "prunaai/p-video",
@@ -503,6 +541,7 @@ export const MODELS = {
       premium: false,
       credits: 8,
       description: "Efficient general video generation at a competitive speed.",
+      imageInputs: { min: 0, max: 2 },
     },
     {
       id: "prunaai/p-video-animate",
@@ -513,6 +552,7 @@ export const MODELS = {
       premium: false,
       credits: 8,
       description: "Tuned for animating still characters or illustrations.",
+      imageInputs: { min: 1, max: 1 },
     },
     {
       id: "prunaai/p-video-avatar",
@@ -523,6 +563,7 @@ export const MODELS = {
       premium: false,
       credits: 8,
       description: "Tuned specifically for talking-avatar style video.",
+      imageInputs: { min: 1, max: 1 },
     },
     {
       id: "alibaba/happyhorse-1.0",
@@ -533,6 +574,7 @@ export const MODELS = {
       premium: false,
       credits: 10,
       description: "Good for playful, stylized motion and lighter content.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "veed/fabric-1.0",
@@ -543,6 +585,7 @@ export const MODELS = {
       premium: false,
       credits: 9,
       description: "Built with editing workflows in mind — clean, predictable output.",
+      imageInputs: { min: 0, max: 1 },
     },
     {
       id: "fofr/tooncrafter",
@@ -553,6 +596,7 @@ export const MODELS = {
       premium: false,
       credits: 7,
       description: "Best for cartoon and animated styles rather than realism.",
+      imageInputs: { min: 2, max: 10 },
     },
   ],
 
