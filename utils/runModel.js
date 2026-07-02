@@ -78,10 +78,50 @@ async function runHuggingFace(model, inputs) {
 // safer than guessing one name and risking another silent miss. As
 // each additional model gets confirmed through real testing, add its
 // real field name here instead of relying on the fallback.
+// Values can be:
+//   string   → send all images as array under this single field name
+//   string[] → positional mapping: images[0]→field[0], images[1]→field[1], etc.
+//              (used for models with named start/end/reference frame slots)
 const IMAGE_FIELD_BY_MODEL = {
-  "google/nano-banana-2": "image_input",
-  "black-forest-labs/flux-2-pro": "input_images",
-  "black-forest-labs/flux-2-flex": "input_images",
+  // Image models
+  "google/nano-banana-2":              "image_input",     // confirmed
+  "black-forest-labs/flux-2-pro":      "input_images",    // confirmed (max 8)
+  "black-forest-labs/flux-2-flex":     "input_images",    // confirmed
+  "bytedance/seedream-5-lite":         "image_input",     // confirmed
+  "wan-video/wan-2.7-image-pro":       "images",          // confirmed (array)
+  "ideogram-ai/ideogram-v3-turbo":     "image",           // confirmed (content ref)
+  "ideogram-ai/ideogram-v2":           "image",           // confirmed
+  "fermatresearch/sdxl-controlnet-lora": "image",         // confirmed (control image)
+  "lucataco/ssd-1b":                   "image",           // confirmed (img2img)
+  // Video models — single image
+  "runwayml/gen-4.5":                  "image",
+  "google/veo-2":                      "image",
+  "google/veo-3.1":                    "image",           // reference_images handled separately
+  "xai/grok-imagine-video":            "image",
+  "bytedance/dreamactor-m2.0":         "image",           // REQUIRED character image
+  "wan-video/wan-2.5-i2v-fast":        "image",           // REQUIRED: I2V start frame
+  "wan-video/wan-2.2-s2v":             "image",           // optional face
+  "minimax/hailuo-2.3":                "first_frame_image",
+  "minimax/video-01":                  "first_frame_image",
+  "prunaai/p-video-animate":           "image",           // REQUIRED still image
+  "prunaai/p-video-avatar":            "image",           // REQUIRED face image
+  "alibaba/happyhorse-1.0":            "image",
+  "veed/fabric-1.0":                   "image",
+  // Video models — multi-slot positional (images array maps to named frame slots)
+  "kwaivgi/kling-v3-video":            ["start_image", "end_image"],
+  "kwaivgi/kling-v3-omni-video":       ["start_image", "end_image"],
+  "kwaivgi/kling-v2.5-turbo-pro":      ["start_image", "end_image"],
+  "kwaivgi/kling-v2.0":                ["start_image"],
+  "bytedance/seedance-2.0":            ["image", "last_frame_image"],
+  "bytedance/seedance-1.5-pro":        ["image", "last_frame_image"],
+  "bytedance/seedance-1-pro":          ["image", "last_frame_image"],
+  "bytedance/seedance-1-lite":         ["image", "last_frame_image"],
+  "prunaai/p-video":                   ["image", "last_frame_image"],
+  // ToonCrafter: up to 10 named image slots for interpolation
+  "fofr/tooncrafter": [
+    "image_1","image_2","image_3","image_4","image_5",
+    "image_6","image_7","image_8","image_9","image_10",
+  ],
 };
 
 // Unconfirmed models get the array duplicated under all of these
@@ -101,7 +141,17 @@ function buildReplicateInput(model, inputs) {
     const { images: _images, image: _image, ...rest } = inputs;
 
     if (confirmedField) {
-      result = { ...rest, [confirmedField]: images };
+      if (Array.isArray(confirmedField)) {
+        // Positional mapping: images[i] → confirmedField[i]
+        // Extra images beyond the field list are silently dropped.
+        const slots = {};
+        confirmedField.forEach((fieldName, i) => {
+          if (images[i] !== undefined) slots[fieldName] = images[i];
+        });
+        result = { ...rest, ...slots };
+      } else {
+        result = { ...rest, [confirmedField]: images };
+      }
     } else {
       const fallbackPayload = {};
       for (const field of FALLBACK_IMAGE_FIELDS) {
