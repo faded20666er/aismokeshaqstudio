@@ -12,7 +12,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "@clerk/nextjs": "^6.5.0",
-    "@huggingface/inference": "^3.6.1",
+    "@huggingface/inference": "^4.13.0",
     "@upstash/redis": "^1.28.4",
     "@vercel/blob": "^0.27.1",
     "@vercel/functions": "^3.7.4",
