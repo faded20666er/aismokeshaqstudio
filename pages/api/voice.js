@@ -16,6 +16,7 @@ import { checkCredits } from "../../middleware/creditCheck.js";
 import { getByokKey } from "../../middleware/byokStore.js";
 import { createJob, generateJobId } from "../../middleware/jobStore.js";
 import { startJobInBackground } from "../../utils/runModelAsync.js";
+import { runModel } from "../../utils/runModel.js";
 
 export const maxDuration = 60;
 
@@ -34,6 +35,11 @@ async function runElevenLabsDirect(voiceId, text, apiKey) {
       }),
     }
   );
+
+  if (response.status === 402) {
+    // Free-tier key (platform or BYOK) — signal caller to fall back.
+    return null;
+  }
 
   if (!response.ok) {
     const errText = await response.text().catch(() => "");
@@ -87,13 +93,20 @@ export default async function handler(req, res) {
     const jobId = generateJobId();
     await createJob(jobId, { modelId: model.id });
 
-    // Only call ElevenLabs direct when the user has their own BYOK key.
-    // The platform's ELEVENLABS_API_KEY is free-tier and 402s on library
-    // voices ("Free users cannot use library voices via the API"). Without
-    // BYOK, customRunner stays null and the standard Replicate TTS model
-    // handles generation — no voice selection, but no 402 either.
+    // When the user has a BYOK key + voiceId, try ElevenLabs direct.
+    // If that returns null (402 — free-tier key can't use library voices),
+    // fall back to the standard Replicate TTS model without voice selection
+    // rather than surfacing the 402 as a job failure.
     const customRunner = (byokKey && inputs?.voiceId)
-      ? () => runElevenLabsDirect(inputs.voiceId, text, byokKey)
+      ? async () => {
+          const result = await runElevenLabsDirect(inputs.voiceId, text, byokKey);
+          if (result === null) {
+            console.warn(`ElevenLabs BYOK key is free-tier (402) for voiceId ${inputs.voiceId} — falling back to Replicate TTS`);
+            const fallbackOutput = await runModel(model, { text });
+            return Array.isArray(fallbackOutput) ? fallbackOutput[0] : fallbackOutput;
+          }
+          return result;
+        }
       : null;
 
     startJobInBackground(jobId, model, inputs, {
