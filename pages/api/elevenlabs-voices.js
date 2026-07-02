@@ -94,10 +94,16 @@ export default async function handler(req, res) {
       if (accent) voices = voices.filter((v) => v.accent === accent);
       if (category) voices = voices.filter((v) => v.category === category);
 
+      // Only surface premade voices on the free path — library/community voices
+      // added to the platform account appear in /v1/voices but 402 at TTS time on
+      // a free key ("Free users cannot use library voices via the API"). Premade
+      // voices are the only category guaranteed usable on any free ElevenLabs key.
+      const premadeOnly = voices.filter((v) => v.category === "premade");
+
       return res.status(200).json({
-        voices,
+        voices: premadeOnly,
         hasMore: false,
-        totalCount: voices.length,
+        totalCount: premadeOnly.length,
         usingOwnKey: false,
         source: "account-voices", // lets the picker UI label this set if useful
       });
