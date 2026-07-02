@@ -98,10 +98,10 @@ async function resolveCharacterAudio(character, blocks, userId) {
           }
         );
 
-        if (response.status === 402 && !byokKey) {
-          // Platform key is free-tier and this voice requires a paid plan.
-          // Fall through to Replicate TTS fallback below.
-          console.warn(`ElevenLabs 402 for voiceId ${voiceId} on platform key — falling back to Replicate TTS`);
+        if (response.status === 402) {
+          // Either the platform key or the user's own BYOK key is free-tier
+          // and this voice requires a paid plan. Fall through to Replicate TTS.
+          console.warn(`ElevenLabs 402 for voiceId ${voiceId} (byok=${!!byokKey}) — falling back to Replicate TTS`);
         } else {
           if (!response.ok) {
             const errText = await response.text().catch(() => "");
