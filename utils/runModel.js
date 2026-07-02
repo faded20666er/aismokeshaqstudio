@@ -46,8 +46,34 @@ async function runHuggingFace(model, inputs) {
     return `data:${mimeType};base64,${base64}`;
   }
 
-  // image and video (image-to-video) NSFW models both go through
-  // textToImage / similar image pipelines on HuggingFace's side.
+  // Image-to-video (I2V) models: hf.imageToVideo() added in SDK 4.x.
+  // Requires an input image blob; prompt goes in parameters.
+  if (category === "video" && model.imageInputs && model.imageInputs.min > 0) {
+    const imageDataUrl =
+      inputs.image || (Array.isArray(inputs.images) ? inputs.images[0] : null);
+    if (!imageDataUrl) {
+      throw new Error(`${model.name || modelId} requires an input image.`);
+    }
+    const match = imageDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (!match) throw new Error("Invalid image data for I2V model.");
+    const [, imgMime, imgB64] = match;
+    const imageBlob = new Blob([Buffer.from(imgB64, "base64")], { type: imgMime });
+
+    const videoBlob = await hf.imageToVideo({
+      model: modelId,
+      inputs: imageBlob,
+      parameters: {
+        ...(inputs.prompt ? { prompt: inputs.prompt } : {}),
+      },
+    });
+
+    const videoBuffer = await videoBlob.arrayBuffer();
+    const videoBase64 = Buffer.from(videoBuffer).toString("base64");
+    const videoMime = videoBlob.type || "video/mp4";
+    return `data:${videoMime};base64,${videoBase64}`;
+  }
+
+  // Text-to-image (default for image-category HuggingFace models)
   const imageBlob = await hf.textToImage({
     model: modelId,
     inputs: inputs.prompt,
