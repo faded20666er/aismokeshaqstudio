@@ -87,8 +87,13 @@ export default async function handler(req, res) {
     const jobId = generateJobId();
     await createJob(jobId, { modelId: model.id });
 
-    const customRunner = inputs?.voiceId
-      ? () => runElevenLabsDirect(inputs.voiceId, text, byokKey || process.env.ELEVENLABS_API_KEY)
+    // Only call ElevenLabs direct when the user has their own BYOK key.
+    // The platform's ELEVENLABS_API_KEY is free-tier and 402s on library
+    // voices ("Free users cannot use library voices via the API"). Without
+    // BYOK, customRunner stays null and the standard Replicate TTS model
+    // handles generation — no voice selection, but no 402 either.
+    const customRunner = (byokKey && inputs?.voiceId)
+      ? () => runElevenLabsDirect(inputs.voiceId, text, byokKey)
       : null;
 
     startJobInBackground(jobId, model, inputs, {
