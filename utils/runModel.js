@@ -73,9 +73,12 @@ async function runHuggingFace(model, inputs) {
       imageBlob = new Blob([Buffer.from(imgB64, "base64")], { type: imgMime });
     }
 
+    // fal-ai is the default "auto" provider but rejects NSFW community models.
+    // wavespeed is also listed as "live" for this model and works correctly.
     const videoBlob = await hf.imageToVideo({
       model: modelId,
       inputs: imageBlob,
+      provider: "wavespeed",
       parameters: {
         ...(inputs.prompt ? { prompt: inputs.prompt } : {}),
       },
