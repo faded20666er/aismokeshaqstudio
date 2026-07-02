@@ -67,12 +67,39 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
     }
   }, []);
 
+  // Raw file → data URL (used for audio/non-image files)
   function fileToDataUrl(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
       reader.onerror = reject;
       reader.readAsDataURL(file);
+    });
+  }
+
+  // Image file → compressed JPEG data URL (max 1536px long side, 85% quality).
+  // Keeps reference images well under 500 KB each so multi-image payloads
+  // don't 413 against Vercel's body-size limit. AI models resize internally
+  // anyway so there's no meaningful quality loss for generation.
+  function compressToDataUrl(file, maxPx = 1536, quality = 0.85) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const scale = Math.min(1, maxPx / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.naturalWidth * scale);
+        canvas.height = Math.round(img.naturalHeight * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        // Canvas failed — fall back to raw data URL
+        fileToDataUrl(file).then(resolve).catch(() => resolve(null));
+      };
+      img.src = objectUrl;
     });
   }
 
@@ -105,7 +132,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
     const inputs = { prompt };
 
     if (uploadedFiles.length > 0) {
-      inputs.images = await Promise.all(uploadedFiles.map((f) => fileToDataUrl(f.file)));
+      inputs.images = await Promise.all(uploadedFiles.map((f) => compressToDataUrl(f.file)));
       inputs.image = inputs.images[0]; // backwards-compat for single-image models
     }
 
@@ -115,7 +142,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
 
     if (category === "lipsync") {
       if (!faceFile) return; // require a face before allowing generate
-      inputs.face = await fileToDataUrl(faceFile);
+      inputs.face = await compressToDataUrl(faceFile);
       if (audioFile) {
         inputs.audio = await fileToDataUrl(audioFile);
       }
