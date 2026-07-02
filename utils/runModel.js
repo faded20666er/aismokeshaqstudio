@@ -54,10 +54,24 @@ async function runHuggingFace(model, inputs) {
     if (!imageDataUrl) {
       throw new Error(`${model.name || modelId} requires an input image.`);
     }
-    const match = imageDataUrl.match(/^data:([^;]+);base64,(.+)$/);
-    if (!match) throw new Error("Invalid image data for I2V model.");
-    const [, imgMime, imgB64] = match;
-    const imageBlob = new Blob([Buffer.from(imgB64, "base64")], { type: imgMime });
+    // generate.js pre-uploads images to Vercel Blob before the job runs,
+    // so inputs.image arrives here as an HTTPS URL, not a base64 data URL.
+    // Handle both cases so this works regardless of upload path.
+    let imageBlob;
+    if (imageDataUrl.startsWith("http://") || imageDataUrl.startsWith("https://")) {
+      const imgFetch = await fetch(imageDataUrl);
+      if (!imgFetch.ok) {
+        throw new Error(`Failed to fetch image for I2V (${imgFetch.status}): ${imageDataUrl}`);
+      }
+      const imgBuffer = await imgFetch.arrayBuffer();
+      const contentType = imgFetch.headers.get("content-type") || "image/jpeg";
+      imageBlob = new Blob([imgBuffer], { type: contentType });
+    } else {
+      const match = imageDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) throw new Error("Invalid image data for I2V model.");
+      const [, imgMime, imgB64] = match;
+      imageBlob = new Blob([Buffer.from(imgB64, "base64")], { type: imgMime });
+    }
 
     const videoBlob = await hf.imageToVideo({
       model: modelId,
