@@ -30,15 +30,55 @@ function OutputPreview({ item, category }) {
     return <pre>{JSON.stringify(item, null, 2)}</pre>;
   }
 
+  async function handleDownload() {
+    const ext =
+      category === "video" || category === "lipsync"
+        ? "mp4"
+        : category === "tts"
+        ? "mp3"
+        : "jpg";
+    const filename = `smokeshaq-${Date.now()}.${ext}`;
+
+    if (isDataUrl) {
+      const a = document.createElement("a");
+      a.href = item;
+      a.download = filename;
+      a.click();
+      return;
+    }
+
+    // External URL — try fetch→blob for a true download; fall back to new tab
+    try {
+      const res = await fetch(item);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(item, "_blank");
+    }
+  }
+
+  let media;
   if (category === "video" || category === "lipsync") {
-    return <video src={item} controls style={{ maxWidth: "100%", borderRadius: 12 }} />;
+    media = <video src={item} controls style={{ maxWidth: "100%", borderRadius: 12 }} />;
+  } else if (category === "tts") {
+    media = <audio src={item} controls style={{ width: "100%" }} />;
+  } else {
+    media = <img src={item} alt="output" />;
   }
 
-  if (category === "tts") {
-    return <audio src={item} controls style={{ width: "100%" }} />;
-  }
-
-  return <img src={item} alt="output" />;
+  return (
+    <div className="output-preview-wrap">
+      {media}
+      <button type="button" className="download-btn" onClick={handleDownload}>
+        ⬇ Download
+      </button>
+    </div>
+  );
 }
 
 export default function StudioPanel({ onGenerate, loading, statusMessage, error, credits, output, userId }) {
@@ -50,6 +90,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
   const [audioFile, setAudioFile] = useState(null);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [durationSeconds, setDurationSeconds] = useState(30);
+  const [videoDuration, setVideoDuration] = useState(null); // selected clip length for video models
   const [usingOwnKey, setUsingOwnKey] = useState(false);
   const [nsfwEnabled, setNsfwEnabled] = useState(false);
   const [nsfwAgeVerified, setNsfwAgeVerified] = useState(false);
@@ -66,6 +107,12 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
       // localStorage unavailable — gate will show every session, which is the safe default
     }
   }, []);
+
+  // Reset video duration selection whenever the model changes so the pill
+  // defaults to the model's first supported duration, not a stale value.
+  useEffect(() => {
+    setVideoDuration(null);
+  }, [selectedModel]);
 
   // Raw file → data URL (used for audio/non-image files)
   function fileToDataUrl(file) {
@@ -138,6 +185,11 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
 
     if (category === "tts" && selectedVoice) {
       inputs.voiceId = selectedVoice.id;
+    }
+
+    if (category === "video" && selectedModel?.durations?.length) {
+      // Pass the user-selected duration (or default to the model's first option)
+      inputs.duration = videoDuration ?? selectedModel.durations[0];
     }
 
     if (category === "lipsync") {
@@ -221,6 +273,30 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
           onSelect={(m) => setSelectedModel(m)}
         />
       </div>
+
+      {/* VIDEO DURATION PILLS — shown when the selected model has defined durations */}
+      {category === "video" && selectedModel?.durations?.length > 0 && (
+        <div className="section-block">
+          <div className="section-header">
+            <span className="section-label text-silver-red">Clip Length</span>
+            <span className="section-meta">
+              {videoDuration ?? selectedModel.durations[0]}s selected
+            </span>
+          </div>
+          <div className="duration-pills">
+            {selectedModel.durations.map((d) => (
+              <button
+                key={d}
+                type="button"
+                className={`duration-pill ${(videoDuration ?? selectedModel.durations[0]) === d ? "active" : ""}`}
+                onClick={() => setVideoDuration(d)}
+              >
+                {d}s
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* LIPSYNC-SPECIFIC INPUTS */}
       {category === "lipsync" && (
@@ -593,6 +669,60 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
           opacity: 0.8;
           margin: 4px 0 0;
           text-align: right;
+        }
+
+        .duration-pills {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .duration-pill {
+          padding: 6px 16px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          cursor: pointer;
+          font-size: 0.85rem;
+          color: #d9d9d9;
+          transition: 0.15s ease;
+        }
+
+        .duration-pill:hover {
+          border-color: rgba(255, 138, 42, 0.6);
+          box-shadow: 0 0 8px rgba(255, 138, 42, 0.3);
+        }
+
+        .duration-pill.active {
+          background: linear-gradient(135deg, #ff8a2a, #ff2a2a);
+          border-color: rgba(255, 255, 255, 0.4);
+          color: #0b0b0d;
+          font-weight: 600;
+          box-shadow: 0 0 12px rgba(255, 138, 42, 0.55);
+        }
+
+        .output-preview-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          align-items: flex-start;
+        }
+
+        .download-btn {
+          padding: 7px 18px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.22);
+          background: rgba(255, 255, 255, 0.07);
+          color: #d9d9d9;
+          font-size: 0.82rem;
+          cursor: pointer;
+          transition: 0.15s ease;
+        }
+
+        .download-btn:hover {
+          border-color: rgba(255, 138, 42, 0.7);
+          background: rgba(255, 138, 42, 0.15);
+          box-shadow: 0 0 10px rgba(255, 138, 42, 0.35);
         }
 
         .generate-btn {
