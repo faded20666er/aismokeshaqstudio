@@ -14,6 +14,72 @@ import VoicePicker from "./VoicePicker";
 import ByokKeyManager from "./ByokKeyManager";
 import AgeGate from "./AgeGate";
 
+// Full voice list for Kokoro-82M (jaaari/kokoro-82m on Replicate).
+// These 46 voices are baked into the model weights — no API call needed.
+// Grouped by language/gender so the dropdown is easy to browse.
+const KOKORO_VOICES = [
+  // ── American English Female ──
+  { id: "af_bella",   label: "Bella (AF · American Female) ★ default" },
+  { id: "af_nicole",  label: "Nicole (AF · American Female)" },
+  { id: "af_sarah",   label: "Sarah (AF · American Female)" },
+  { id: "af_sky",     label: "Sky (AF · American Female)" },
+  { id: "af_alloy",   label: "Alloy (AF · American Female)" },
+  { id: "af_aoede",   label: "Aoede (AF · American Female)" },
+  { id: "af_heart",   label: "Heart (AF · American Female)" },
+  { id: "af_jessica", label: "Jessica (AF · American Female)" },
+  { id: "af_kore",    label: "Kore (AF · American Female)" },
+  { id: "af_nova",    label: "Nova (AF · American Female)" },
+  { id: "af_river",   label: "River (AF · American Female)" },
+  // ── American English Male ──
+  { id: "am_michael", label: "Michael (AM · American Male)" },
+  { id: "am_puck",    label: "Puck (AM · American Male)" },
+  { id: "am_fenrir",  label: "Fenrir (AM · American Male)" },
+  { id: "am_adam",    label: "Adam (AM · American Male)" },
+  { id: "am_echo",    label: "Echo (AM · American Male)" },
+  { id: "am_eric",    label: "Eric (AM · American Male)" },
+  { id: "am_liam",    label: "Liam (AM · American Male)" },
+  { id: "am_onyx",    label: "Onyx (AM · American Male)" },
+  { id: "am_santa",   label: "Santa (AM · American Male)" },
+  // ── British English Female ──
+  { id: "bf_emma",     label: "Emma (BF · British Female)" },
+  { id: "bf_alice",    label: "Alice (BF · British Female)" },
+  { id: "bf_isabella", label: "Isabella (BF · British Female)" },
+  { id: "bf_lily",     label: "Lily (BF · British Female)" },
+  // ── British English Male ──
+  { id: "bm_daniel",  label: "Daniel (BM · British Male)" },
+  { id: "bm_george",  label: "George (BM · British Male)" },
+  { id: "bm_fable",   label: "Fable (BM · British Male)" },
+  { id: "bm_lewis",   label: "Lewis (BM · British Male)" },
+  // ── French ──
+  { id: "ff_siwis",   label: "Siwis (FF · French Female)" },
+  { id: "fm_gaston",  label: "Gaston (FM · French Male)" },
+  // ── Japanese ──
+  { id: "jf_alpha",      label: "Alpha (JF · Japanese Female)" },
+  { id: "jf_gongitsune", label: "Gongitsune (JF · Japanese Female)" },
+  { id: "jf_nezuko",     label: "Nezuko (JF · Japanese Female)" },
+  { id: "jf_tebukuro",   label: "Tebukuro (JF · Japanese Female)" },
+  { id: "jm_kumo",       label: "Kumo (JM · Japanese Male)" },
+  // ── Korean ──
+  { id: "kf_dahyun", label: "Dahyun (KF · Korean Female)" },
+  { id: "km_inpyo",  label: "Inpyo (KM · Korean Male)" },
+  // ── Mandarin Chinese ──
+  { id: "zf_xiaobei", label: "Xiaobei (ZF · Mandarin Female)" },
+  { id: "zf_xiaoni",  label: "Xiaoni (ZF · Mandarin Female)" },
+  { id: "zf_xiaoyan", label: "Xiaoyan (ZF · Mandarin Female)" },
+  { id: "zf_xiaoyou", label: "Xiaoyou (ZF · Mandarin Female)" },
+  { id: "zm_yunjian", label: "Yunjian (ZM · Mandarin Male)" },
+  { id: "zm_yunxi",   label: "Yunxi (ZM · Mandarin Male)" },
+  { id: "zm_yunxia",  label: "Yunxia (ZM · Mandarin Male)" },
+  { id: "zm_yunyang", label: "Yunyang (ZM · Mandarin Male)" },
+  // ── Spanish ──
+  { id: "ef_dora",  label: "Dora (EF · Spanish Female)" },
+  { id: "em_alex",  label: "Alex (EM · Spanish Male)" },
+  { id: "em_santa", label: "Santa (EM · Spanish Male)" },
+  // ── Hindi ──
+  { id: "hf_alpha", label: "Alpha (HF · Hindi Female)" },
+  { id: "hm_omega", label: "Omega (HM · Hindi Male)" },
+];
+
 // Renders generated output as the right media type — lipsync/video
 // produce video, TTS produces audio, image/NSFW-image produce images.
 // Falls back to raw JSON if the shape is unexpected, so nothing ever
@@ -89,6 +155,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
   const [faceFile, setFaceFile] = useState(null);
   const [audioFile, setAudioFile] = useState(null);
   const [selectedVoice, setSelectedVoice] = useState(null);
+  const [kokoroVoice, setKokoroVoice] = useState("af_bella"); // default Kokoro voice
   const [durationSeconds, setDurationSeconds] = useState(30);
   const [videoDuration, setVideoDuration] = useState(null); // selected clip length for video models
   const [usingOwnKey, setUsingOwnKey] = useState(false);
@@ -185,6 +252,10 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
 
     if (category === "tts" && selectedVoice) {
       inputs.voiceId = selectedVoice.id;
+    }
+
+    if (category === "tts" && selectedModel?.id === "jaaari/kokoro-82m") {
+      inputs.voice = kokoroVoice;
     }
 
     if (category === "video" && selectedModel?.durations?.length) {
@@ -366,6 +437,29 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
             )}
           </div>
           <VoicePicker userId={userId} onSelect={(v) => setSelectedVoice(v)} />
+        </div>
+      )}
+
+      {/* KOKORO VOICE PICKER — 50 baked-in voices across 6 languages, no API call */}
+      {category === "tts" && selectedModel?.id === "jaaari/kokoro-82m" && (
+        <div className="section-block">
+          <div className="section-header">
+            <span className="section-label text-silver-red">Voice</span>
+            <span className="section-meta">
+              {KOKORO_VOICES.find((v) => v.id === kokoroVoice)?.label.split(" (")[0] ?? kokoroVoice}
+            </span>
+          </div>
+          <select
+            className="kokoro-voice-select"
+            value={kokoroVoice}
+            onChange={(e) => setKokoroVoice(e.target.value)}
+          >
+            {KOKORO_VOICES.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.label}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
@@ -723,6 +817,31 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
           border-color: rgba(255, 138, 42, 0.7);
           background: rgba(255, 138, 42, 0.15);
           box-shadow: 0 0 10px rgba(255, 138, 42, 0.35);
+        }
+
+        .kokoro-voice-select {
+          width: 100%;
+          padding: 9px 12px;
+          border-radius: 10px;
+          background: rgba(5, 5, 8, 0.95);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          color: #d9d9d9;
+          font-size: 0.88rem;
+          outline: none;
+          cursor: pointer;
+          transition: 0.18s ease;
+          appearance: auto;
+        }
+
+        .kokoro-voice-select:focus,
+        .kokoro-voice-select:hover {
+          border-color: rgba(255, 138, 42, 0.6);
+          box-shadow: 0 0 10px rgba(255, 138, 42, 0.3);
+        }
+
+        .kokoro-voice-select option {
+          background: #0d0d10;
+          color: #d9d9d9;
         }
 
         .generate-btn {

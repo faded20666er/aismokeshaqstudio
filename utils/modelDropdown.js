@@ -16,13 +16,12 @@ export function getDropdownModels(nsfwEnabled = false) {
   CATEGORIES.forEach((category) => {
     const sorted = getSortedModels(category);
 
+    // Spread the full model object so the UI can access all fields:
+    // durations (video pills), creditsPerSecond + maxDurationSeconds
+    // (lipsync slider), provider/domoAICategory (routing metadata), etc.
+    // Only override `locked` — everything else passes through as-is.
     dropdown[category] = sorted.map((m) => ({
-      id: m.id,
-      name: m.name,
-      credits: m.credits,
-      description: m.description,
-      nsfw: m.nsfw,
-      premium: m.premium,
+      ...m,
       imageInputs: m.imageInputs || { min: 0, max: 1 },
       locked: m.nsfw && m.locked && !nsfwEnabled,
     }));
