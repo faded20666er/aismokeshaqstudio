@@ -323,6 +323,79 @@ export const MODELS = {
       imageInputs: { min: 0, max: 1 },
     },
     {
+      // VERIFIED: DomoAI docs confirm $0.10/sec for animate-2.4-advanced.
+      // Pricing: $0.10 × 2.5 markup / $0.05 per credit = 5 credits/sec.
+      // Min useful duration 5s = 25 credits.
+      id: "domoai/animate-2.4-advanced",
+      name: "Animate 2.4 Advanced (DomoAI)",
+      provider: "domoai",
+      domoAICategory: "image2video",
+      domoAIModel: "animate-2.4-advanced",
+      nsfw: false,
+      locked: false,
+      premium: true,
+      credits: 25,
+      creditsPerSecond: 5,
+      maxDurationSeconds: 10,
+      durations: [3, 5, 8, 10],
+      description: "DomoAI premium I2V — highest quality motion and subject fidelity. Per-second billing.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      // VERIFIED: DomoAI docs confirm $0.10/sec for t2v-2.4-advanced.
+      // Pricing: 5 credits/sec. Min useful duration 5s = 25 credits.
+      id: "domoai/t2v-2.4-advanced",
+      name: "T2V 2.4 Advanced (DomoAI)",
+      provider: "domoai",
+      domoAICategory: "text2video",
+      domoAIModel: "t2v-2.4-advanced",
+      nsfw: false,
+      locked: false,
+      premium: true,
+      credits: 25,
+      creditsPerSecond: 5,
+      maxDurationSeconds: 10,
+      durations: [3, 5, 8, 10],
+      description: "DomoAI premium T2V — best motion quality. Supports anime, realistic, pixel, cartoon styles.",
+      imageInputs: { min: 0, max: 0 },
+    },
+    {
+      // VERIFIED: DomoAI docs confirm $0.04/sec for animate-2.4-faster.
+      // Pricing: $0.04 × 2.5 / $0.05 = 2 credits/sec. 5s = 10 credits.
+      id: "domoai/animate-2.4-faster",
+      name: "Animate 2.4 Fast (DomoAI)",
+      provider: "domoai",
+      domoAICategory: "image2video",
+      domoAIModel: "animate-2.4-faster",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      credits: 10,
+      creditsPerSecond: 2,
+      maxDurationSeconds: 10,
+      durations: [3, 5, 8, 10],
+      description: "DomoAI fast I2V — smooth animation from a single image at lower cost. Per-second billing.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      // VERIFIED: DomoAI docs confirm $0.04/sec for t2v-2.4-faster.
+      // Pricing: 2 credits/sec. 5s = 10 credits.
+      id: "domoai/t2v-2.4-faster",
+      name: "T2V 2.4 Fast (DomoAI)",
+      provider: "domoai",
+      domoAICategory: "text2video",
+      domoAIModel: "t2v-2.4-faster",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      credits: 10,
+      creditsPerSecond: 2,
+      maxDurationSeconds: 10,
+      durations: [3, 5, 8, 10],
+      description: "DomoAI fast T2V — quick text-to-video with anime, realistic, and pixel art styles.",
+      imageInputs: { min: 0, max: 0 },
+    },
+    {
       id: "runwayml/gen-4.5",
       name: "Runway Gen-4.5",
       provider: "replicate",
@@ -781,6 +854,24 @@ export const MODELS = {
   // minimum, shown in the dropdown for reference.
   // =====================================================================
   lipsync: [
+    {
+      // VERIFIED: DomoAI docs confirm $0.06/sec for talking-avatar-v1.
+      // Pricing: $0.06 × 2.5 / $0.05 = 3 credits/sec. 5s min = 15 credits.
+      // Supports up to 60s. Takes face photo + audio → talking video.
+      // Same inputs as other lipsync models (face image + audio file).
+      id: "domoai/talking-avatar-v1",
+      name: "Talking Avatar (DomoAI)",
+      provider: "domoai",
+      domoAICategory: "talking-avatar",
+      domoAIModel: "talking-avatar-v1",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      credits: 15, // minimum charge, 5 seconds
+      creditsPerSecond: 3,
+      maxDurationSeconds: 60,
+      description: "DomoAI talking avatar — photo or video driven by your audio. Realistic head + expression sync. Up to 60 seconds.",
+    },
     {
       id: "wavespeed-ai/infinitetalk",
       name: "InfiniteTalk 720p (WaveSpeed)",

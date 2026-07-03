@@ -436,6 +436,114 @@ async function runAtlasCloud(model, inputs) {
   throw new Error("Atlas Cloud generation timed out");
 }
 
+// DomoAI Enterprise API — submit-then-poll, same pattern as Atlas Cloud.
+// Base URL: https://api.domoai.com
+// Auth: Bearer DOMOAI_API_KEY
+// Submit: POST /v1/video/{category} → { code:0, data:{ task_id } }
+// Poll:   GET  /v1/tasks/{task_id}  → { code:0, data:{ status, output_videos:[{url}] } }
+// Statuses: PENDING | QUEUING | PROCESSING | SUCCESS | FAILED | CANCELED
+//
+// model.domoAICategory: "image2video" | "text2video" | "talking-avatar"
+// model.domoAIModel: the exact model string DomoAI expects (e.g. "animate-2.4-faster")
+//
+// Image/audio inputs arrive as full data URLs ("data:image/jpeg;base64,...").
+// DomoAI wants only the base64 portion (no prefix) in bytes_base64_encoded.
+async function runDomoAI(model, inputs) {
+  const apiKey = process.env.DOMOAI_API_KEY;
+  if (!apiKey) throw new Error("DOMOAI_API_KEY is not set");
+
+  const BASE = "https://api.domoai.com";
+
+  // Strip "data:<mime>;base64," prefix — DomoAI wants raw base64 only.
+  function b64(dataUrl) {
+    if (!dataUrl) return null;
+    const idx = dataUrl.indexOf(",");
+    return idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl;
+  }
+
+  const category = model.domoAICategory;
+  let endpoint;
+  const body = {};
+
+  if (category === "image2video") {
+    endpoint = "/v1/video/image2video";
+    const imageData = inputs.image || inputs.images?.[0];
+    if (!imageData) throw new Error("DomoAI image2video requires an image input");
+    body.model = model.domoAIModel;
+    body.prompt = inputs.prompt || "";
+    body.image = { bytes_base64_encoded: b64(imageData) };
+    body.seconds = Math.min(10, Math.max(1, inputs.duration ?? model.durations?.[0] ?? 5));
+
+  } else if (category === "text2video") {
+    endpoint = "/v1/video/text2video";
+    body.model = model.domoAIModel;
+    body.prompt = inputs.prompt || "";
+    body.seconds = Math.min(10, Math.max(1, inputs.duration ?? model.durations?.[0] ?? 5));
+    if (inputs.style) body.style = inputs.style;
+    if (inputs.aspectRatio) body.aspect_ratio = inputs.aspectRatio;
+
+  } else if (category === "talking-avatar") {
+    endpoint = "/v1/video/talking-avatar";
+    const faceData = inputs.face || inputs.image;
+    const audioData = inputs.audio;
+    if (!audioData) throw new Error("DomoAI talking-avatar requires an audio input");
+    body.model = model.domoAIModel || "talking-avatar-v1";
+    body.prompt = inputs.prompt || "";
+    if (faceData) body.image = { bytes_base64_encoded: b64(faceData) };
+    body.audio = { bytes_base64_encoded: b64(audioData) };
+    body.seconds = Math.min(60, Math.max(1, inputs.durationSeconds ?? 5));
+
+  } else {
+    throw new Error(`Unknown DomoAI category: ${category}`);
+  }
+
+  // Submit
+  const submitRes = await fetch(`${BASE}${endpoint}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!submitRes.ok) {
+    const errText = await submitRes.text().catch(() => "");
+    throw new Error(`DomoAI submit error (${submitRes.status}): ${errText || submitRes.statusText}`);
+  }
+
+  const submitJson = await submitRes.json();
+  const taskId = submitJson?.data?.task_id;
+  if (!taskId) throw new Error("DomoAI did not return a task_id");
+
+  // Poll up to 10 minutes (120 × 5s)
+  for (let attempt = 0; attempt < 120; attempt++) {
+    await new Promise((r) => setTimeout(r, 5000));
+
+    const pollRes = await fetch(`${BASE}/v1/tasks/${taskId}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+
+    if (!pollRes.ok) continue; // transient error — keep polling
+
+    const pollJson = await pollRes.json();
+    const status = pollJson?.data?.status;
+
+    if (status === "SUCCESS") {
+      const url = pollJson.data.output_videos?.[0]?.url;
+      if (!url) throw new Error("DomoAI task succeeded but returned no output URL");
+      return url;
+    }
+
+    if (status === "FAILED" || status === "CANCELED") {
+      throw new Error(`DomoAI task ${status} (id: ${taskId})`);
+    }
+    // PENDING | QUEUING | PROCESSING — keep waiting
+  }
+
+  throw new Error("DomoAI task timed out after 10 minutes");
+}
+
 // model: the full model object from models/index.js (needs .id and .provider)
 export async function runModel(model, inputs) {
   if (model.provider === "replicate") {
@@ -452,6 +560,10 @@ export async function runModel(model, inputs) {
 
   if (model.provider === "atlascloud") {
     return runAtlasCloud(model, inputs);
+  }
+
+  if (model.provider === "domoai") {
+    return runDomoAI(model, inputs);
   }
 
   throw new Error(`Unknown provider: ${model.provider}`);
