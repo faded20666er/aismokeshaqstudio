@@ -34,9 +34,16 @@ async function runHuggingFace(model, inputs) {
 
   if (category === "tts") {
     // hf.textToSpeech expects the spoken text directly, no "inputs" wrapper.
+    // Pass voice in parameters so Kokoro (and similar multi-voice models) can
+    // honour the user's voice selection — HF inference providers forward
+    // unknown parameters to the underlying model, so this is safe to include
+    // even for models that don't use it.
+    const ttsParams = {};
+    if (inputs.voice) ttsParams.voice = inputs.voice;
     const audioBlob = await hf.textToSpeech({
       model: modelId,
       inputs: inputs.text || inputs.prompt,
+      ...(Object.keys(ttsParams).length > 0 ? { parameters: ttsParams } : {}),
     });
 
     const arrayBuffer = await audioBlob.arrayBuffer();
@@ -88,6 +95,27 @@ async function runHuggingFace(model, inputs) {
     const videoBase64 = Buffer.from(videoBuffer).toString("base64");
     const videoMime = videoBlob.type || "video/mp4";
     return `data:${videoMime};base64,${videoBase64}`;
+  }
+
+  // Text-to-video for HF T2V models (e.g. Lightricks/LTX-Video).
+  // hf.textToVideo() was added in @huggingface/inference SDK 4.x — fall back
+  // to the generic hf.request() for older installs. Both return a video Blob.
+  if (category === "video") {
+    let videoBlob;
+    if (typeof hf.textToVideo === "function") {
+      videoBlob = await hf.textToVideo({
+        model: modelId,
+        inputs: inputs.prompt,
+      });
+    } else {
+      videoBlob = await hf.request({
+        model: modelId,
+        inputs: inputs.prompt,
+      });
+    }
+    const videoBuffer = await videoBlob.arrayBuffer();
+    const videoMime = videoBlob.type || "video/mp4";
+    return `data:${videoMime};base64,${Buffer.from(videoBuffer).toString("base64")}`;
   }
 
   // Text-to-image (default for image-category HuggingFace models)

@@ -254,7 +254,9 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
       inputs.voiceId = selectedVoice.id;
     }
 
-    if (category === "tts" && selectedModel?.id === "jaaari/kokoro-82m") {
+    // Pass voice for both the free HF Kokoro and the Replicate Kokoro
+    const isKokoro = selectedModel?.id === "jaaari/kokoro-82m" || selectedModel?.id === "hexgrad/Kokoro-82M";
+    if (category === "tts" && isKokoro) {
       inputs.voice = kokoroVoice;
     }
 
@@ -440,8 +442,8 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
         </div>
       )}
 
-      {/* KOKORO VOICE PICKER — 50 baked-in voices across 6 languages, no API call */}
-      {category === "tts" && selectedModel?.id === "jaaari/kokoro-82m" && (
+      {/* KOKORO VOICE PICKER — works for both the free HF version and the Replicate version */}
+      {category === "tts" && (selectedModel?.id === "jaaari/kokoro-82m" || selectedModel?.id === "hexgrad/Kokoro-82M") && (
         <div className="section-block">
           <div className="section-header">
             <span className="section-label text-silver-red">Voice</span>

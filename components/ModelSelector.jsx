@@ -19,9 +19,8 @@ export default function ModelSelector({ category, nsfwEnabled, onSelect }) {
     const list = dropdown[category] || [];
     setModels(list);
 
-    // Default to the first unlocked model whenever the category or
-    // NSFW toggle changes, so there's always a sensible selection.
-    const firstAvailable = list.find((m) => !m.locked);
+    // Default to the first model that's actually usable (not locked, not coming soon).
+    const firstAvailable = list.find((m) => !m.locked && !m.comingSoon);
     if (firstAvailable) {
       setSelectedId(firstAvailable.id);
       onSelect(firstAvailable);
@@ -36,17 +35,22 @@ export default function ModelSelector({ category, nsfwEnabled, onSelect }) {
     const id = e.target.value;
     setSelectedId(id);
     const model = models.find((m) => m.id === id);
-    if (model && !model.locked) onSelect(model);
+    if (model && !model.locked && !model.comingSoon) onSelect(model);
   }
 
   return (
     <div className="model-selector">
       <select className="model-select" value={selectedId} onChange={handleChange}>
         {models.map((model) => (
-          <option key={model.id} value={model.id} disabled={model.locked}>
-            {model.locked ? "🔒 " : ""}
-            {model.name} — {model.credits} credit{model.credits === 1 ? "" : "s"}
-            {model.premium ? " ★" : ""}
+          <option key={model.id} value={model.id} disabled={model.locked || model.comingSoon}>
+            {model.locked ? "🔒 " : model.comingSoon ? "🔜 " : ""}
+            {model.name}
+            {model.comingSoon
+              ? " — Coming Soon"
+              : model.credits === 0
+              ? " — FREE"
+              : ` — ${model.credits} credit${model.credits === 1 ? "" : "s"}`}
+            {!model.comingSoon && model.premium ? " ★" : ""}
           </option>
         ))}
       </select>
@@ -55,6 +59,10 @@ export default function ModelSelector({ category, nsfwEnabled, onSelect }) {
         <p className="model-description">
           {selectedModel.locked
             ? "Unlock NSFW mode to use this model."
+            : selectedModel.comingSoon
+            ? "🔜 Coming soon — will be available once funding is restored. Select a free model to generate now."
+            : selectedModel.credits === 0
+            ? `✅ FREE — ${selectedModel.description}`
             : selectedModel.description}
         </p>
       )}

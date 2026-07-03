@@ -31,9 +31,24 @@ export const MODELS = {
   // =====================================================================
   image: [
     {
+      // HuggingFace free-tier — zero API cost, included free for all members.
+      // FLUX.1-schnell is BFL's fastest open-weight model, widely regarded
+      // as the best free image generator available (HF inference free tier).
+      id: "black-forest-labs/FLUX.1-schnell",
+      name: "FLUX Schnell — Free",
+      provider: "huggingface",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      credits: 0,
+      description: "Free for all members. Fast, solid image quality — great for everyday prompts and quick drafts.",
+      imageInputs: { min: 0, max: 0 },
+    },
+    {
       id: "black-forest-labs/flux-2-pro",
       name: "FLUX-2 Pro (Black-Forest-Labs)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -45,6 +60,7 @@ export const MODELS = {
       id: "google/nano-banana-2",
       name: "Nano Banana 2 (Google)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -59,6 +75,7 @@ export const MODELS = {
       id: "google/imagen-4-ultra",
       name: "Imagen 4 Ultra (Google)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -75,6 +92,7 @@ export const MODELS = {
       id: "black-forest-labs/flux-2-flex",
       name: "FLUX-2 Flex (Black-Forest-Labs)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -86,6 +104,7 @@ export const MODELS = {
       id: "bytedance/seedream-5-lite",
       name: "Seedream 5 Lite (Bytedance)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -97,6 +116,7 @@ export const MODELS = {
       id: "bytedance/seedream-4.5",
       name: "Seedream 4.5 (Bytedance)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -108,6 +128,7 @@ export const MODELS = {
       id: "bytedance/seedream-3",
       name: "Seedream 3 (Bytedance)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -119,6 +140,7 @@ export const MODELS = {
       id: "wan-video/wan-2.7-image-pro",
       name: "WAN 2.7 Image Pro (WAN-Video)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -130,6 +152,7 @@ export const MODELS = {
       id: "ideogram-ai/ideogram-v3-turbo",
       name: "Ideogram V3 Turbo (Ideogram)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -141,6 +164,7 @@ export const MODELS = {
       id: "ideogram-ai/ideogram-v2",
       name: "Ideogram V2 (Ideogram)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -152,6 +176,7 @@ export const MODELS = {
       id: "minimax/image-01",
       name: "MiniMax Image-01",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -163,6 +188,7 @@ export const MODELS = {
       id: "comfyui/any-comfyui-workflow",
       name: "Any ComfyUI Workflow (ComfyUI)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -174,6 +200,7 @@ export const MODELS = {
       id: "fermatresearch/sdxl-controlnet-lora",
       name: "SDXL ControlNet LoRA (FermatResearch)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -185,6 +212,7 @@ export const MODELS = {
       id: "lucataco/ssd-1b",
       name: "SSD-1B (Lucataco)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -203,6 +231,7 @@ export const MODELS = {
       id: "aisha-ai-official/nsfw-flux-dev",
       name: "NSFW Flux Dev (Aisha AI)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: true,
       locked: true,
       premium: false,
@@ -244,6 +273,21 @@ export const MODELS = {
   // marketing/usage of those specific models.
   // =====================================================================
   video: [
+    {
+      // HuggingFace free-tier — zero API cost, included free for all members.
+      // LTX-Video is Lightricks' open-source video model, one of the best
+      // free T2V options available on HF inference (free tier).
+      id: "Lightricks/LTX-Video",
+      name: "LTX Video — Free",
+      provider: "huggingface",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      credits: 0,
+      durations: [3, 5, 8],
+      description: "Free for all members. Text-to-video with good motion quality — great for quick clips.",
+      imageInputs: { min: 0, max: 0 },
+    },
     {
       // VERIFIED: Atlas Cloud model page confirms "$0.03 per run" flat
       // (333 runs for $10 — atlascloud.ai/models/alibaba/wan-2.2-spicy/image-to-video).
@@ -399,6 +443,7 @@ export const MODELS = {
       id: "runwayml/gen-4.5",
       name: "Runway Gen-4.5",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -411,6 +456,7 @@ export const MODELS = {
       id: "google/veo-3.1",
       name: "VEO 3.1 (Google)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -423,6 +469,7 @@ export const MODELS = {
       id: "bytedance/dreamactor-m2.0",
       name: "DreamActor M2.0 (Bytedance)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -435,6 +482,7 @@ export const MODELS = {
       id: "xai/grok-imagine-video",
       name: "Grok Imagine Video (XAI)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -447,6 +495,7 @@ export const MODELS = {
       id: "google/veo-2",
       name: "VEO 2 (Google)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -459,6 +508,7 @@ export const MODELS = {
       id: "kwaivgi/kling-v3-video",
       name: "Kling V3 Video (Kwaivgi)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -471,6 +521,7 @@ export const MODELS = {
       id: "kwaivgi/kling-v3-omni-video",
       name: "Kling V3 Omni Video (Kwaivgi)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -483,6 +534,7 @@ export const MODELS = {
       id: "kwaivgi/kling-v2.5-turbo-pro",
       name: "Kling V2.5 Turbo Pro (Kwaivgi)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -495,6 +547,7 @@ export const MODELS = {
       id: "kwaivgi/kling-v2.0",
       name: "Kling V2.0 (Kwaivgi)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -507,6 +560,7 @@ export const MODELS = {
       id: "bytedance/seedance-2.0",
       name: "Seedance 2.0 (Bytedance)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -519,6 +573,7 @@ export const MODELS = {
       id: "bytedance/seedance-1.5-pro",
       name: "Seedance 1.5 Pro (Bytedance)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -531,6 +586,7 @@ export const MODELS = {
       id: "bytedance/seedance-1-pro",
       name: "Seedance 1 Pro (Bytedance)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -543,6 +599,7 @@ export const MODELS = {
       id: "bytedance/seedance-1-lite",
       name: "Seedance 1 Lite (Bytedance)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -555,6 +612,7 @@ export const MODELS = {
       id: "wan-video/wan-2.7-t2v",
       name: "WAN 2.7 T2V (WAN-Video)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -567,6 +625,7 @@ export const MODELS = {
       id: "wan-video/wan-2.5-t2v-fast",
       name: "WAN 2.5 T2V Fast (WAN-Video)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -579,6 +638,7 @@ export const MODELS = {
       id: "wan-video/wan-2.2-t2v-fast",
       name: "WAN 2.2 T2V Fast (WAN-Video)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -591,6 +651,7 @@ export const MODELS = {
       id: "wan-video/wan-2.5-i2v-fast",
       name: "WAN 2.5 I2V Fast (WAN-Video)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -603,6 +664,7 @@ export const MODELS = {
       id: "wan-video/wan-2.2-s2v",
       name: "WAN 2.2 S2V (WAN-Video)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -615,6 +677,7 @@ export const MODELS = {
       id: "minimax/hailuo-2.3",
       name: "Hailuo 2.3 (MiniMax)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -627,6 +690,7 @@ export const MODELS = {
       id: "minimax/video-01",
       name: "MiniMax Video-01",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -639,6 +703,7 @@ export const MODELS = {
       id: "prunaai/p-video",
       name: "P-Video (PrunaAI)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -651,6 +716,7 @@ export const MODELS = {
       id: "prunaai/p-video-animate",
       name: "P-Video Animate (PrunaAI)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -663,6 +729,7 @@ export const MODELS = {
       id: "prunaai/p-video-avatar",
       name: "P-Video Avatar (PrunaAI)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -675,6 +742,7 @@ export const MODELS = {
       id: "alibaba/happyhorse-1.0",
       name: "HappyHorse 1.0 (Alibaba)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -687,6 +755,7 @@ export const MODELS = {
       id: "veed/fabric-1.0",
       name: "Fabric 1.0 (VEED)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -699,6 +768,7 @@ export const MODELS = {
       id: "fofr/tooncrafter",
       name: "ToonCrafter (Fofr)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -714,6 +784,19 @@ export const MODELS = {
   // =====================================================================
   tts: [
     {
+      // HuggingFace free-tier — zero API cost, included free for all members.
+      // Same Kokoro-82M weights as the Replicate version, served via HF inference.
+      // 50 voices across 6 languages with voice selection (passed via parameters).
+      id: "hexgrad/Kokoro-82M",
+      name: "Kokoro-82M — Free",
+      provider: "huggingface",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      credits: 0,
+      description: "Free for all members. #1 ranked open TTS with 50 voices across 6 languages.",
+    },
+    {
       // VERIFIED: Replicate model page confirms $0.00022/run (4545 runs per $1).
       // 96M+ runs — most widely used open-source TTS. Ranked #1 on TTS Arena.
       // 46 voices across 6 languages (en-US, en-GB, fr, hi, it, ja, zh).
@@ -721,6 +804,7 @@ export const MODELS = {
       id: "jaaari/kokoro-82m",
       name: "Kokoro-82M",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -731,6 +815,7 @@ export const MODELS = {
       id: "elevenlabs/v3",
       name: "ElevenLabs v3",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -741,6 +826,7 @@ export const MODELS = {
       id: "minimax/speech-2.8-hd",
       name: "Speech 2.8 HD (MiniMax)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -751,6 +837,7 @@ export const MODELS = {
       id: "elevenlabs/turbo-v2.5",
       name: "ElevenLabs Turbo v2.5",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -761,6 +848,7 @@ export const MODELS = {
       id: "inworld/realtime-tts-2",
       name: "Realtime TTS-2 (Inworld)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -771,6 +859,7 @@ export const MODELS = {
       id: "minimax/speech-2.8-turbo",
       name: "Speech 2.8 Turbo (MiniMax)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -781,6 +870,7 @@ export const MODELS = {
       id: "google/gemini-3.1-flash-tts",
       name: "Gemini 3.1 Flash TTS (Google)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -791,6 +881,7 @@ export const MODELS = {
       id: "resemble-ai/chatterbox",
       name: "Chatterbox (Resemble)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -801,6 +892,7 @@ export const MODELS = {
       id: "afiaka87/tortoise-tts",
       name: "Tortoise TTS",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -982,6 +1074,7 @@ export const MODELS = {
       id: "sync/lipsync-2-pro",
       name: "LipSync 2 Pro (Sync)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -992,6 +1085,7 @@ export const MODELS = {
       id: "heygen/lipsync-precision",
       name: "LipSync Precision (HeyGen)",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -1002,6 +1096,7 @@ export const MODELS = {
       id: "pixverse/lipsync",
       name: "PixVerse LipSync",
       provider: "replicate",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -1039,7 +1134,17 @@ export function findModelById(modelId) {
 export function getSortedModels(category) {
   const list = MODELS[category] || [];
   return [...list].sort((a, b) => {
-    if (a.locked !== b.locked) return a.locked ? 1 : -1;
+    // Free (0 credits, active) models float to the top of the active section
+    // so members immediately see what they can use right now.
+    // Coming-soon and locked models sink to the bottom in that order.
+    const aFree = (!a.locked && !a.comingSoon && a.credits === 0) ? 1 : 0;
+    const bFree = (!b.locked && !b.comingSoon && b.credits === 0) ? 1 : 0;
+    if (aFree !== bFree) return bFree - aFree; // free first
+
+    const aDown = (a.comingSoon ? 2 : 0) + (a.locked ? 1 : 0);
+    const bDown = (b.comingSoon ? 2 : 0) + (b.locked ? 1 : 0);
+    if (aDown !== bDown) return aDown - bDown;
+
     return b.credits - a.credits;
   });
 }
