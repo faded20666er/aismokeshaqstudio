@@ -641,6 +641,20 @@ export const MODELS = {
   // =====================================================================
   tts: [
     {
+      // VERIFIED: Replicate model page confirms $0.00022/run (4545 runs per $1).
+      // 96M+ runs — most widely used open-source TTS. Ranked #1 on TTS Arena.
+      // 46 voices across 6 languages (en-US, en-GB, fr, hi, it, ja, zh).
+      // Pricing: $0.00022 × 2.5 markup / $0.05 per credit = 0.011 → 1 credit.
+      id: "jaaari/kokoro-82m",
+      name: "Kokoro-82M",
+      provider: "replicate",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      credits: 1,
+      description: "Open-source TTS, ranked #1 on TTS Arena. 46 voices across 6 languages. Fastest and most cost-effective option.",
+    },
+    {
       id: "elevenlabs/v3",
       name: "ElevenLabs v3",
       provider: "replicate",
