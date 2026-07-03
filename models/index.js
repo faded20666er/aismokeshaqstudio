@@ -15,7 +15,8 @@
 //   Fast video         -> 30 credits  (real cost ~$1.25)
 //   Premium video      -> 45 credits  (real cost ~$2.00)
 //   NSFW image         -> 5 credits   (HF-hosted, slightly higher infra cost)
-//   NSFW video         -> 60 credits  (image-to-video, same tier as premium video+)
+//   NSFW I2V (budget)  -> 2 credits   (Atlas Cloud Wan 2.2 Spicy, real cost $0.03/run)
+//   NSFW I2V (turbo)   -> 5+ credits  (Atlas Cloud Wan 2.2 Turbo Spicy Infinite)
 //
 // Every model has a short "description" field describing its strengths
 // in plain language — shown in the dropdown so customers can pick the
@@ -244,14 +245,22 @@ export const MODELS = {
   // =====================================================================
   video: [
     {
-      id: "imb101/I2V-WAN2.2-POVFaceSitting",
-      name: "I2V WAN 2.2 POV Face Sitting (NSFW)",
-      provider: "huggingface",
+      // VERIFIED: Atlas Cloud model page confirms "$0.03 per run" flat
+      // (333 runs for $10 — atlascloud.ai/models/alibaba/wan-2.2-spicy/image-to-video).
+      // Purpose-built NSFW I2V on Atlas Cloud's uncensored tier — no content filters,
+      // no trigger phrases, no monthly credit pools. Works via ATLASCLOUD_API_KEY.
+      // Replaces imb101/I2V-WAN2.2-POVFaceSitting which required HF monthly credits,
+      // uncertain LORA loading, and a trigger phrase to produce any NSFW output.
+      // Pricing: $0.03 real × 2.5× markup / $0.05 per credit = 1.5 → 2 credits.
+      id: "alibaba/wan-2.2-spicy/image-to-video",
+      name: "Wan 2.2 Spicy I2V (Atlas Cloud)",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 60,
-      description: "NSFW image-to-video model. Unlock NSFW mode to use.",
+      credits: 2,
+      description: "NSFW image-to-video. Animates your image into a cinematic clip. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
     {
