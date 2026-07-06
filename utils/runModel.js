@@ -131,6 +131,46 @@ async function runHuggingFace(model, inputs) {
   return `data:${mimeType};base64,${base64}`;
 }
 
+// ---------------------------------------------------------------------------
+// Cloudflare Workers AI
+// Free tier resets daily — no monthly cap that can be permanently exhausted.
+// Endpoint: POST /accounts/{id}/ai/run/{model-slug}
+// Image models return raw binary bytes (not JSON), so we read as ArrayBuffer.
+// ---------------------------------------------------------------------------
+async function runCloudflare(model, inputs) {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  if (!accountId || !apiToken) {
+    throw new Error(
+      "Cloudflare credentials missing — add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN to Vercel environment variables."
+    );
+  }
+
+  const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model.id}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ prompt: inputs.prompt }),
+  });
+
+  if (!res.ok) {
+    let msg = res.statusText;
+    try {
+      const j = await res.json();
+      msg = j.errors?.[0]?.message || msg;
+    } catch {}
+    throw new Error(`Cloudflare AI error (${res.status}): ${msg}`);
+  }
+
+  // Image generation models return raw binary — read as buffer, encode base64
+  const buf = await res.arrayBuffer();
+  const ct = res.headers.get("content-type") || "image/jpeg";
+  return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
+}
+
 // CONFIRMED REAL FIELD NAMES for reference-image inputs, per Replicate
 // model. Every model names this differently — sending the wrong field
 // name doesn't error, it just gets silently ignored, so the model
@@ -576,6 +616,10 @@ async function runDomoAI(model, inputs) {
 export async function runModel(model, inputs) {
   if (model.provider === "replicate") {
     return runReplicate(model, inputs);
+  }
+
+  if (model.provider === "cloudflare") {
+    return runCloudflare(model, inputs);
   }
 
   if (model.provider === "huggingface") {

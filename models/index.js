@@ -31,17 +31,16 @@ export const MODELS = {
   // =====================================================================
   image: [
     {
-      // HuggingFace free-tier — zero API cost, included free for all members.
-      // FLUX.1-schnell is BFL's fastest open-weight model, widely regarded
-      // as the best free image generator available (HF inference free tier).
-      id: "black-forest-labs/FLUX.1-schnell",
+      // Cloudflare Workers AI — free tier resets DAILY, no monthly cap.
+      // Requires CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN in Vercel.
+      id: "@cf/black-forest-labs/flux-1-schnell",
       name: "FLUX Schnell — Free",
-      provider: "huggingface",
+      provider: "cloudflare",
       nsfw: false,
       locked: false,
       premium: false,
       credits: 0,
-      description: "Free for all members. Fast, solid image quality — great for everyday prompts and quick drafts.",
+      description: "Free for all members — resets daily. Fast, solid image quality for everyday prompts.",
       imageInputs: { min: 0, max: 0 },
     },
     {
@@ -239,23 +238,7 @@ export const MODELS = {
       description: "NSFW image model. Unlock NSFW mode to use.",
       imageInputs: { min: 0, max: 0 },
     },
-    {
-      // Confirmed via Hugging Face Hub API to have live inference
-      // providers (fal-ai, replicate, wavespeed). Kept on the
-      // huggingface provider here since the exact Replicate-hosted
-      // slug for this model wasn't verified — this HF path IS
-      // confirmed working, so no need to risk an unverified path.
-      id: "Jonny001/NSFW_master",
-      name: "NSFW Master (Jonny001)",
-      provider: "huggingface",
-      nsfw: true,
-      locked: true,
-      premium: false,
-      credits: 5,
-      description: "NSFW image model. Unlock NSFW mode to use.",
-      imageInputs: { min: 0, max: 0 },
-    },
-  ],
+      ],
 
   // =====================================================================
   // VIDEO MODELS
@@ -273,22 +256,7 @@ export const MODELS = {
   // marketing/usage of those specific models.
   // =====================================================================
   video: [
-    {
-      // HuggingFace free-tier — zero API cost, included free for all members.
-      // LTX-Video is Lightricks' open-source video model, one of the best
-      // free T2V options available on HF inference (free tier).
-      id: "Lightricks/LTX-Video",
-      name: "LTX Video — Free",
-      provider: "huggingface",
-      nsfw: false,
-      locked: false,
-      premium: false,
-      credits: 0,
-      durations: [3, 5, 8],
-      description: "Free for all members. Text-to-video with good motion quality — great for quick clips.",
-      imageInputs: { min: 0, max: 0 },
-    },
-    {
+        {
       // VERIFIED: Atlas Cloud model page confirms "$0.03 per run" flat
       // (333 runs for $10 — atlascloud.ai/models/alibaba/wan-2.2-spicy/image-to-video).
       // Purpose-built NSFW I2V on Atlas Cloud's uncensored tier — no content filters,
@@ -783,20 +751,7 @@ export const MODELS = {
   // TTS MODELS
   // =====================================================================
   tts: [
-    {
-      // HuggingFace free-tier — zero API cost, included free for all members.
-      // Same Kokoro-82M weights as the Replicate version, served via HF inference.
-      // 50 voices across 6 languages with voice selection (passed via parameters).
-      id: "hexgrad/Kokoro-82M",
-      name: "Kokoro-82M — Free",
-      provider: "huggingface",
-      nsfw: false,
-      locked: false,
-      premium: false,
-      credits: 0,
-      description: "Free for all members. #1 ranked open TTS with 50 voices across 6 languages.",
-    },
-    {
+        {
       // VERIFIED: Replicate model page confirms $0.00022/run (4545 runs per $1).
       // 96M+ runs — most widely used open-source TTS. Ranked #1 on TTS Arena.
       // 46 voices across 6 languages (en-US, en-GB, fr, hi, it, ja, zh).
@@ -899,37 +854,7 @@ export const MODELS = {
       credits: 1,
       description: "Slower to generate but known for very natural-sounding cadence.",
     },
-    {
-      id: "fermatresearch/spanish-f5-tts",
-      name: "Spanish F5 TTS (FermatResearch)",
-      provider: "huggingface",
-      nsfw: false,
-      locked: false,
-      premium: false,
-      credits: 1,
-      description: "Tuned specifically for natural Spanish pronunciation.",
-    },
-    {
-      id: "x-lance/f5-tts",
-      name: "F5 TTS (X-Lance)",
-      provider: "huggingface",
-      nsfw: false,
-      locked: false,
-      premium: false,
-      credits: 1,
-      description: "Solid general multilingual text-to-speech baseline.",
-    },
-    {
-      id: "chenxwh/openvoice",
-      name: "OpenVoice (Chenxwh)",
-      provider: "huggingface",
-      nsfw: false,
-      locked: false,
-      premium: false,
-      credits: 1,
-      description: "Supports voice cloning from a short reference sample.",
-    },
-  ],
+              ],
 
   // =====================================================================
   // TALKING PHOTO MODELS (formerly "Lip Sync" tab)
