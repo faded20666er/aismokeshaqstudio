@@ -802,6 +802,16 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
           flex-direction: column;
           gap: 10px;
           align-items: flex-start;
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        .output-preview-wrap img {
+          width: 100%;
+          max-width: 100%;
+          height: auto;
+          border-radius: 12px;
+          box-shadow: 0 0 18px rgba(0, 0, 0, 0.7);
         }
 
         .download-btn {
