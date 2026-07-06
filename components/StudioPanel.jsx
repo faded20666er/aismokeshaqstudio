@@ -130,11 +130,11 @@ function OutputPreview({ item, category }) {
 
   let media;
   if (category === "video" || category === "lipsync") {
-    media = <video src={item} controls style={{ maxWidth: "100%", borderRadius: 12 }} />;
+    media = <video src={item} controls style={{ width: "100%", height: "auto", display: "block", borderRadius: 12 }} />;
   } else if (category === "tts") {
     media = <audio src={item} controls style={{ width: "100%" }} />;
   } else {
-    media = <img src={item} alt="output" />;
+    media = <img src={item} alt="output" style={{ width: "100%", height: "auto", display: "block", borderRadius: 12, boxShadow: "0 0 18px rgba(0,0,0,0.7)" }} />;
   }
 
   return (
