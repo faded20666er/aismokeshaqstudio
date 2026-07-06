@@ -165,10 +165,22 @@ async function runCloudflare(model, inputs) {
     throw new Error(`Cloudflare AI error (${res.status}): ${msg}`);
   }
 
-  // Image generation models return raw binary — read as buffer, encode base64
+  // Cloudflare image models return EITHER:
+  //   (a) JSON: { result: { image: "<base64>" }, success: true, ... }
+  //   (b) Raw binary PNG bytes with content-type: image/png
+  // Check content-type and handle both cases.
+  const ct = res.headers.get("content-type") || "";
+  if (ct.includes("application/json") || ct.includes("text/")) {
+    const json = await res.json();
+    const imageBase64 = json?.result?.image;
+    if (!imageBase64) {
+      throw new Error(`Cloudflare returned no image. Response: ${JSON.stringify(json)}`);
+    }
+    return `data:image/png;base64,${imageBase64}`;
+  }
+  // Raw binary fallback
   const buf = await res.arrayBuffer();
-  const ct = res.headers.get("content-type") || "image/jpeg";
-  return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
+  return `data:image/png;base64,${Buffer.from(buf).toString("base64")}`;
 }
 
 // CONFIRMED REAL FIELD NAMES for reference-image inputs, per Replicate
