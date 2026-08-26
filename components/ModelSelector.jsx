@@ -10,12 +10,12 @@
 import { useEffect, useState } from "react";
 import { getDropdownModels } from "../utils/modelDropdown";
 
-export default function ModelSelector({ category, nsfwEnabled, onSelect }) {
+export default function ModelSelector({ category, onSelect }) {
   const [models, setModels] = useState([]);
   const [selectedId, setSelectedId] = useState("");
 
   useEffect(() => {
-    const dropdown = getDropdownModels(nsfwEnabled);
+    const dropdown = getDropdownModels();
     const list = dropdown[category] || [];
     setModels(list);
 
@@ -27,7 +27,7 @@ export default function ModelSelector({ category, nsfwEnabled, onSelect }) {
     } else {
       setSelectedId("");
     }
-  }, [category, nsfwEnabled]);
+  }, [category]);
 
   const selectedModel = models.find((m) => m.id === selectedId);
 

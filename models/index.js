@@ -219,25 +219,6 @@ export const MODELS = {
       description: "Lightweight and fast. Good for quick drafts and iteration.",
       imageInputs: { min: 0, max: 1 },
     },
-    {
-      // Replaces gooniebloans/igoonhard, which had ZERO working
-      // HuggingFace inference providers (confirmed via Hugging Face Hub
-      // API — "no inference provider available"). This model is real,
-      // active, and hosted directly on Replicate: 404K+ runs, ~$0.017
-      // per run, built on FLUX.1-dev with the safety checker disabled
-      // (Replicate's docs explicitly support this for FLUX/SDXL
-      // derivative fine-tunes — see docs/topics/predictions/safety-checking).
-      id: "aisha-ai-official/nsfw-flux-dev",
-      name: "NSFW Flux Dev (Aisha AI)",
-      provider: "replicate",
-      comingSoon: true,
-      nsfw: true,
-      locked: true,
-      premium: false,
-      credits: 5,
-      description: "NSFW image model. Unlock NSFW mode to use.",
-      imageInputs: { min: 0, max: 0 },
-    },
       ],
 
   // =====================================================================
@@ -256,84 +237,6 @@ export const MODELS = {
   // marketing/usage of those specific models.
   // =====================================================================
   video: [
-        {
-      // VERIFIED: Atlas Cloud model page confirms "$0.03 per run" flat
-      // (333 runs for $10 — atlascloud.ai/models/alibaba/wan-2.2-spicy/image-to-video).
-      // Purpose-built NSFW I2V on Atlas Cloud's uncensored tier — no content filters,
-      // no trigger phrases, no monthly credit pools. Works via ATLASCLOUD_API_KEY.
-      // Replaces imb101/I2V-WAN2.2-POVFaceSitting which required HF monthly credits,
-      // uncertain LORA loading, and a trigger phrase to produce any NSFW output.
-      // Pricing: $0.03 real × 2.5× markup / $0.05 per credit = 1.5 → 2 credits.
-      id: "alibaba/wan-2.2-spicy/image-to-video",
-      name: "Wan 2.2 Spicy I2V (Atlas Cloud)",
-      provider: "atlascloud",
-      atlasCloudType: "video",
-      nsfw: true,
-      locked: true,
-      premium: false,
-      credits: 2,
-      durations: [5, 8],
-      description: "NSFW image-to-video. Animates your image into a cinematic clip. Unlock NSFW mode to use.",
-      imageInputs: { min: 1, max: 1 },
-    },
-    {
-      // VERIFIED via Atlas Cloud's own published docs/pricing page:
-      // $0.020/sec at 480p ($0.040/sec at 720p — resolution_factor 2x
-      // per their pricing formula). Applying the same 2.5x markup
-      // already used for InfiniteTalk ($0.06/sec real -> 3cr/sec,
-      // i.e. 2.5x at $0.05/credit) keeps margin consistent across the
-      // catalog: 480p -> 1cr/sec, 720p -> 2cr/sec.
-      // Supports segmented multi-prompt generation up to 6x5s=30s in
-      // one call ("infinite" naming) — prompt field must be a JSON
-      // array per Atlas Cloud's docs, handled in utils/runModel.js.
-      id: "atlascloud/wan-2.2-turbo-spicy-infinite",
-      name: "Wan 2.2 Turbo Spicy Infinite (Atlas Cloud)",
-      provider: "atlascloud",
-      atlasCloudType: "video",
-      nsfw: true,
-      locked: true,
-      premium: false,
-      credits: 5, // minimum charge, 5 seconds at 480p
-      creditsPerSecond: 1,
-      maxDurationSeconds: 30,
-      resolution: "480p",
-      description: "Lowest-cost NSFW video model. Long-form via segmented prompts (up to 30s). Unlock NSFW mode to use.",
-      imageInputs: { min: 0, max: 1 },
-    },
-    {
-      id: "atlascloud/wan-2.2-turbo-spicy-infinite-720p",
-      name: "Wan 2.2 Turbo Spicy Infinite 720p (Atlas Cloud)",
-      provider: "atlascloud",
-      atlasCloudType: "video",
-      nsfw: true,
-      locked: true,
-      premium: false,
-      credits: 10,
-      creditsPerSecond: 2,
-      maxDurationSeconds: 30,
-      resolution: "720p",
-      description: "Higher-resolution version of the lowest-cost NSFW video model. Unlock NSFW mode to use.",
-      imageInputs: { min: 0, max: 1 },
-    },
-    {
-      // VERIFIED via Atlas Cloud's published pricing/blog page:
-      // $0.049/sec, described as their highest-quality uncensored
-      // video tier (best motion/subject coherence). Same 2.5x markup
-      // applied: 0.049 * 2.5 / 0.05 = 2.45cr/sec, rounded to 2.5.
-      id: "atlascloud/seedance-v1.5-pro-spicy",
-      name: "Seedance v1.5 Pro Spicy (Atlas Cloud)",
-      provider: "atlascloud",
-      atlasCloudType: "video",
-      nsfw: true,
-      locked: true,
-      premium: true,
-      credits: 13, // minimum charge, ~5 seconds
-      creditsPerSecond: 2.5,
-      maxDurationSeconds: 15,
-      resolution: "720p",
-      description: "Highest-quality NSFW video model — best motion smoothness and subject coherence. Unlock NSFW mode to use.",
-      imageInputs: { min: 0, max: 1 },
-    },
     {
       // VERIFIED: DomoAI docs confirm $0.10/sec for animate-2.4-advanced.
       // Pricing: $0.10 × 2.5 markup / $0.05 per credit = 5 credits/sec.
