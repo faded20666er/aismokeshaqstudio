@@ -635,6 +635,61 @@ export const MODELS = {
       description: "Best for cartoon and animated styles rather than realism.",
       imageInputs: { min: 2, max: 10 },
     },
+    // ==== Atlas Cloud (atlascloud.ai) general video models =================
+    // Atlas Cloud is the only currently-funded provider ($25 test balance,
+    // Aug 2026 — Replicate is at $0 and WaveSpeed's account is disabled).
+    // These two are added here because they were confirmed, via Atlas
+    // Cloud's own live public model-catalog API
+    // (https://api.atlascloud.ai/api/v1/models) plus its per-model schema/
+    // example endpoints, to be dramatically cheaper than the equivalent
+    // models on Replicate:
+    //   - Kling V2.0: Replicate charged $1.40/generation (removed from
+    //     catalog for being priced at a loss — see commit 83c1f6e). Atlas
+    //     Cloud's kling-v2.0-i2v-master is $0.238/generation — ~83% cheaper.
+    //   - Seedance 1 Pro: Replicate charged $0.75/generation. Atlas Cloud's
+    //     seedance-v1-pro-i2v-720p is $0.047/generation — ~94% cheaper.
+    // IMPORTANT — not yet verified with a real paid test call (only the
+    // schema/example endpoints, which is a step better than trusting the
+    // marketing pricing page alone, but is not the same as watching a real
+    // generation succeed and confirming the actual bill). Also unconfirmed:
+    // whether Atlas Cloud's base_price scales with the "duration" field or
+    // is flat regardless of length within the schema's allowed range.
+    // KEEP comingSoon: true until a real test generation is run and the
+    // real charged amount is confirmed — same rule that burned us on the
+    // Atlas Cloud Spicy NSFW line (never actually tested before relying on
+    // it) and on WaveSpeed lipsync (commit 8975a72).
+    {
+      id: "kwaivgi/kling-v2.0-i2v-master",
+      name: "Kling V2.0 Master (Atlas Cloud)",
+      provider: "atlascloud",
+      atlasCloudType: "video",
+      comingSoon: true,
+      nsfw: false,
+      locked: false,
+      premium: false,
+      // real cost $0.238/generation (Atlas Cloud live pricing API, Aug 2026)
+      // x2.5 markup / $0.05 per credit = 11.9 -> 12 credits
+      credits: 12,
+      durations: [5, 10],
+      description: "Kling V2.0, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Smooth motion, good consistency.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "bytedance/seedance-v1-pro-i2v-720p",
+      name: "Seedance 1 Pro 720p (Atlas Cloud)",
+      provider: "atlascloud",
+      atlasCloudType: "video",
+      comingSoon: true,
+      nsfw: false,
+      locked: false,
+      premium: false,
+      // real cost $0.047/generation at default 5s (Atlas Cloud live pricing
+      // API, Aug 2026) x2.5 markup / $0.05 per credit = 2.35 -> 3 credits
+      credits: 3,
+      durations: [5, 8, 10],
+      description: "Seedance 1 Pro, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Good motion quality for general video.",
+      imageInputs: { min: 1, max: 1 },
+    },
   ],
 
   // =====================================================================
