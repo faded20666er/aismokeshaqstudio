@@ -296,7 +296,13 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
           <span className="section-label text-silver-red">Model</span>
           {selectedModel && (
             <span className="section-meta">
-              {selectedModel.name} · {selectedModel.credits} credits
+              {selectedModel.name} ·{" "}
+              {selectedModel.creditsByDuration
+                ? selectedModel.creditsByDuration[
+                    videoDuration ?? selectedModel.durations?.[0]
+                  ] ?? selectedModel.credits
+                : selectedModel.credits}{" "}
+              credits
             </span>
           )}
         </div>
@@ -306,7 +312,11 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
         />
       </div>
 
-      {/* VIDEO DURATION PILLS — shown when the selected model has defined durations */}
+      {/* VIDEO DURATION PILLS — shown when the selected model has defined durations.
+          A few models (e.g. Atlas Cloud Seedance) are billed per-second by
+          the provider, so their credit cost is different per duration —
+          creditsByDuration reflects that on each pill instead of showing
+          one flat price for every length. */}
       {category === "video" && selectedModel?.durations?.length > 0 && (
         <div className="section-block">
           <div className="section-header">
@@ -324,6 +334,9 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
                 onClick={() => setVideoDuration(d)}
               >
                 {d}s
+                {selectedModel.creditsByDuration
+                  ? ` · ${selectedModel.creditsByDuration[d]}cr`
+                  : ""}
               </button>
             ))}
           </div>

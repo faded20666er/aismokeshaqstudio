@@ -645,29 +645,39 @@ export const MODELS = {
     // models on Replicate:
     //   - Kling V2.0: Replicate charged $1.40/generation (removed from
     //     catalog for being priced at a loss — see commit 83c1f6e). Atlas
-    //     Cloud's kling-v2.0-i2v-master is $0.238/generation — ~83% cheaper.
-    //   - Seedance 1 Pro: Replicate charged $0.75/generation. Atlas Cloud's
-    //     seedance-v1-pro-i2v-720p is $0.047/generation — ~94% cheaper.
-    // Credits rounded up past the strict 2.5x formula (owner's call) for
-    // extra margin cushion while these are still unproven live: Kling
-    // 11.9->15, Seedance 2.35->5.
-    // comingSoon removed (flipped live) — owner has the ATLASCLOUD_API_KEY
-    // already set in Vercel and is running the real first test generation
-    // directly against production. Still unconfirmed: whether Atlas
-    // Cloud's base_price scales with the "duration" field or is flat
-    // regardless of length within the schema's allowed range — watch the
-    // first real generations for a mismatch between expected and actual
-    // charged amount.
+    //     Cloud lists kling-v2.0-i2v-master at a "base_price" of $0.238.
+    //   - Seedance 1 Pro: Replicate charged $0.75/generation. Atlas Cloud
+    //     lists seedance-v1-pro-i2v-720p at a "base_price" of $0.047.
+    //
+    // REAL BILLING CONFIRMED (Aug 2026, from owner's actual Atlas Cloud
+    // balance): $25.00 -> $24.29 after one 5s + one 10s Seedance
+    // generation = $0.71 / 15s = $0.0473/s. Atlas Cloud's "base_price" for
+    // this model is PER SECOND, not per generation as originally assumed
+    // when these were added (commit 4b54b3c) — that assumption was wrong.
+    // Fixed by adding creditsByDuration below and teaching
+    // pages/api/generate.js to charge per-duration when present, instead
+    // of the flat model.credits every other model uses.
+    //
+    // Kling's $0.238 figure came from the identical schema shape (no
+    // explicit "unit": "generation" tag, same as Seedance had) so it is
+    // very likely ALSO per-second, NOT the $0.238 flat this was originally
+    // priced against. UNCONFIRMED — owner has not run a real Kling test
+    // yet. Re-gated comingSoon: true until a real Kling generation +
+    // balance check confirms the real per-unit cost, same rule that
+    // caught the Seedance mistake above. Do not remove comingSoon here
+    // without a real tested number.
     {
       id: "kwaivgi/kling-v2.0-i2v-master",
       name: "Kling V2.0 Master (Atlas Cloud)",
       provider: "atlascloud",
       atlasCloudType: "video",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      // real cost $0.238/generation (Atlas Cloud live pricing API, Aug 2026)
-      // strict 2.5x formula = 11.9 -> rounded up to 15 credits (owner's call)
+      // UNVERIFIED — see comment above. Likely wrong (probably per-second,
+      // not per-generation, same mistake Seedance had). Do not trust this
+      // number until a real test + balance check confirms it.
       credits: 15,
       durations: [5, 10],
       description: "Kling V2.0, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Smooth motion, good consistency.",
@@ -681,10 +691,16 @@ export const MODELS = {
       nsfw: false,
       locked: false,
       premium: false,
-      // real cost $0.047/generation at default 5s (Atlas Cloud live pricing
-      // API, Aug 2026) strict 2.5x formula = 2.35 -> rounded up to 5 credits
-      // (owner's call)
-      credits: 5,
+      // VERIFIED per-second real cost: $0.0473/s (owner's real Atlas Cloud
+      // balance, Aug 2026 — see comment above). credits is the flat
+      // fallback (kept at the 10s/worst-case price so anything that
+      // doesn't hit creditsByDuration still can't lose money).
+      // creditsByDuration is owner's explicit per-tier pricing (rounded up
+      // for margin, not the strict 2.5x formula): 5s->10cr ($0.235 cost,
+      // 53% margin), 8s->15cr ($0.376 cost, 50% margin), 10s->25cr ($0.47
+      // cost, 62% margin). All three profitable, none at a loss.
+      credits: 25,
+      creditsByDuration: { 5: 10, 8: 15, 10: 25 },
       durations: [5, 8, 10],
       description: "Seedance 1 Pro, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Good motion quality for general video.",
       imageInputs: { min: 1, max: 1 },

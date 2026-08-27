@@ -76,7 +76,22 @@ export default async function handler(req, res) {
       });
     }
 
-    const hasCredits = await checkCredits(userId, model.credits);
+    // Most models charge a flat model.credits regardless of the duration
+    // the user picked. A few (currently: Atlas Cloud Seedance 1 Pro) are
+    // billed by the provider PER SECOND, not per generation — found the
+    // hard way when a flat-priced Seedance entry was losing money on
+    // longer clips (real per-second cost vs a flat credit price). For
+    // those, model.creditsByDuration maps each allowed duration to its
+    // own correct credit price. Falls back to the flat model.credits for
+    // every other model, and for any duration value that isn't in the
+    // map (shouldn't happen from the UI, but stay safe rather than charge
+    // $0).
+    const creditsToCharge =
+      model.creditsByDuration && inputs?.duration && model.creditsByDuration[inputs.duration] != null
+        ? model.creditsByDuration[inputs.duration]
+        : model.credits;
+
+    const hasCredits = await checkCredits(userId, creditsToCharge);
     if (!hasCredits) {
       return res.status(402).json({ error: "Not enough credits" });
     }
@@ -98,7 +113,7 @@ export default async function handler(req, res) {
 
     startJobInBackground(jobId, model, inputs, {
       userId,
-      creditsToCharge: model.credits,
+      creditsToCharge,
       recordHistory: true,
       category: model.nsfw ? "image-nsfw" : "image",
       prompt: inputs?.prompt,
