@@ -648,28 +648,27 @@ export const MODELS = {
     //     Cloud's kling-v2.0-i2v-master is $0.238/generation — ~83% cheaper.
     //   - Seedance 1 Pro: Replicate charged $0.75/generation. Atlas Cloud's
     //     seedance-v1-pro-i2v-720p is $0.047/generation — ~94% cheaper.
-    // IMPORTANT — not yet verified with a real paid test call (only the
-    // schema/example endpoints, which is a step better than trusting the
-    // marketing pricing page alone, but is not the same as watching a real
-    // generation succeed and confirming the actual bill). Also unconfirmed:
-    // whether Atlas Cloud's base_price scales with the "duration" field or
-    // is flat regardless of length within the schema's allowed range.
-    // KEEP comingSoon: true until a real test generation is run and the
-    // real charged amount is confirmed — same rule that burned us on the
-    // Atlas Cloud Spicy NSFW line (never actually tested before relying on
-    // it) and on WaveSpeed lipsync (commit 8975a72).
+    // Credits rounded up past the strict 2.5x formula (owner's call) for
+    // extra margin cushion while these are still unproven live: Kling
+    // 11.9->15, Seedance 2.35->5.
+    // comingSoon removed (flipped live) — owner has the ATLASCLOUD_API_KEY
+    // already set in Vercel and is running the real first test generation
+    // directly against production. Still unconfirmed: whether Atlas
+    // Cloud's base_price scales with the "duration" field or is flat
+    // regardless of length within the schema's allowed range — watch the
+    // first real generations for a mismatch between expected and actual
+    // charged amount.
     {
       id: "kwaivgi/kling-v2.0-i2v-master",
       name: "Kling V2.0 Master (Atlas Cloud)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
       // real cost $0.238/generation (Atlas Cloud live pricing API, Aug 2026)
-      // x2.5 markup / $0.05 per credit = 11.9 -> 12 credits
-      credits: 12,
+      // strict 2.5x formula = 11.9 -> rounded up to 15 credits (owner's call)
+      credits: 15,
       durations: [5, 10],
       description: "Kling V2.0, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Smooth motion, good consistency.",
       imageInputs: { min: 1, max: 1 },
@@ -679,13 +678,13 @@ export const MODELS = {
       name: "Seedance 1 Pro 720p (Atlas Cloud)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
       // real cost $0.047/generation at default 5s (Atlas Cloud live pricing
-      // API, Aug 2026) x2.5 markup / $0.05 per credit = 2.35 -> 3 credits
-      credits: 3,
+      // API, Aug 2026) strict 2.5x formula = 2.35 -> rounded up to 5 credits
+      // (owner's call)
+      credits: 5,
       durations: [5, 8, 10],
       description: "Seedance 1 Pro, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Good motion quality for general video.",
       imageInputs: { min: 1, max: 1 },
