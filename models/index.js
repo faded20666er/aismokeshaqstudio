@@ -695,12 +695,13 @@ export const MODELS = {
       // balance, Aug 2026 — see comment above). credits is the flat
       // fallback (kept at the 10s/worst-case price so anything that
       // doesn't hit creditsByDuration still can't lose money).
-      // creditsByDuration is owner's explicit per-tier pricing (rounded up
-      // for margin, not the strict 2.5x formula): 5s->10cr ($0.235 cost,
-      // 53% margin), 8s->15cr ($0.376 cost, 50% margin), 10s->25cr ($0.47
-      // cost, 62% margin). All three profitable, none at a loss.
-      credits: 25,
-      creditsByDuration: { 5: 10, 8: 15, 10: 25 },
+      // creditsByDuration is owner's explicit round-number pricing (higher
+      // margin than the earlier 10/15/25 pass): 5s->10cr ($0.235 cost, 53%
+      // margin), 8s->20cr ($0.376 cost, 62% margin), 10s->30cr ($0.47
+      // cost, 69% margin). All three profitable, margin increases with
+      // length.
+      credits: 30,
+      creditsByDuration: { 5: 10, 8: 20, 10: 30 },
       durations: [5, 8, 10],
       description: "Seedance 1 Pro, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Good motion quality for general video.",
       imageInputs: { min: 1, max: 1 },
