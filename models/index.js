@@ -793,9 +793,14 @@ export const MODELS = {
       description: "DomoAI talking avatar — photo or video driven by your audio. Realistic head + expression sync. Up to 60 seconds.",
     },
     {
+      // WaveSpeed account was disabled by their payment processor
+      // (repeated failed card attempts read as a fraud signal) —
+      // gated comingSoon until the account is reinstated and funded.
+      // Remove comingSoon once verified working again.
       id: "wavespeed-ai/infinitetalk",
       name: "InfiniteTalk 720p (WaveSpeed)",
       provider: "wavespeed",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -809,6 +814,7 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-480p",
       name: "InfiniteTalk 480p (WaveSpeed)",
       provider: "wavespeed",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -822,6 +828,7 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-v2v",
       name: "InfiniteTalk Video-to-Video (WaveSpeed)",
       provider: "wavespeed",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -836,6 +843,7 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-v2v-480p",
       name: "InfiniteTalk Video-to-Video 480p (WaveSpeed)",
       provider: "wavespeed",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -854,9 +862,17 @@ export const MODELS = {
       // simultaneous speakers per call; the Timeline backend groups
       // characters into pairs and chains the resulting clips for casts
       // larger than 2.
+      //
+      // NOTE: comingSoon here only hides this from the standalone
+      // Lipsync dropdown. The Multi-Character Timeline (timeline-generate.js)
+      // looks this model up directly by id and does NOT check comingSoon,
+      // so Timeline will still attempt real calls and fail (safely, no
+      // credits charged on failure — see runModelAsync.js) until the
+      // WaveSpeed account is reinstated.
       id: "wavespeed-ai/infinitetalk-multi",
       name: "InfiniteTalk Multi 720p (WaveSpeed)",
       provider: "wavespeed",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -871,6 +887,7 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-multi-480p",
       name: "InfiniteTalk Multi 480p (WaveSpeed)",
       provider: "wavespeed",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -887,6 +904,7 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-multi-v2v",
       name: "InfiniteTalk Multi Video-to-Video (WaveSpeed)",
       provider: "wavespeed",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
