@@ -442,7 +442,24 @@ async function runAtlasCloud(model, inputs) {
     ? "https://api.atlascloud.ai/api/v1/model/generateVideo"
     : "https://api.atlascloud.ai/api/v1/model/generateImage";
 
-  const body = { model: model.id };
+  // Atlas Cloud splits "generate from scratch" and "generate from
+  // reference image(s)" into TWO DIFFERENT model ids on their own
+  // catalog (e.g. ".../text-to-image" vs ".../edit" or
+  // ".../reference-to-image") — there is no single id that does both.
+  // model.id is the text-only variant; model.atlasImageEditId (when
+  // present) is the reference-image variant, confirmed via Atlas
+  // Cloud's own published schema for each — takes an "images" array
+  // of URLs. If a model has no atlasImageEditId, it genuinely doesn't
+  // support reference images on Atlas Cloud (see imageInputs.max in
+  // models/index.js for that entry, which is set to 0 to match).
+  const refImages = Array.isArray(inputs.images) && inputs.images.length
+    ? inputs.images
+    : inputs.image
+    ? [inputs.image]
+    : [];
+  const useEditEndpoint = !isVideo && refImages.length > 0 && model.atlasImageEditId;
+
+  const body = { model: useEditEndpoint ? model.atlasImageEditId : model.id };
 
   if (isVideo) {
     // Wan 2.2/2.7 Spicy and Seedance Spicy all take "image" (first
@@ -462,6 +479,7 @@ async function runAtlasCloud(model, inputs) {
     if (typeof inputs.seed === "number") body.seed = inputs.seed;
   } else {
     body.prompt = inputs.prompt || "";
+    if (useEditEndpoint) body.images = refImages;
     if (inputs.width) body.width = inputs.width;
     if (inputs.height) body.height = inputs.height;
   }

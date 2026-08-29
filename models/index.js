@@ -44,10 +44,18 @@ export const MODELS = {
       imageInputs: { min: 0, max: 0 },
     },
     {
-      id: "black-forest-labs/flux-2-pro",
+      // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate charges
+      // $0.015/run + $0.015/MP in + $0.015/MP out (variable, can exceed
+      // $0.03 easily on larger images). Atlas Cloud lists this exact model
+      // at a flat $0.03/image, no per-megapixel surcharge, no "unit" field
+      // (confirmed flat, not per-second/duration-billed — images are safe
+      // from the per-second trap that bit Seedance). Atlas Cloud is also
+      // the only funded, working provider right now (Replicate is at $0).
+      id: "black-forest-labs/flux-2-pro/text-to-image",
+      atlasImageEditId: "black-forest-labs/flux-2-pro/edit",
       name: "FLUX-2 Pro (Black-Forest-Labs)",
-      provider: "replicate",
-      comingSoon: true,
+      provider: "atlascloud",
+      atlasCloudType: "image",
       nsfw: false,
       locked: false,
       premium: true,
@@ -56,16 +64,19 @@ export const MODELS = {
       imageInputs: { min: 0, max: 8 },
     },
     {
-      id: "google/nano-banana-2",
+      // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate real
+      // cost was $0.067-0.151/image depending on resolution. Atlas Cloud's
+      // equivalent runs $0.04-0.08/image flat, no "unit" field (confirmed
+      // flat, not duration-billed) — same margin logic, lower real cost,
+      // same credits charged to the customer = pure margin improvement.
+      id: "google/nano-banana-2/text-to-image",
+      atlasImageEditId: "google/nano-banana-2/reference-to-image",
       name: "Nano Banana 2 (Google)",
-      provider: "replicate",
-      comingSoon: true,
+      provider: "atlascloud",
+      atlasCloudType: "image",
       nsfw: false,
       locked: false,
       premium: true,
-      // VERIFIED: real cost is $0.067-0.151/image depending on resolution
-      // (confirmed across multiple sources). Was 3 credits, too thin a
-      // margin especially at 4K output — corrected to 5.
       credits: 5,
       description: "Top all-around image model. Multi-image fusion (up to 14 refs), excellent text rendering.",
       imageInputs: { min: 0, max: 14 },
@@ -88,10 +99,14 @@ export const MODELS = {
       imageInputs: { min: 0, max: 0 },
     },
     {
-      id: "black-forest-labs/flux-2-flex",
+      // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate
+      // charges $0.06/MP in + $0.06/MP out (variable). Atlas Cloud: flat
+      // $0.05/image, confirmed no "unit" field (not duration-billed).
+      id: "black-forest-labs/flux-2-flex/text-to-image",
+      atlasImageEditId: "black-forest-labs/flux-2-flex/edit",
       name: "FLUX-2 Flex (Black-Forest-Labs)",
-      provider: "replicate",
-      comingSoon: true,
+      provider: "atlascloud",
+      atlasCloudType: "image",
       nsfw: false,
       locked: false,
       premium: false,
@@ -100,10 +115,14 @@ export const MODELS = {
       imageInputs: { min: 0, max: 8 },
     },
     {
-      id: "bytedance/seedream-5-lite",
+      // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate
+      // $0.035/image vs Atlas Cloud's Seedream v5.0 Lite at $0.032/image
+      // flat (near tie, but Atlas Cloud is the funded/working provider).
+      id: "bytedance/seedream-v5.0-lite",
+      atlasImageEditId: "bytedance/seedream-v5.0-lite/edit",
       name: "Seedream 5 Lite (Bytedance)",
-      provider: "replicate",
-      comingSoon: true,
+      provider: "atlascloud",
+      atlasCloudType: "image",
       nsfw: false,
       locked: false,
       premium: false,
@@ -112,10 +131,13 @@ export const MODELS = {
       imageInputs: { min: 0, max: 4 },
     },
     {
-      id: "bytedance/seedream-4.5",
+      // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate
+      // $0.04/image vs Atlas Cloud $0.036/image flat.
+      id: "bytedance/seedream-v4.5",
+      atlasImageEditId: "bytedance/seedream-v4.5/edit",
       name: "Seedream 4.5 (Bytedance)",
-      provider: "replicate",
-      comingSoon: true,
+      provider: "atlascloud",
+      atlasCloudType: "image",
       nsfw: false,
       locked: false,
       premium: false,
@@ -124,15 +146,21 @@ export const MODELS = {
       imageInputs: { min: 0, max: 15 },
     },
     {
-      id: "bytedance/seedream-3",
-      name: "Seedream 3 (Bytedance)",
-      provider: "replicate",
-      comingSoon: true,
+      // SWITCHED + UPGRADED to Atlas Cloud [pricing audit, Aug 2026]:
+      // Replicate's old Seedream 3 ($0.03/image) has no Atlas Cloud
+      // equivalent — Atlas Cloud only carries the newer Seedream v4
+      // ($0.027/image flat), which is both newer AND cheaper, so this
+      // slot now points at v4 instead of the discontinued v3.
+      id: "bytedance/seedream-v4",
+      atlasImageEditId: "bytedance/seedream-v4/edit",
+      name: "Seedream 4 (Bytedance)",
+      provider: "atlascloud",
+      atlasCloudType: "image",
       nsfw: false,
       locked: false,
       premium: false,
       credits: 2,
-      description: "Older, budget-friendly Seedream version. Solid for simple compositions.",
+      description: "Budget-friendly Seedream version. Solid for simple compositions.",
       imageInputs: { min: 0, max: 0 },
     },
     {
@@ -148,28 +176,39 @@ export const MODELS = {
       imageInputs: { min: 0, max: 4 },
     },
     {
-      id: "ideogram-ai/ideogram-v3-turbo",
-      name: "Ideogram V3 Turbo (Ideogram)",
-      provider: "replicate",
-      comingSoon: true,
+      // SWITCHED + UPGRADED to Atlas Cloud [pricing audit, Aug 2026]:
+      // Replicate $0.03/image vs Atlas Cloud's newer Ideogram v4 Turbo at
+      // $0.008/image flat — dramatically cheaper AND a newer model
+      // version. Atlas Cloud has no reference-image endpoint for
+      // Ideogram (text-to-image only), so imageInputs.max is dropped to
+      // 0 to match real capability rather than silently ignoring an
+      // uploaded reference.
+      id: "ideogram/v4/turbo/text-to-image",
+      name: "Ideogram V4 Turbo (Ideogram)",
+      provider: "atlascloud",
+      atlasCloudType: "image",
       nsfw: false,
       locked: false,
       premium: false,
       credits: 2,
       description: "Best-in-class for text and lettering inside images. Great for logos and signage.",
-      imageInputs: { min: 0, max: 2 },
+      imageInputs: { min: 0, max: 0 },
     },
     {
-      id: "ideogram-ai/ideogram-v2",
-      name: "Ideogram V2 (Ideogram)",
-      provider: "replicate",
-      comingSoon: true,
+      // SWITCHED + UPGRADED to Atlas Cloud [pricing audit, Aug 2026]:
+      // Replicate $0.08/image vs Atlas Cloud's Ideogram v4 Quality at
+      // $0.025/image flat. Same no-reference-image caveat as V4 Turbo
+      // above — imageInputs.max dropped to 0 to match real capability.
+      id: "ideogram/v4/quality/text-to-image",
+      name: "Ideogram V4 Quality (Ideogram)",
+      provider: "atlascloud",
+      atlasCloudType: "image",
       nsfw: false,
       locked: false,
       premium: false,
       credits: 2,
-      description: "Older Ideogram version. Still strong for typography-heavy designs.",
-      imageInputs: { min: 0, max: 1 },
+      description: "Strong typography-heavy designs with richer detail than Turbo.",
+      imageInputs: { min: 0, max: 0 },
     },
     {
       id: "minimax/image-01",
@@ -241,9 +280,15 @@ export const MODELS = {
       // VERIFIED: DomoAI docs confirm $0.10/sec for animate-2.4-advanced.
       // Pricing: $0.10 × 2.5 markup / $0.05 per credit = 5 credits/sec.
       // Min useful duration 5s = 25 credits.
+      // GATED [Aug 29 2026]: DOMOAI_API_KEY is not set in Vercel at all —
+      // checked directly, not present. Every real customer call to this
+      // model currently throws "DOMOAI_API_KEY is not set" instantly.
+      // Re-gate comingSoon: false only after the key is added AND the
+      // DomoAI account is funded (their real API has no free tier).
       id: "domoai/animate-2.4-advanced",
       name: "Animate 2.4 Advanced (DomoAI)",
       provider: "domoai",
+      comingSoon: true,
       domoAICategory: "image2video",
       domoAIModel: "animate-2.4-advanced",
       nsfw: false,
@@ -259,9 +304,12 @@ export const MODELS = {
     {
       // VERIFIED: DomoAI docs confirm $0.10/sec for t2v-2.4-advanced.
       // Pricing: 5 credits/sec. Min useful duration 5s = 25 credits.
+      // GATED [Aug 29 2026]: same DOMOAI_API_KEY-not-set issue, see
+      // animate-2.4-advanced above.
       id: "domoai/t2v-2.4-advanced",
       name: "T2V 2.4 Advanced (DomoAI)",
       provider: "domoai",
+      comingSoon: true,
       domoAICategory: "text2video",
       domoAIModel: "t2v-2.4-advanced",
       nsfw: false,
@@ -277,9 +325,12 @@ export const MODELS = {
     {
       // VERIFIED: DomoAI docs confirm $0.04/sec for animate-2.4-faster.
       // Pricing: $0.04 × 2.5 / $0.05 = 2 credits/sec. 5s = 10 credits.
+      // GATED [Aug 29 2026]: same DOMOAI_API_KEY-not-set issue, see
+      // animate-2.4-advanced above.
       id: "domoai/animate-2.4-faster",
       name: "Animate 2.4 Fast (DomoAI)",
       provider: "domoai",
+      comingSoon: true,
       domoAICategory: "image2video",
       domoAIModel: "animate-2.4-faster",
       nsfw: false,
@@ -295,9 +346,12 @@ export const MODELS = {
     {
       // VERIFIED: DomoAI docs confirm $0.04/sec for t2v-2.4-faster.
       // Pricing: 2 credits/sec. 5s = 10 credits.
+      // GATED [Aug 29 2026]: same DOMOAI_API_KEY-not-set issue, see
+      // animate-2.4-advanced above.
       id: "domoai/t2v-2.4-faster",
       name: "T2V 2.4 Fast (DomoAI)",
       provider: "domoai",
+      comingSoon: true,
       domoAICategory: "text2video",
       domoAIModel: "t2v-2.4-faster",
       nsfw: false,
@@ -324,9 +378,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 1 },
     },
     {
-      id: "google/veo-3.1",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: matches Replicate's audio-on rate almost exactly. base_price $0.20/s listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "google/veo-3.1" (Replicate, $0 balance).
+      id: "google/veo3.1/text-to-video",
       name: "VEO 3.1 (Google)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -350,9 +406,11 @@ export const MODELS = {
       imageInputs: { min: 1, max: 1 },
     },
     {
-      id: "xai/grok-imagine-video",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: same headline number as Replicate — if flat here, ~5x cheaper. base_price $0.05 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "xai/grok-imagine-video" (Replicate, $0 balance).
+      id: "xai/grok-imagine-video/text-to-video",
       name: "Grok Imagine Video (XAI)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -363,9 +421,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 1 },
     },
     {
-      id: "google/veo-2",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: VEO 2 has no direct Atlas Cloud match; substituting VEO 3.1 Lite, a newer/cheaper tier. base_price $0.05 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "google/veo-2" (Replicate, $0 balance).
+      id: "google/veo3.1-lite/text-to-video",
       name: "VEO 2 (Google)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -376,9 +436,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 1 },
     },
     {
-      id: "kwaivgi/kling-v3-video",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: cheaper even flat-vs-flat than Replicate's per-second rate. base_price $0.071 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "kwaivgi/kling-v3-video" (Replicate, $0 balance).
+      id: "kwaivgi/kling-v3.0-std/text-to-video",
       name: "Kling V3 Video (Kwaivgi)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -389,9 +451,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 2 },
     },
     {
-      id: "kwaivgi/kling-v3-omni-video",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: same Kling V3.0 Std family as kling-v3-video. base_price $0.071 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "kwaivgi/kling-v3-omni-video" (Replicate, $0 balance).
+      id: "kwaivgi/kling-v3.0-std/text-to-video",
       name: "Kling V3 Omni Video (Kwaivgi)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -402,9 +466,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 4 },
     },
     {
-      id: "kwaivgi/kling-v2.5-turbo-pro",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: if flat, ~6x cheaper than Replicate's $0.07/s. base_price $0.06 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "kwaivgi/kling-v2.5-turbo-pro" (Replicate, $0 balance).
+      id: "kwaivgi/kling-v2.5-turbo-pro/text-to-video",
       name: "Kling V2.5 Turbo Pro (Kwaivgi)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -415,9 +481,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 3 },
     },
     {
-      id: "bytedance/seedance-2.0",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: likely cheaper than Replicate's ~$0.18/s either way. base_price $0.112 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "bytedance/seedance-2.0" (Replicate, $0 balance).
+      id: "bytedance/seedance-2.0/text-to-video",
       name: "Seedance 2.0 (Bytedance)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -428,9 +496,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 4 },
     },
     {
-      id: "bytedance/seedance-1.5-pro",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: CAUTION: if per-second, MORE expensive than Replicate's $0.026/s — do not assume, test first. base_price $0.047 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "bytedance/seedance-1.5-pro" (Replicate, $0 balance).
+      id: "bytedance/seedance-v1.5-pro/text-to-video",
       name: "Seedance 1.5 Pro (Bytedance)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -454,9 +524,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 2 },
     },
     {
-      id: "bytedance/seedance-1-lite",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: different tier than Replicate's Seedance 1 Lite, verify equivalence before trusting. base_price $0.009 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "bytedance/seedance-1-lite" (Replicate, $0 balance).
+      id: "bytedance/seedance-v1-pro-fast/text-to-video",
       name: "Seedance 1 Lite (Bytedance)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -467,9 +539,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 3 },
     },
     {
-      id: "wan-video/wan-2.7-t2v",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: same number both places — needs a real test to know the winner. base_price $0.10 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "wan-video/wan-2.7-t2v" (Replicate, $0 balance).
+      id: "alibaba/wan-2.7/text-to-video",
       name: "WAN 2.7 T2V (WAN-Video)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -480,9 +554,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 0 },
     },
     {
-      id: "wan-video/wan-2.5-t2v-fast",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: roughly a wash vs Replicate either way. base_price $0.071 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "wan-video/wan-2.5-t2v-fast" (Replicate, $0 balance).
+      id: "alibaba/wan-2.5/text-to-video-fast",
       name: "WAN 2.5 T2V Fast (WAN-Video)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -506,9 +582,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 0 },
     },
     {
-      id: "wan-video/wan-2.5-i2v-fast",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: roughly a wash vs Replicate either way. base_price $0.071 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "wan-video/wan-2.5-i2v-fast" (Replicate, $0 balance).
+      id: "alibaba/wan-2.5/image-to-video-fast",
       name: "WAN 2.5 I2V Fast (WAN-Video)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -597,9 +675,11 @@ export const MODELS = {
       imageInputs: { min: 1, max: 1 },
     },
     {
-      id: "alibaba/happyhorse-1.0",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: SWITCH+UPGRADE: newer 1.1, half the price of 1.0 ($0.14->$0.07), Replicate doesn't offer 1.1. base_price $0.07 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "alibaba/happyhorse-1.0" (Replicate, $0 balance).
+      id: "alibaba/happyhorse-1.1/text-to-video",
       name: "HappyHorse 1.0 (Alibaba)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -610,9 +690,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 1 },
     },
     {
-      id: "veed/fabric-1.0",
+      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: close to Replicate's $0.08/s, could go either way, needs test. base_price $0.088 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "veed/fabric-1.0" (Replicate, $0 balance).
+      id: "veed/fabric-1.0/image-to-video",
       name: "Fabric 1.0 (VEED)",
-      provider: "replicate",
+      provider: "atlascloud",
+      atlasCloudType: "video",
       comingSoon: true,
       nsfw: false,
       locked: false,
@@ -837,9 +919,12 @@ export const MODELS = {
       // Pricing: $0.06 × 2.5 / $0.05 = 3 credits/sec. 5s min = 15 credits.
       // Supports up to 60s. Takes face photo + audio → talking video.
       // Same inputs as other lipsync models (face image + audio file).
+      // GATED [Aug 29 2026]: DOMOAI_API_KEY is not set in Vercel — same
+      // issue as the DomoAI video models above.
       id: "domoai/talking-avatar-v1",
       name: "Talking Avatar (DomoAI)",
       provider: "domoai",
+      comingSoon: true,
       domoAICategory: "talking-avatar",
       domoAIModel: "talking-avatar-v1",
       nsfw: false,
