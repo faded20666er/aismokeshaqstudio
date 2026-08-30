@@ -175,13 +175,26 @@ export default function DialogueTimeline({
         </div>
 
         {audioMode === "tts" ? (
-          <input
-            type="text"
-            className="dialogue-text-input"
-            placeholder="What does this character say?"
-            value={draftText}
-            onChange={(e) => setDraftText(e.target.value)}
-          />
+          <>
+            <input
+              type="text"
+              className="dialogue-text-input"
+              placeholder='What does this character say? Try: [excited] This is amazing!'
+              value={draftText}
+              onChange={(e) => setDraftText(e.target.value)}
+            />
+            {/* ElevenLabs' v3 voice model (see pages/api/voice.js and
+                pages/api/timeline-generate.js) reads bracketed cues
+                like [excited], [whispers], [laughs], [sad] right out
+                of the typed line and performs them — no separate
+                "emotion" control needed, it's just part of the text.
+                Surfaced here since customers have no way to discover
+                this otherwise. */}
+            <p className="dialogue-tts-hint">
+              Tip: bracketed cues like [whispers], [laughs], [angry], or [sighs] change how the
+              line is performed.
+            </p>
+          </>
         ) : (
           <input
             type="file"
@@ -371,6 +384,12 @@ export default function DialogueTimeline({
         .timeline-empty-note {
           font-size: 0.85rem;
           opacity: 0.6;
+        }
+
+        .dialogue-tts-hint {
+          font-size: 0.72rem;
+          opacity: 0.55;
+          margin: 0;
         }
 
         .timeline-block {

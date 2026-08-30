@@ -110,7 +110,12 @@ async function resolveCharacterAudio(character, blocks, userId) {
               "xi-api-key": apiKey,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ text: block.text, model_id: "eleven_multilingual_v2" }),
+            // eleven_v3 (not eleven_multilingual_v2) — see the comment
+            // on the equivalent call in pages/api/voice.js for why:
+            // more expressive, not plan-gated, and reads bracketed
+            // audio-tag cues ([excited], [whispers], ...) typed right
+            // into the dialogue line.
+            body: JSON.stringify({ text: block.text, model_id: "eleven_v3" }),
           }
         );
 

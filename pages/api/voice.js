@@ -33,7 +33,19 @@ async function runElevenLabsDirect(voiceId, text, apiKey) {
       },
       body: JSON.stringify({
         text,
-        model_id: "eleven_multilingual_v2",
+        // SWITCHED [Aug 30 2026] from eleven_multilingual_v2 to
+        // eleven_v3 — ElevenLabs' current most-expressive model.
+        // Confirmed via their own docs (elevenlabs.io/docs/overview/
+        // models): generally available, NOT plan-gated (works on the
+        // same free-tier key we already use here), and it reads
+        // bracketed audio-tag cues typed right into `text` — [excited],
+        // [whispers], [laughs], [sad], etc. — and performs them. This
+        // is what actually answers "voices with emotion" — v2 never
+        // supported that regardless of which voice was picked. Costs
+        // more credits per character than v2; worth watching usage
+        // after this ships. See components/DialogueTimeline.jsx for
+        // the matching UI hint that tells customers these tags exist.
+        model_id: "eleven_v3",
       }),
     }
   );
