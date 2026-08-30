@@ -25,7 +25,7 @@ import { pollJob } from "../utils/pollJob";
 const MAX_CLIP_SECONDS = 60;
 
 export default function TimelinePage() {
-  const [scene, setScene] = useState({ previewUrl: null, mediaType: null, url: null });
+  const [scene, setScene] = useState({ previewUrl: null, mediaType: null, url: null, width: null, height: null });
   const [characters, setCharacters] = useState([]);
   const [blocks, setBlocks] = useState([]);
   const [clipSeconds, setClipSeconds] = useState(15);
@@ -88,7 +88,12 @@ export default function TimelinePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
-          scene: { url: scene.url, mediaType: scene.mediaType },
+          // width/height: real pixel dimensions captured client-side at
+          // upload time (see components/SceneUpload.jsx) — needed
+          // server-side for the 3rd-character mask pass without ever
+          // having to sharp-decode a video file (sharp can't; see
+          // pages/api/timeline-generate.js).
+          scene: { url: scene.url, mediaType: scene.mediaType, width: scene.width, height: scene.height },
           characters: characters.map((c) => ({
             id: c.id,
             name: c.name,

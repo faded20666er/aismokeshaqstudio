@@ -36,8 +36,28 @@ export default function SceneUpload({ scene, onChange }) {
 
     // Immediate local preview while the real upload happens in the
     // background — same pattern as the old CharacterSetup component.
+    // width/height start null and get filled in by the preview
+    // media's onLoad/onLoadedMetadata below (real pixel dimensions,
+    // needed server-side for mask generation — see the note there).
+    //
+    // NOTE: every onChange call below uses the FUNCTIONAL setState
+    // form (onChange is setScene from pages/timeline.jsx), not a plain
+    // object built from the `scene` closure variable. The dimension
+    // callback can fire at any point during the upload (it's a local,
+    // near-instant browser decode racing an async network upload), so
+    // building each update from the CURRENT state rather than the
+    // scene value captured when handleFile started is what keeps
+    // width/height from getting silently clobbered by whichever
+    // update lands second.
     const previewUrl = URL.createObjectURL(file);
-    onChange({ ...scene, previewUrl, mediaType: isVideo ? "video" : "image", url: null });
+    onChange((prev) => ({
+      ...prev,
+      previewUrl,
+      mediaType: isVideo ? "video" : "image",
+      url: null,
+      width: null,
+      height: null,
+    }));
 
     try {
       const blob = await upload(file.name, file, {
@@ -46,22 +66,42 @@ export default function SceneUpload({ scene, onChange }) {
         onUploadProgress: ({ percentage }) => setProgress(percentage),
       });
 
-      onChange({
-        ...scene,
+      onChange((prev) => ({
+        ...prev,
         previewUrl,
         mediaType: isVideo ? "video" : "image",
         url: blob.url,
-      });
+      }));
     } catch (err) {
       setError(err.message || "Upload failed");
-      onChange({ ...scene, previewUrl: null, mediaType: null, url: null });
+      onChange((prev) => ({ ...prev, previewUrl: null, mediaType: null, url: null, width: null, height: null }));
     } finally {
       setUploading(false);
     }
   }
 
+  // Real pixel dimensions of the uploaded media, captured directly from
+  // the browser's own decode of the file (video's intrinsic
+  // videoWidth/videoHeight, or an image's naturalWidth/naturalHeight).
+  //
+  // WHY THIS EXISTS: the Multi-Character Timeline's 3rd-character pass
+  // needs real pixel dimensions to build a mask image (see
+  // utils/generateMask.js's generateMaskFromBox). That used to be
+  // fetched server-side via sharp(buffer).metadata() — which works
+  // fine for a real image, but throws "Input buffer contains
+  // unsupported image format" when the scene is a VIDEO, since sharp
+  // is an image library and cannot decode video bytes at all. Capturing
+  // real dimensions here, once, at upload time, and sending them along
+  // with the scene means the backend never needs to sharp-decode a
+  // video file. See pages/api/timeline-generate.js for the consuming
+  // side of this fix.
+  function handleMediaDimensions(width, height) {
+    if (!width || !height) return;
+    onChange((prev) => ({ ...prev, width, height }));
+  }
+
   function handleRemove() {
-    onChange({ previewUrl: null, mediaType: null, url: null });
+    onChange({ previewUrl: null, mediaType: null, url: null, width: null, height: null });
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -88,9 +128,20 @@ export default function SceneUpload({ scene, onChange }) {
       {scene?.previewUrl && (
         <div className="scene-preview">
           {scene.mediaType === "video" ? (
-            <video src={scene.previewUrl} className="scene-preview-media" controls muted />
+            <video
+              src={scene.previewUrl}
+              className="scene-preview-media"
+              controls
+              muted
+              onLoadedMetadata={(e) => handleMediaDimensions(e.target.videoWidth, e.target.videoHeight)}
+            />
           ) : (
-            <img src={scene.previewUrl} alt="Scene" className="scene-preview-media" />
+            <img
+              src={scene.previewUrl}
+              alt="Scene"
+              className="scene-preview-media"
+              onLoad={(e) => handleMediaDimensions(e.target.naturalWidth, e.target.naturalHeight)}
+            />
           )}
 
           {uploading && (

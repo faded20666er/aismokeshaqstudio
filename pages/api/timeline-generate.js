@@ -185,7 +185,32 @@ async function runTimelineGeneration({ scene, characters, blocks, soloModel, mul
     throw new Error(`Missing dialogue for "${thirdChar.name}"`);
   }
 
-  const { width, height } = await getImageDimensions(scene.url);
+  // Real pixel dimensions for the mask. Prefer what the browser
+  // captured at upload time (scene.width/height — see
+  // components/SceneUpload.jsx) over fetching + decoding scene.url
+  // here. That matters specifically for VIDEO scenes: this used to
+  // always call getImageDimensions(scene.url), which runs the fetched
+  // bytes through sharp — an IMAGE library. For a real photo that
+  // works fine; for a video file it throws "Input buffer contains
+  // unsupported image format" every single time, since sharp cannot
+  // decode video at all. A real customer hit exactly this crash on a
+  // video scene + 3-character timeline [Aug 30 2026].
+  let width = scene.width;
+  let height = scene.height;
+  if (!width || !height) {
+    if (scene.mediaType === "video") {
+      // No client-supplied dimensions and sharp cannot read a video —
+      // fail clearly instead of crashing inside sharp with a confusing
+      // error. Re-uploading the scene (current SceneUpload.jsx) always
+      // captures width/height, so this should only happen for an old
+      // scene selection made before this fix shipped.
+      throw new Error(
+        "Missing video dimensions for the scene — please re-upload the scene video and try again."
+      );
+    }
+    ({ width, height } = await getImageDimensions(scene.url));
+  }
+
   const maskUrl = await generateMaskFromBox(thirdChar.box, width, height);
 
   const passTwoOutput = await runModel(layerModel, {
