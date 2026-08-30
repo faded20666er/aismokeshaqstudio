@@ -14,15 +14,19 @@
 
 import { useRef, useState } from "react";
 
-// Capped at 3 for launch, not 5. The underlying model (InfiniteTalk)
-// only natively supports 2 simultaneous speakers per call via bounding
-// box + audio track pairs. A 3rd character requires a second
-// sequential pass layered onto the first pass's output, which carries
-// real risk of visual artifacts on the already-synced faces. Starting
-// conservative; raise this once live testing confirms pass-3 quality
-// holds up. See pages/api/timeline-generate.js for the generation
-// logic this constrains.
-const MAX_CHARACTERS = 3;
+// Capped at 4 for launch, not higher. The underlying model
+// (InfiniteTalk) only natively supports 2 simultaneous speakers per
+// call — characters get grouped into PAIRS and chained: pass 1 syncs
+// characters 1 & 2 natively, pass 2 layers characters 3 & 4 onto pass
+// 1's output using a masked dual pass (confirmed real and supported
+// by WaveSpeed's own API — see pages/api/timeline-generate.js). Every
+// extra pair means a full extra WaveSpeed video call inside the same
+// background job, and this pairing approach hasn't been confirmed
+// working in production even once yet — starting conservative at 4
+// (2 passes), same pass count the previous 3-character cap already
+// used. Raise this only once live testing confirms both quality and
+// that jobs reliably finish before Vercel's real duration ceiling.
+const MAX_CHARACTERS = 4;
 const BOX_COLORS = ["#ff8a2a", "#f3d98b", "#7dd3fc", "#86efac", "#f9a8d4"];
 
 export default function CharacterTagger({ scene, characters, onChange }) {

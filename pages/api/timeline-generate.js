@@ -15,36 +15,50 @@
 //     public API) that accepts more than 2 simultaneous speakers in a
 //     single call. Every "multi-character" product on the market
 //     (Dzine, HeyGen's app, Avatalk) achieves 3+ by layering
-//     single/dual-speaker passes sequentially onto the same video.
+//     single/dual-speaker passes sequentially onto the same video —
+//     same approach Runway/Domo/others take, they just don't surface
+//     the pass structure to the user.
 //
-//   - For 2 characters: ONE call to infinitetalk/multi (image or
-//     video + left_audio + right_audio + order). This is a genuine
-//     native dual-speaker mode — bounding boxes are NOT needed here,
-//     the model auto-detects left/right position in the frame.
+//   - Characters are sorted left-to-right and grouped into PAIRS.
+//     Pass 1 is ONE call to infinitetalk/multi (image or video +
+//     left_audio + right_audio + order) on the ORIGINAL scene — a
+//     genuine native dual-speaker mode, bounding boxes aren't needed
+//     for this pass, the model auto-detects left/right position.
 //
-//   - For a 3rd character: a SECOND pass using infinitetalk
-//     video-to-video on the pass-1 OUTPUT, with a mask_image that
-//     only exposes character 3's tagged face region — this protects
-//     characters 1 & 2's already-synced faces from being re-touched.
+//   - PAIRING [Aug 30 2026]: every pass after the first layers the
+//     NEXT pair of characters onto the previous pass's video output,
+//     using infinitetalk/video-to-video-multi (left_audio + right_audio
+//     + a mask_image covering BOTH of that pair's tagged regions) —
+//     confirmed via WaveSpeed's own docs that mask_image really is
+//     supported on the dual endpoint, not just the solo one (see
+//     utils/runModel.js). A leftover single character at the end (odd
+//     character count) still gets the older masked SOLO pass. This
+//     replaces the old hard "3 characters max, pass 2 is always a
+//     single leftover character" design — a straight generalization,
+//     not a rewrite of the underlying, already-shipped mechanism.
 //
-// Capped at 3 characters for launch (not 5) specifically because this
-// sequential-layering approach is unverified in production — pass 2
-// carries real risk of visible seams/artifacts where the mask
-// boundary sits. Raise MAX_CHARACTERS only after live testing
-// confirms quality holds up; see CharacterTagger.jsx for the matching
-// UI-side cap.
+// Capped at MAX_CHARACTERS = 4 for now (2 passes total, same pass
+// COUNT as the previous 3-character cap already shipped) rather than
+// something larger — every extra pair adds a full extra WaveSpeed
+// video call inside the SAME background job invocation (see
+// utils/runModelAsync.js's honest note on Vercel's real duration
+// ceiling), and this pairing approach hasn't been confirmed working
+// in production even once yet. Raise MAX_CHARACTERS further only
+// after live testing confirms both quality AND that jobs reliably
+// finish inside that ceiling; see CharacterTagger.jsx for the
+// matching UI-side cap.
 
 import { findModelById } from "../../models/index.js";
 import { checkCredits } from "../../middleware/creditCheck.js";
 import { createJob, generateJobId } from "../../middleware/jobStore.js";
 import { startJobInBackground } from "../../utils/runModelAsync.js";
 import { runModel } from "../../utils/runModel.js";
-import { generateMaskFromBox, getImageDimensions } from "../../utils/generateMask.js";
+import { generateMaskFromBoxes, getImageDimensions } from "../../utils/generateMask.js";
 import { getByokKey } from "../../middleware/byokStore.js";
 import { getUserSettings } from "../../middleware/userSettingsStore.js";
 import { hasTierAccess } from "../../middleware/tierCheck.js";
 
-const MAX_CHARACTERS = 3;
+const MAX_CHARACTERS = 4;
 const FALLBACK_TTS_MODEL_ID = "elevenlabs/v3";
 
 export const config = {
@@ -129,10 +143,13 @@ async function resolveCharacterAudio(character, blocks, userId) {
 }
 
 // The full multi-pass generation logic, run as a single customRunner
-// inside the background job — covers solo, 2-character, and
-// 3-character (with masked layering) paths exactly as before, just
-// moved out of the synchronous request/response cycle.
-async function runTimelineGeneration({ scene, characters, blocks, soloModel, multiModel, layerModel, userId }) {
+// inside the background job. Groups characters into pairs and chains
+// one pass per pair (pass 1 native-dual on the original scene, every
+// pass after that a masked dual pass on the PREVIOUS pass's video
+// output); an odd leftover character at the end gets a masked SOLO
+// pass, same mechanism the old 3-character path already used and
+// shipped. See the file-level comment above for the real API basis.
+async function runTimelineGeneration({ scene, characters, blocks, soloModel, multiModel, pairLayerModel, layerModel, userId }) {
   if (characters.length === 1) {
     const audioUrl = await resolveCharacterAudio(characters[0], blocks, userId);
     if (!audioUrl) {
@@ -151,8 +168,28 @@ async function runTimelineGeneration({ scene, characters, blocks, soloModel, mul
   }
 
   const sorted = [...characters].sort((a, b) => (a.box?.left ?? 0) - (b.box?.left ?? 0));
-  const [leftChar, rightChar, thirdChar] = sorted;
 
+  // Real pixel dimensions, needed for any pass beyond the first (mask
+  // building). Prefer what the browser captured at upload time
+  // (scene.width/height — see components/SceneUpload.jsx) over
+  // fetching + decoding scene.url here. That matters specifically for
+  // VIDEO scenes: fetching + sharp-decoding scene.url only works for a
+  // real photo — sharp is an image library and throws "Input buffer
+  // contains unsupported image format" on video bytes every time. A
+  // real customer hit exactly this crash on a video scene + 3rd
+  // character before this was fixed [Aug 30 2026].
+  async function resolveDimensions() {
+    if (scene.width && scene.height) return { width: scene.width, height: scene.height };
+    if (scene.mediaType === "video") {
+      throw new Error(
+        "Missing video dimensions for the scene — please re-upload the scene video and try again."
+      );
+    }
+    return getImageDimensions(scene.url);
+  }
+
+  // Pass 1: the first pair, natively dual-synced on the original scene.
+  const [leftChar, rightChar] = sorted;
   const [leftAudio, rightAudio] = await Promise.all([
     resolveCharacterAudio(leftChar, blocks, userId),
     resolveCharacterAudio(rightChar, blocks, userId),
@@ -174,53 +211,62 @@ async function runTimelineGeneration({ scene, characters, blocks, soloModel, mul
     prompt: "",
   });
 
-  const passOneUrl = Array.isArray(passOneOutput) ? passOneOutput[0] : passOneOutput;
+  let currentVideoUrl = Array.isArray(passOneOutput) ? passOneOutput[0] : passOneOutput;
 
-  if (!thirdChar) {
-    return passOneUrl;
-  }
+  // Remaining characters (3rd, 4th, ...) get grouped into pairs and
+  // layered one pass at a time, each pass masked to protect everyone
+  // already synced in earlier passes.
+  const remaining = sorted.slice(2);
 
-  const thirdAudio = await resolveCharacterAudio(thirdChar, blocks, userId);
-  if (!thirdAudio) {
-    throw new Error(`Missing dialogue for "${thirdChar.name}"`);
-  }
+  for (let i = 0; i < remaining.length; i += 2) {
+    const pairChars = remaining.slice(i, i + 2);
+    const { width, height } = await resolveDimensions();
+    const maskUrl = await generateMaskFromBoxes(pairChars.map((c) => c.box), width, height);
 
-  // Real pixel dimensions for the mask. Prefer what the browser
-  // captured at upload time (scene.width/height — see
-  // components/SceneUpload.jsx) over fetching + decoding scene.url
-  // here. That matters specifically for VIDEO scenes: this used to
-  // always call getImageDimensions(scene.url), which runs the fetched
-  // bytes through sharp — an IMAGE library. For a real photo that
-  // works fine; for a video file it throws "Input buffer contains
-  // unsupported image format" every single time, since sharp cannot
-  // decode video at all. A real customer hit exactly this crash on a
-  // video scene + 3-character timeline [Aug 30 2026].
-  let width = scene.width;
-  let height = scene.height;
-  if (!width || !height) {
-    if (scene.mediaType === "video") {
-      // No client-supplied dimensions and sharp cannot read a video —
-      // fail clearly instead of crashing inside sharp with a confusing
-      // error. Re-uploading the scene (current SceneUpload.jsx) always
-      // captures width/height, so this should only happen for an old
-      // scene selection made before this fix shipped.
-      throw new Error(
-        "Missing video dimensions for the scene — please re-upload the scene video and try again."
-      );
+    if (pairChars.length === 2) {
+      const [pairLeft, pairRight] = pairChars;
+      const [pairLeftAudio, pairRightAudio] = await Promise.all([
+        resolveCharacterAudio(pairLeft, blocks, userId),
+        resolveCharacterAudio(pairRight, blocks, userId),
+      ]);
+
+      if (!pairLeftAudio || !pairRightAudio) {
+        throw new Error(
+          `Missing dialogue for "${!pairLeftAudio ? pairLeft.name : pairRight.name}" — every character needs at least one line.`
+        );
+      }
+
+      const passOutput = await runModel(pairLayerModel, {
+        video: currentVideoUrl,
+        leftAudio: pairLeftAudio,
+        rightAudio: pairRightAudio,
+        order: "meanwhile",
+        maskImage: maskUrl,
+        prompt: "",
+      });
+
+      currentVideoUrl = Array.isArray(passOutput) ? passOutput[0] : passOutput;
+    } else {
+      // Odd character left over at the end — same masked SOLO pass
+      // the original 3-character path used.
+      const [soloChar] = pairChars;
+      const soloAudio = await resolveCharacterAudio(soloChar, blocks, userId);
+      if (!soloAudio) {
+        throw new Error(`Missing dialogue for "${soloChar.name}"`);
+      }
+
+      const passOutput = await runModel(layerModel, {
+        video: currentVideoUrl,
+        audio: soloAudio,
+        maskImage: maskUrl,
+        prompt: "",
+      });
+
+      currentVideoUrl = Array.isArray(passOutput) ? passOutput[0] : passOutput;
     }
-    ({ width, height } = await getImageDimensions(scene.url));
   }
 
-  const maskUrl = await generateMaskFromBox(thirdChar.box, width, height);
-
-  const passTwoOutput = await runModel(layerModel, {
-    video: passOneUrl,
-    audio: thirdAudio,
-    maskImage: maskUrl,
-    prompt: "",
-  });
-
-  return Array.isArray(passTwoOutput) ? passTwoOutput[0] : passTwoOutput;
+  return currentVideoUrl;
 }
 
 export default async function handler(req, res) {
@@ -270,16 +316,39 @@ export default async function handler(req, res) {
 
     const layerModelId = res480 ? "wavespeed-ai/infinitetalk-v2v-480p" : "wavespeed-ai/infinitetalk-v2v";
 
+    // Pass-2+ pairs always operate on the PREVIOUS pass's video output
+    // (regardless of whether the original scene was a photo or video),
+    // so this is always the video-to-video multi variant.
+    const pairLayerModelId = res480
+      ? "wavespeed-ai/infinitetalk-multi-v2v-480p"
+      : "wavespeed-ai/infinitetalk-multi-v2v";
+
     const soloModel = findModelById(soloModelId);
     const multiModel = findModelById(multiModelId);
+    const pairLayerModel = findModelById(pairLayerModelId);
     const layerModel = findModelById(layerModelId);
 
-    if (!soloModel || !multiModel || !layerModel) {
+    if (!soloModel || !multiModel || !pairLayerModel || !layerModel) {
       return res.status(500).json({ error: "Internal model configuration error" });
     }
 
-    const modelsInPlay =
-      characters.length === 1 ? [soloModel] : characters.length === 2 ? [multiModel] : [multiModel, layerModel];
+    // Mirrors runTimelineGeneration's own pairing loop just to know
+    // which models are actually going to be called, for the NSFW/tier
+    // gate checks and the cost estimate below — characters beyond the
+    // first 2 are grouped into pairs (pairLayerModel), with a leftover
+    // odd character getting a solo masked pass (layerModel).
+    const extraPassCount = Math.max(0, characters.length - 2);
+    const fullPairPasses = Math.floor(extraPassCount / 2);
+    const hasOddLeftover = extraPassCount % 2 === 1;
+
+    const modelsInPlay = [];
+    if (characters.length === 1) {
+      modelsInPlay.push(soloModel);
+    } else {
+      modelsInPlay.push(multiModel);
+      for (let i = 0; i < fullPairPasses; i++) modelsInPlay.push(pairLayerModel);
+      if (hasOddLeftover) modelsInPlay.push(layerModel);
+    }
 
     const blockedModel = modelsInPlay.find((m) => m.nsfw && m.locked && !nsfwEnabled);
     if (blockedModel) {
@@ -288,10 +357,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // Tier-gated models — see middleware/tierCheck.js. The Timeline's
-    // 3 InfiniteTalk model ids never set minTier today, but this closes
-    // the gap so one could be added later without a silent bypass here
-    // (mirrors generate.js/lipsync.js/voice.js).
+    // Tier-gated models — see middleware/tierCheck.js. None of the
+    // Timeline's InfiniteTalk model ids set minTier today, but this
+    // closes the gap so one could be added later without a silent
+    // bypass here (mirrors generate.js/lipsync.js/voice.js).
     const tierBlockedModel = modelsInPlay.find((m) => m.minTier);
     if (tierBlockedModel) {
       const { tier: userTier } = await getUserSettings(userId);
@@ -304,14 +373,9 @@ export default async function handler(req, res) {
 
     const perSegment = (m) => Math.max(m.credits, Math.ceil(m.creditsPerSecond * seconds));
 
-    let totalCost;
-    if (characters.length === 1) {
-      totalCost = perSegment(soloModel);
-    } else if (characters.length === 2) {
-      totalCost = perSegment(multiModel);
-    } else {
-      totalCost = perSegment(multiModel) + perSegment(layerModel);
-    }
+    // One real pass per entry in modelsInPlay — see the pairing note
+    // above it.
+    const totalCost = modelsInPlay.reduce((sum, m) => sum + perSegment(m), 0);
 
     const hasCredits = await checkCredits(userId, totalCost);
     if (!hasCredits) {
@@ -335,7 +399,16 @@ export default async function handler(req, res) {
         category: "timeline",
         prompt: characters.map((c) => c.name).join(", "),
         customRunner: () =>
-          runTimelineGeneration({ scene, characters, blocks, soloModel, multiModel, layerModel, userId }),
+          runTimelineGeneration({
+            scene,
+            characters,
+            blocks,
+            soloModel,
+            multiModel,
+            pairLayerModel,
+            layerModel,
+            userId,
+          }),
       }
     );
 
@@ -343,7 +416,7 @@ export default async function handler(req, res) {
       success: true,
       jobId,
       creditsNeeded: totalCost,
-      passCount: characters.length > 2 ? 2 : 1,
+      passCount: modelsInPlay.length,
     });
   } catch (err) {
     console.error("timeline-generate.js error:", err);

@@ -1,16 +1,17 @@
 // pages/timeline.jsx
 //
 // The Multi-Character Timeline: upload ONE shared scene (photo or
-// video), draw bounding boxes to tag up to 3 characters in it, build a
+// video), draw bounding boxes to tag up to 4 characters in it, build a
 // shared dialogue timeline (audio upload or TTS per line, gaps
 // allowed), set the total clip length, then generate one scene video.
 //
 // Real architecture (no model anywhere supports more than 2
 // simultaneous speakers per call — verified against WaveSpeed's live
-// API docs): 1-2 characters = one infinitetalk/multi call. A 3rd
-// character is layered on top via a second, masked video-to-video
-// pass that only animates that character's tagged face region,
-// protecting characters 1 & 2's already-synced faces. See
+// API docs): 1-2 characters = one infinitetalk/multi call. Characters
+// beyond the first 2 are grouped into pairs and layered on, one masked
+// pass per pair — WaveSpeed's own docs confirm the masked layering
+// pass genuinely supports 2 speakers at once (not just 1), so 4
+// characters costs the same 2 passes 3 characters used to. See
 // pages/api/timeline-generate.js for the full generation logic and
 // research notes.
 
@@ -50,28 +51,38 @@ export default function TimelinePage() {
   // exactly (see pages/api/timeline-generate.js) so the number shown
   // here before generating is what actually gets charged.
   //   1 character  -> one solo-rate pass
-  //   2 characters -> one multi-rate pass
-  //   3 characters -> one multi-rate pass + one solo-rate layering pass
-  const estimatedCredits = useMemo(() => {
-    const multiModelId =
-      resolution === "720p" ? "wavespeed-ai/infinitetalk-multi" : "wavespeed-ai/infinitetalk-multi-480p";
-    const soloModelId =
-      resolution === "720p" ? "wavespeed-ai/infinitetalk" : "wavespeed-ai/infinitetalk-480p";
+  //   2 characters -> one multi-rate (dual) pass
+  //   3+ characters -> one multi-rate pass, then characters 3/4, 5/6...
+  //                    grouped into pairs, each pair one masked
+  //                    pair-rate pass; an odd leftover character gets
+  //                    one masked solo-rate pass
+  const passCount = useMemo(() => {
+    if (characters.length <= 1) return characters.length; // 0 or 1
+    const extra = characters.length - 2;
+    return 1 + Math.ceil(extra / 2);
+  }, [characters.length]);
 
-    const multiModel = findModelById(multiModelId);
-    const soloModel = findModelById(soloModelId);
-    if (!multiModel || !soloModel) return null;
+  const estimatedCredits = useMemo(() => {
+    const suffix = resolution === "720p" ? "" : "-480p";
+    const soloModel = findModelById(`wavespeed-ai/infinitetalk${suffix}`);
+    const multiModel = findModelById(`wavespeed-ai/infinitetalk-multi${suffix}`);
+    const pairLayerModel = findModelById(`wavespeed-ai/infinitetalk-multi-v2v${suffix}`);
+    const layerModel = findModelById(`wavespeed-ai/infinitetalk-v2v${suffix}`);
+    if (!soloModel || !multiModel || !pairLayerModel || !layerModel) return null;
 
     const perSegment = (m) => Math.max(m.credits, Math.ceil(m.creditsPerSecond * clipSeconds));
-    const multiCost = perSegment(multiModel);
-    const soloCost = perSegment(soloModel);
 
-    if (characters.length <= 1) return soloCost;
-    if (characters.length === 2) return multiCost;
-    return multiCost + soloCost; // 3rd character = extra masked layering pass
+    if (characters.length <= 1) return perSegment(soloModel);
+
+    const extra = characters.length - 2;
+    const fullPairPasses = Math.floor(extra / 2);
+    const hasOddLeftover = extra % 2 === 1;
+
+    let total = perSegment(multiModel);
+    total += fullPairPasses * perSegment(pairLayerModel);
+    if (hasOddLeftover) total += perSegment(layerModel);
+    return total;
   }, [characters.length, clipSeconds, resolution]);
-
-  const passCount = characters.length > 2 ? 2 : 1;
 
   async function handleGenerate() {
     try {
@@ -192,7 +203,8 @@ export default function TimelinePage() {
                 {characters.length > 2 && (
                   <span className="timeline-cost-note">
                     {" "}
-                    ({passCount} passes — 2 characters + 1 layered)
+                    ({passCount} passes — 2 characters synced first, then{" "}
+                    {characters.length - 2} more layered on top)
                   </span>
                 )}
               </p>

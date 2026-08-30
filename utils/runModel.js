@@ -332,6 +332,15 @@ async function runReplicate(model, inputs) {
 // re-checking the docs, they are NOT the same shape as the single
 // endpoint.
 //
+// mask_image on infinitetalk/video-to-video-multi [confirmed Aug 30
+// 2026 against https://wavespeed.ai/docs/docs-api/wavespeed-ai/infinitetalk-video-to-video-multi]:
+// the real API DOES accept mask_image as an optional field alongside
+// left_audio/right_audio — same "which regions can move" semantics as
+// the solo video-to-video endpoint. This is what lets the
+// Multi-Character Timeline layer a PAIR of characters at once (a
+// masked dual pass) instead of only ever a single leftover character —
+// see pages/api/timeline-generate.js's pairing loop.
+//
 // GENERALIZED [Aug 30 2026] to also handle the NSFW "spicy" video
 // lineup (models/index.js, video category, provider: "wavespeed",
 // nsfw: true) — those are plain image-to-video / video-extend models,
@@ -365,6 +374,12 @@ async function runWaveSpeed(modelId, inputs) {
         resolution,
         seed: -1,
       };
+
+      // mask_image applies here too, not just the solo v2v branch below
+      // — see the confirmed-real-API comment above this function.
+      if (isV2V && inputs.maskImage) {
+        body.mask_image = inputs.maskImage;
+      }
     } else {
       realModelSlug = isV2V
         ? "wavespeed-ai/infinitetalk/video-to-video"

@@ -1378,6 +1378,11 @@ export const MODELS = {
     {
       // Video-to-video variant: user already has an animated/existing
       // clip and just needs lip sync dubbed onto up to 2 people in it.
+      // Also the pass-2+ model for the Multi-Character Timeline's
+      // pairing loop (4-character timelines) — every pass after the
+      // first operates on the PREVIOUS pass's video output, regardless
+      // of whether the original scene was a photo or video, so it
+      // always needs the video-to-video variant here.
       id: "wavespeed-ai/infinitetalk-multi-v2v",
       name: "InfiniteTalk Multi Video-to-Video",
       provider: "wavespeed",
@@ -1391,6 +1396,28 @@ export const MODELS = {
       resolution: "720p",
       inputType: "video",
       description: "Lip-syncs up to 2 people in an existing video to new dialogue. Use when you already have animated footage.",
+    },
+    {
+      // ADDED [Aug 30 2026]: budget counterpart to the 720p entry above,
+      // same pattern as every other InfiniteTalk pair (see -480p
+      // siblings elsewhere in this file). runWaveSpeed() in
+      // utils/runModel.js already derives resolution generically from
+      // the "-480p" suffix, so no new provider-side logic is needed —
+      // this is purely a catalog entry to expose the budget option for
+      // the Timeline's pairing loop.
+      id: "wavespeed-ai/infinitetalk-multi-v2v-480p",
+      name: "InfiniteTalk Multi Video-to-Video 480p",
+      provider: "wavespeed",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      credits: 8,
+      creditsPerSecond: 1.5,
+      maxDurationSeconds: 600,
+      maxSpeakers: 2,
+      resolution: "480p",
+      inputType: "video",
+      description: "Budget video-to-video lip sync for up to 2 people in an existing video.",
     },
     {
       id: "sync/lipsync-2-pro",
