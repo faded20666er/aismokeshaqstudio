@@ -17,6 +17,8 @@ import { getByokKey } from "../../middleware/byokStore.js";
 import { createJob, generateJobId } from "../../middleware/jobStore.js";
 import { startJobInBackground } from "../../utils/runModelAsync.js";
 import { runModel } from "../../utils/runModel.js";
+import { getUserSettings } from "../../middleware/userSettingsStore.js";
+import { hasTierAccess } from "../../middleware/tierCheck.js";
 
 export const maxDuration = 60;
 
@@ -76,6 +78,18 @@ export default async function handler(req, res) {
       return res.status(403).json({
         error: "NSFW model locked. Enable NSFW mode to use this model.",
       });
+    }
+
+    // Tier-gated models — see middleware/tierCheck.js. No TTS model
+    // currently sets minTier, but this closes the gap so one could be
+    // added later without a silent bypass here (mirrors generate.js).
+    if (model.minTier) {
+      const { tier: userTier } = await getUserSettings(userId);
+      if (!hasTierAccess(model, userTier)) {
+        return res.status(403).json({
+          error: `This model requires the ${model.minTier.charAt(0).toUpperCase()}${model.minTier.slice(1)} plan.`,
+        });
+      }
     }
 
     const byokKey = await getByokKey(userId, "elevenlabs");

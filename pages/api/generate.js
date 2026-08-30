@@ -20,6 +20,8 @@ import { findModelById } from "../../models/index.js";
 import { checkCredits } from "../../middleware/creditCheck.js";
 import { createJob, generateJobId } from "../../middleware/jobStore.js";
 import { startJobInBackground } from "../../utils/runModelAsync.js";
+import { getUserSettings } from "../../middleware/userSettingsStore.js";
+import { hasTierAccess } from "../../middleware/tierCheck.js";
 
 export const config = {
   api: {
@@ -74,6 +76,21 @@ export default async function handler(req, res) {
       return res.status(403).json({
         error: "NSFW model locked. Enable NSFW mode to use this model.",
       });
+    }
+
+    // Tier-gated models (e.g. Kling V2.0 Master — see models/index.js
+    // and middleware/tierCheck.js) require checking the user's real
+    // subscription tier server-side. This is the authoritative check —
+    // the frontend also hides/locks these in the dropdown, but that's
+    // just UX; a request that reaches here with a mismatched tier is
+    // always rejected regardless of what the client sent.
+    if (model.minTier) {
+      const { tier: userTier } = await getUserSettings(userId);
+      if (!hasTierAccess(model, userTier)) {
+        return res.status(403).json({
+          error: `This model requires the ${model.minTier.charAt(0).toUpperCase()}${model.minTier.slice(1)} plan.`,
+        });
+      }
     }
 
     // Most models charge a flat model.credits regardless of the duration

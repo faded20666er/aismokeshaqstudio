@@ -10,12 +10,12 @@
 import { useEffect, useState } from "react";
 import { getDropdownModels } from "../utils/modelDropdown";
 
-export default function ModelSelector({ category, nsfwEnabled, onSelect }) {
+export default function ModelSelector({ category, nsfwEnabled, userTier, onSelect }) {
   const [models, setModels] = useState([]);
   const [selectedId, setSelectedId] = useState("");
 
   useEffect(() => {
-    const dropdown = getDropdownModels(nsfwEnabled);
+    const dropdown = getDropdownModels(nsfwEnabled, userTier);
     const list = dropdown[category] || [];
     setModels(list);
 
@@ -27,7 +27,7 @@ export default function ModelSelector({ category, nsfwEnabled, onSelect }) {
     } else {
       setSelectedId("");
     }
-  }, [category, nsfwEnabled]);
+  }, [category, nsfwEnabled, userTier]);
 
   const selectedModel = models.find((m) => m.id === selectedId);
 
@@ -58,7 +58,9 @@ export default function ModelSelector({ category, nsfwEnabled, onSelect }) {
       {selectedModel && (
         <p className="model-description">
           {selectedModel.locked
-            ? "Unlock NSFW mode to use this model."
+            ? selectedModel.minTier && !(selectedModel.nsfw && !nsfwEnabled)
+              ? `Requires the ${selectedModel.minTier.charAt(0).toUpperCase()}${selectedModel.minTier.slice(1)} plan.`
+              : "Unlock NSFW mode to use this model."
             : selectedModel.comingSoon
             ? "🔜 Coming soon — will be available once funding is restored. Select a free model to generate now."
             : selectedModel.credits === 0

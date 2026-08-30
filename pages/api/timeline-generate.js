@@ -41,6 +41,8 @@ import { startJobInBackground } from "../../utils/runModelAsync.js";
 import { runModel } from "../../utils/runModel.js";
 import { generateMaskFromBox, getImageDimensions } from "../../utils/generateMask.js";
 import { getByokKey } from "../../middleware/byokStore.js";
+import { getUserSettings } from "../../middleware/userSettingsStore.js";
+import { hasTierAccess } from "../../middleware/tierCheck.js";
 
 const MAX_CHARACTERS = 3;
 const FALLBACK_TTS_MODEL_ID = "elevenlabs/v3";
@@ -259,6 +261,20 @@ export default async function handler(req, res) {
       return res.status(403).json({
         error: "NSFW model locked. Enable NSFW mode to use this model.",
       });
+    }
+
+    // Tier-gated models — see middleware/tierCheck.js. The Timeline's
+    // 3 InfiniteTalk model ids never set minTier today, but this closes
+    // the gap so one could be added later without a silent bypass here
+    // (mirrors generate.js/lipsync.js/voice.js).
+    const tierBlockedModel = modelsInPlay.find((m) => m.minTier);
+    if (tierBlockedModel) {
+      const { tier: userTier } = await getUserSettings(userId);
+      if (!hasTierAccess(tierBlockedModel, userTier)) {
+        return res.status(403).json({
+          error: `This model requires the ${tierBlockedModel.minTier.charAt(0).toUpperCase()}${tierBlockedModel.minTier.slice(1)} plan.`,
+        });
+      }
     }
 
     const perSegment = (m) => Math.max(m.credits, Math.ceil(m.creditsPerSecond * seconds));

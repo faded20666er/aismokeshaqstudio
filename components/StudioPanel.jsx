@@ -147,7 +147,7 @@ function OutputPreview({ item, category }) {
   );
 }
 
-export default function StudioPanel({ onGenerate, loading, statusMessage, error, credits, output, userId }) {
+export default function StudioPanel({ onGenerate, loading, statusMessage, error, credits, output, userId, userTier }) {
   const [category, setCategory] = useState("image");
   const [selectedModel, setSelectedModel] = useState(null);
   const [prompt, setPrompt] = useState("");
@@ -349,6 +349,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
         <ModelSelector
           category={category}
           nsfwEnabled={nsfwEnabled}
+          userTier={userTier}
           onSelect={(m) => setSelectedModel(m)}
         />
       </div>

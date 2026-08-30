@@ -1,5 +1,5 @@
 // pages/studio.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import StudioPanel from '../components/StudioPanel';
 import AuthHeader from '../components/AuthHeader';
 import { useAppUserId } from '../utils/useAppUserId';
@@ -20,7 +20,27 @@ export default function StudioPage() {
   const [statusMessage, setStatusMessage] = useState(null);
   const [error, setError] = useState(null);
   const [credits, setCredits] = useState(null);
+  const [userTier, setUserTier] = useState(null);
   const { userId, isReady } = useAppUserId();
+
+  // Fetch the real credit balance + subscription tier on load. Tier
+  // powers minTier-gated models (e.g. Kling V2.0 Master, Premium-only —
+  // see middleware/tierCheck.js) so the dropdown shows them locked
+  // instead of letting a Starter/Pro customer pick one and only find
+  // out it's off-limits after clicking Generate.
+  useEffect(() => {
+    if (!isReady || !userId) return;
+    fetch(`/api/credits?userId=${encodeURIComponent(userId)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.credits === 'number') setCredits(data.credits);
+        setUserTier(data.tier ?? null);
+      })
+      .catch(() => {
+        // Non-fatal — credits/tier just won't be known until the next
+        // successful generation updates them.
+      });
+  }, [isReady, userId]);
 
   const handleGenerate = async ({ category, modelId, nsfwEnabled, inputs }) => {
     try {
@@ -100,6 +120,7 @@ export default function StudioPage() {
           credits={credits}
           output={output}
           userId={userId}
+          userTier={userTier}
         />
       </div>
     </div>

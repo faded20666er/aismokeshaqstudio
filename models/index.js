@@ -755,29 +755,41 @@ export const MODELS = {
     // of the flat model.credits every other model uses.
     //
     // Kling's $0.238 figure came from the identical schema shape (no
-    // explicit "unit": "generation" tag, same as Seedance had) so it is
-    // very likely ALSO per-second, NOT the $0.238 flat this was originally
-    // priced against. UNCONFIRMED — owner has not run a real Kling test
-    // yet. Re-gated comingSoon: true until a real Kling generation +
-    // balance check confirms the real per-unit cost, same rule that
-    // caught the Seedance mistake above. Do not remove comingSoon here
-    // without a real tested number.
+    // explicit "unit": "generation" tag, same as Seedance had), and was
+    // originally left comingSoon:true as UNCONFIRMED for that reason.
+    // Un-gated since (Aug 2026, "Turn on WaveSpeed + Atlas Cloud" pass) —
+    // still not owner-tested against a real balance delta, but Atlas
+    // Cloud's own public pricing pages (atlascloud.ai/pricing/models and
+    // their blog) independently confirm the whole Kling family bills
+    // per-second in this exact range (Kling 3.0: $0.153/s, Kling Video
+    // O3: $0.085/s — both explicitly labeled "/sec" in their own
+    // materials), which corroborates $0.238/s for V2.0 Master. Treat the
+    // math as real, not a pricing bug.
+    //
+    // TIER-GATED instead [Aug 30 2026]: 119 credits for one 10s clip is
+    // 60% of the entire $10/200-credit Starter month — correct math, bad
+    // customer experience (owner's real concern, and the right call: a
+    // Starter customer burning their whole month on one clip is how you
+    // lose them, not how you show off a premium model). minTier below
+    // restricts it to the Premium ($59/1000cr) tier, enforced server-side
+    // in every generation endpoint via middleware/tierCheck.js — a
+    // Starter/Pro customer gets a clear 403 instead of ever being able to
+    // charge it, same shape as the nsfw/locked gate above it in this
+    // file. Cheaper Kling tiers (V2.5 Turbo Pro, V3 Std) stay open to
+    // everyone — this restriction is specific to the priciest variant.
     {
-            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.238/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.238 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "kwaivgi/kling-v2.0-i2v-master",
       name: "Kling V2.0 Master (Atlas Cloud)",
       provider: "atlascloud",
       atlasCloudType: "video",
       nsfw: false,
       locked: false,
-      premium: false,
-      // UNVERIFIED — see comment above. Likely wrong (probably per-second,
-      // not per-generation, same mistake Seedance had). Do not trust this
-      // number until a real test + balance check confirms it.
+      premium: true,
+      minTier: "premium", // Premium-plan-only — see comment above
       credits: 119,
       creditsByDuration: { 5: 60, 10: 119 },
       durations: [5, 10],
-      description: "Kling V2.0, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Smooth motion, good consistency.",
+      description: "Kling V2.0, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Smooth motion, good consistency. Premium plan required.",
       imageInputs: { min: 1, max: 1 },
     },
     {

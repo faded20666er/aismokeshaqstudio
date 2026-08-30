@@ -5,6 +5,7 @@
 // balances persist instead of resetting on every serverless cold start.
 
 import { getUserCredits, addCredits, setUserCredits } from "../../middleware/creditsStore.js";
+import { getUserSettings } from "../../middleware/userSettingsStore.js";
 
 export default async function handler(req, res) {
   try {
@@ -18,11 +19,16 @@ export default async function handler(req, res) {
       }
 
       const credits = await getUserCredits(userId);
+      // Also surfaced here (not just from Stripe webhook state) so the
+      // frontend can gate tier-restricted models (e.g. Kling V2.0
+      // Master, see middleware/tierCheck.js) without a second round trip.
+      const { tier } = await getUserSettings(userId);
 
       return res.status(200).json({
         success: true,
         userId,
         credits,
+        tier,
       });
     }
 
