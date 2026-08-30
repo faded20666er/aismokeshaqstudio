@@ -864,21 +864,41 @@ export const MODELS = {
     // 2 known false-positive keyword matches (wavespeed-ai/chroma,
     // wavespeed-ai/scail — not actually NSFW models) excluded.
     //
-    // Duration cap [5, 8] on every entry below, on purpose, no
-    // exceptions — tied directly to the real 300s Vercel timeout that
-    // killed the Kling V2.0 test (see utils/runModelAsync.js's honest
+    // DURATION [Aug 30 2026 — corrected after a real failure]: every
+    // entry below now offers ONLY 5s, not [5, 8] as originally shipped.
+    // Real reason, not just caution: a live test on
+    // alibaba/wan-2.7/image-to-video-spicy came back
+    // `400 invalid request body field, duration must be one of 5, 10,
+    // or 15, got number 8` — the [5, 8] durations guessed for every one
+    // of these 14 entries were never confirmed against each model's
+    // real accepted values, and at least one was flat-out wrong (8
+    // isn't even in that model's valid set). Rather than guess a
+    // second value per model and risk 13 more of these one at a time
+    // as the owner tests each one, every entry was pulled back to just
+    // 5s — the one duration virtually every video-gen API on any
+    // provider accepts, and (per the timeout math below) the one
+    // that's safely under the Vercel ceiling regardless of which
+    // model's real max turns out to be.
+    //
+    // Original 300s-timeout reasoning still applies to WHICH durations
+    // are safe to re-add once each model's real accepted values are
+    // known: tied directly to the real 300s Vercel timeout that killed
+    // the Kling V2.0 test (see utils/runModelAsync.js's honest
     // limitation comment: waitUntil doesn't extend past Fluid Compute's
     // hard ceiling, and there's no multi-invocation continuation chain
     // built yet, so a job that runs past ~300s just dies silently and
     // sits "processing" in Redis forever). WaveSpeed's own docs (cited
     // in utils/runModel.js's runWaveSpeed()) put worst-case wall time
-    // at ~30s per 1s of video. At 8s that's a 240s worst case — 60s of
-    // real buffer under the 300s ceiling. A 10s option would be 300s
-    // worst case: right at the wall, one slow run from silently
-    // failing. Not offered here for that reason. If real testing shows
-    // WaveSpeed is faster than the documented worst case, these caps
-    // can be raised — but raise them from a real timed test, not a
-    // guess (same discipline as the per-second pricing above).
+    // at ~30s per 1s of video — at 8s that's 240s (60s buffer), at 10s
+    // it's 300s (right at the wall), at 15s it's 450s (would just fail).
+    // So even for wan-2.7-spicy, now confirmed to accept 10 and 15
+    // server-side, only 5s is offered here — 10s sits at the timeout
+    // wall with zero margin, 15s would exceed it outright. Widening any
+    // of these needs a real timed test confirming both (a) the model's
+    // true accepted duration values (test each one — do not assume
+    // family-mates share a schema) and (b) real wall-clock time, not
+    // just the documented worst case — same discipline as the
+    // per-second pricing above.
     {
       id: "wavespeed-ai/wan-2.2-spicy/image-to-video",
       name: "Wan 2.2 Spicy I2V (WaveSpeed)",
@@ -886,9 +906,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 12, // $0.03/s -> 5s:8cr, 8s:12cr
-      creditsByDuration: { 5: 8, 8: 12 },
-      durations: [5, 8],
+      credits: 8, // $0.03/s -> 5s only, see note above
+      creditsByDuration: { 5: 8 },
+      durations: [5],
       description: "NSFW image-to-video. Animates your image into a cinematic clip. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -899,9 +919,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 12, // $0.03/s -> 5s:8cr, 8s:12cr
-      creditsByDuration: { 5: 8, 8: 12 },
-      durations: [5, 8],
+      credits: 8, // $0.03/s -> 5s only, see note above
+      creditsByDuration: { 5: 8 },
+      durations: [5],
       inputType: "video",
       description: "NSFW video extension — continues an existing clip further. Unlock NSFW mode to use.",
       imageInputs: { min: 0, max: 0 },
@@ -913,9 +933,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 16, // $0.04/s -> 5s:10cr, 8s:16cr
-      creditsByDuration: { 5: 10, 8: 16 },
-      durations: [5, 8],
+      credits: 10, // $0.04/s -> 5s only, see note above
+      creditsByDuration: { 5: 10 },
+      durations: [5],
       description: "NSFW image-to-video with LoRA styling support. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -926,9 +946,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 16, // $0.04/s -> 5s:10cr, 8s:16cr
-      creditsByDuration: { 5: 10, 8: 16 },
-      durations: [5, 8],
+      credits: 10, // $0.04/s -> 5s only, see note above
+      creditsByDuration: { 5: 10 },
+      durations: [5],
       inputType: "video",
       description: "NSFW video extension with LoRA styling support. Unlock NSFW mode to use.",
       imageInputs: { min: 0, max: 0 },
@@ -940,9 +960,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 8, // $0.02/s -> 5s:5cr, 8s:8cr
-      creditsByDuration: { 5: 5, 8: 8 },
-      durations: [5, 8],
+      credits: 5, // $0.02/s -> 5s only, see note above
+      creditsByDuration: { 5: 5 },
+      durations: [5],
       description: "Cheapest NSFW video model in the lineup. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -953,9 +973,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 12, // $0.03/s -> 5s:8cr, 8s:12cr
-      creditsByDuration: { 5: 8, 8: 12 },
-      durations: [5, 8],
+      credits: 8, // $0.03/s -> 5s only, see note above
+      creditsByDuration: { 5: 8 },
+      durations: [5],
       description: "Budget NSFW video with LoRA styling support. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -966,9 +986,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 40, // $0.10/s -> 5s:25cr, 8s:40cr
-      creditsByDuration: { 5: 25, 8: 40 },
-      durations: [5, 8],
+      credits: 25, // $0.10/s -> 5s only, see note above
+      creditsByDuration: { 5: 25 },
+      durations: [5],
       description: "NSFW image-to-video on Wan 2.7's newer, sharper model. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -979,9 +999,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 40, // $0.10/s -> 5s:25cr, 8s:40cr
-      creditsByDuration: { 5: 25, 8: 40 },
-      durations: [5, 8],
+      credits: 25, // $0.10/s -> 5s only, see note above
+      creditsByDuration: { 5: 25 },
+      durations: [5],
       description: "NSFW image-to-video on Wan 2.6. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -992,9 +1012,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: true,
-      credits: 28, // $0.07/s -> 5s:18cr, 8s:28cr
-      creditsByDuration: { 5: 18, 8: 28 },
-      durations: [5, 8],
+      credits: 18, // $0.07/s -> 5s only, see note above
+      creditsByDuration: { 5: 18 },
+      durations: [5],
       description: "NSFW image-to-video on Vidu Q3 — stronger prompt adherence, higher tier. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -1005,9 +1025,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: true,
-      credits: 21, // $0.052/s -> 5s:13cr, 8s:21cr
-      creditsByDuration: { 5: 13, 8: 21 },
-      durations: [5, 8],
+      credits: 13, // $0.052/s -> 5s only, see note above
+      creditsByDuration: { 5: 13 },
+      durations: [5],
       description: "NSFW image-to-video on Seedance 1.5 Pro — smooth motion, strong subject coherence. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -1018,9 +1038,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 32, // $0.08/s -> 5s:20cr, 8s:32cr
-      creditsByDuration: { 5: 20, 8: 32 },
-      durations: [5, 8],
+      credits: 20, // $0.08/s -> 5s only, see note above
+      creditsByDuration: { 5: 20 },
+      durations: [5],
       description: "Faster, cheaper NSFW Seedance 2.0 tier. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -1031,9 +1051,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 29, // $0.072/s -> 5s:18cr, 8s:29cr
-      creditsByDuration: { 5: 18, 8: 29 },
-      durations: [5, 8],
+      credits: 18, // $0.072/s -> 5s only, see note above
+      creditsByDuration: { 5: 18 },
+      durations: [5],
       description: "Budget NSFW Seedance 2.0 tier. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -1044,9 +1064,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: true,
-      credits: 44, // $0.108/s -> 5s:27cr, 8s:44cr
-      creditsByDuration: { 5: 27, 8: 44 },
-      durations: [5, 8],
+      credits: 27, // $0.108/s -> 5s only, see note above
+      creditsByDuration: { 5: 27 },
+      durations: [5],
       description: "Full-quality NSFW Seedance 2.0 tier. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -1057,9 +1077,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: true,
-      credits: 65, // $0.162/s -> 5s:41cr, 8s:65cr
-      creditsByDuration: { 5: 41, 8: 65 },
-      durations: [5, 8],
+      credits: 41, // $0.162/s -> 5s only, see note above
+      creditsByDuration: { 5: 41 },
+      durations: [5],
       description: "Top-tier NSFW video model — newest Seedance generation, best quality in the spicy lineup. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
