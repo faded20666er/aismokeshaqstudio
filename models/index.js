@@ -851,6 +851,22 @@ export const MODELS = {
     // cost x 2.5 markup / $0.05 per credit) = ceil(real $/s x duration x 50).
     // 2 known false-positive keyword matches (wavespeed-ai/chroma,
     // wavespeed-ai/scail — not actually NSFW models) excluded.
+    //
+    // Duration cap [5, 8] on every entry below, on purpose, no
+    // exceptions — tied directly to the real 300s Vercel timeout that
+    // killed the Kling V2.0 test (see utils/runModelAsync.js's honest
+    // limitation comment: waitUntil doesn't extend past Fluid Compute's
+    // hard ceiling, and there's no multi-invocation continuation chain
+    // built yet, so a job that runs past ~300s just dies silently and
+    // sits "processing" in Redis forever). WaveSpeed's own docs (cited
+    // in utils/runModel.js's runWaveSpeed()) put worst-case wall time
+    // at ~30s per 1s of video. At 8s that's a 240s worst case — 60s of
+    // real buffer under the 300s ceiling. A 10s option would be 300s
+    // worst case: right at the wall, one slow run from silently
+    // failing. Not offered here for that reason. If real testing shows
+    // WaveSpeed is faster than the documented worst case, these caps
+    // can be raised — but raise them from a real timed test, not a
+    // guess (same discipline as the per-second pricing above).
     {
       id: "wavespeed-ai/wan-2.2-spicy/image-to-video",
       name: "Wan 2.2 Spicy I2V (WaveSpeed)",
