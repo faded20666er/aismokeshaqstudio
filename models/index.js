@@ -69,8 +69,15 @@ export const MODELS = {
       // equivalent runs $0.04-0.08/image flat, no "unit" field (confirmed
       // flat, not duration-billed) — same margin logic, lower real cost,
       // same credits charged to the customer = pure margin improvement.
+      // FIXED [Aug 30 2026, schema audit]: was pointed at
+      // ".../reference-to-image", which turns out to be a DIFFERENT real
+      // feature (generates from a source VIDEO clip — its schema requires
+      // a "video_clips" field we never sent) — every reference-image
+      // request here would have 400'd on a required-field miss. The real
+      // plain-photo-reference-editing endpoint is ".../edit" (confirmed
+      // via its schema: images array, no video_clips requirement).
       id: "google/nano-banana-2/text-to-image",
-      atlasImageEditId: "google/nano-banana-2/reference-to-image",
+      atlasImageEditId: "google/nano-banana-2/edit",
       name: "Nano Banana 2 (Google)",
       provider: "atlascloud",
       atlasCloudType: "image",
@@ -118,6 +125,9 @@ export const MODELS = {
       // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate
       // $0.035/image vs Atlas Cloud's Seedream v5.0 Lite at $0.032/image
       // flat (near tie, but Atlas Cloud is the funded/working provider).
+      // FIXED [real schema audit, Aug 2026]: bytedance/seedream-v5.0-lite/edit's
+      // real Atlas Cloud schema shows images maxItems:14, not 4 — this
+      // was under-declared (not a bug, just a missed capability).
       id: "bytedance/seedream-v5.0-lite",
       atlasImageEditId: "bytedance/seedream-v5.0-lite/edit",
       name: "Seedream 5 Lite (Bytedance)",
@@ -128,11 +138,14 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Clean, balanced style. Reliable for everyday scenes and characters.",
-      imageInputs: { min: 0, max: 4 },
+      imageInputs: { min: 0, max: 14 },
     },
     {
       // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate
       // $0.04/image vs Atlas Cloud $0.036/image flat.
+      // FIXED [real schema audit, Aug 2026]: bytedance/seedream-v4.5/edit's
+      // real Atlas Cloud schema shows images maxItems:10, not 15 — this
+      // was OVER-declared, meaning 11-15 reference images would 400.
       id: "bytedance/seedream-v4.5",
       atlasImageEditId: "bytedance/seedream-v4.5/edit",
       name: "Seedream 4.5 (Bytedance)",
@@ -143,7 +156,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Vivid color and lighting. Good for stylized or vibrant artwork.",
-      imageInputs: { min: 0, max: 15 },
+      imageInputs: { min: 0, max: 10 },
     },
     {
       // SWITCHED + UPGRADED to Atlas Cloud [pricing audit, Aug 2026]:
@@ -151,6 +164,11 @@ export const MODELS = {
       // equivalent — Atlas Cloud only carries the newer Seedream v4
       // ($0.027/image flat), which is both newer AND cheaper, so this
       // slot now points at v4 instead of the discontinued v3.
+      // FIXED [real schema audit, Aug 2026]: imageInputs was left at
+      // max:0 even though atlasImageEditId already points at a real,
+      // working bytedance/seedream-v4/edit endpoint (images array,
+      // maxItems:10, minItems:1, required) — the reference-image upload
+      // control was never shown for this model. Raised to match.
       id: "bytedance/seedream-v4",
       atlasImageEditId: "bytedance/seedream-v4/edit",
       name: "Seedream 4 (Bytedance)",
@@ -161,7 +179,7 @@ export const MODELS = {
       premium: false,
       credits: 2,
       description: "Budget-friendly Seedream version. Solid for simple compositions.",
-      imageInputs: { min: 0, max: 0 },
+      imageInputs: { min: 0, max: 10 },
     },
     {
       id: "wan-video/wan-2.7-image-pro",
@@ -380,6 +398,10 @@ export const MODELS = {
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: matches Replicate's audio-on rate almost exactly. base_price $0.20/s listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "google/veo-3.1" (Replicate, $0 balance).
             // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.2/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.2 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
+      // FIXED [real schema audit, Aug 2026]: real Atlas Cloud schema's
+      // duration enum is [4, 6, 8] — 5 was never a valid value and every
+      // 5s request would 400. Recomputed creditsByDuration at the same
+      // confirmed $0.20/s rate for the corrected duration set.
       id: "google/veo3.1/text-to-video",
       name: "VEO 3.1 (Google)",
       provider: "atlascloud",
@@ -388,8 +410,8 @@ export const MODELS = {
       locked: false,
       premium: true,
       credits: 80,
-      creditsByDuration: { 5: 50, 8: 80 },
-      durations: [5, 8],
+      creditsByDuration: { 4: 40, 6: 60, 8: 80 },
+      durations: [4, 6, 8],
       description: "Excellent realism and physics. Strong for natural movement and lighting.",
       imageInputs: { min: 0, max: 4 },
     },
@@ -425,6 +447,10 @@ export const MODELS = {
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: VEO 2 has no direct Atlas Cloud match; substituting VEO 3.1 Lite, a newer/cheaper tier. base_price $0.05 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "google/veo-2" (Replicate, $0 balance).
             // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.05/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.05 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
+      // FIXED [real schema audit, Aug 2026]: real Atlas Cloud schema's
+      // duration enum is [4, 6, 8] — 5 was never a valid value and every
+      // 5s request would 400. Recomputed creditsByDuration at the same
+      // confirmed ~$0.05/s rate for the corrected duration set.
       id: "google/veo3.1-lite/text-to-video",
       name: "VEO 2 (Google)",
       provider: "atlascloud",
@@ -433,8 +459,8 @@ export const MODELS = {
       locked: false,
       premium: false,
       credits: 20,
-      creditsByDuration: { 5: 13, 8: 20 },
-      durations: [5, 8],
+      creditsByDuration: { 4: 10, 6: 15, 8: 20 },
+      durations: [4, 6, 8],
       description: "Reliable realism at a lower cost than VEO 3.1. Good everyday choice.",
       imageInputs: { min: 0, max: 1 },
     },
@@ -689,6 +715,12 @@ export const MODELS = {
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: SWITCH+UPGRADE: newer 1.1, half the price of 1.0 ($0.14->$0.07), Replicate doesn't offer 1.1. base_price $0.07 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "alibaba/happyhorse-1.0" (Replicate, $0 balance).
             // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.07/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.07 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
+      // FIXED [real schema audit, Aug 2026]: real Atlas Cloud schema has
+      // NO image-related field at all for this model (model/prompt/
+      // resolution/ratio/duration/seed only) — imageInputs.max:1 was
+      // advertising an upload control this model can't use. Dropped to
+      // 0. Duration is a free integer in the real schema (no enum,
+      // default 5) — current [5,8,10,15] has no confirmed conflict.
       id: "alibaba/happyhorse-1.1/text-to-video",
       name: "HappyHorse 1.0 (Alibaba)",
       provider: "atlascloud",
@@ -700,15 +732,27 @@ export const MODELS = {
       creditsByDuration: { 5: 18, 8: 29, 10: 35, 15: 53 },
       durations: [5, 8, 10, 15],
       description: "Good for playful, stylized motion and lighter content.",
-      imageInputs: { min: 0, max: 1 },
+      imageInputs: { min: 0, max: 0 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: close to Replicate's $0.08/s, could go either way, needs test. base_price $0.088 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "veed/fabric-1.0" (Replicate, $0 balance).
             // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.088/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.088 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
+      // GATED [real schema audit, Aug 2026]: this model is structurally
+      // broken as configured. Real Atlas Cloud schema requires
+      // image_url (not image), audio_url (this is actually an
+      // audio-driven avatar/lipsync model, not a plain image-to-video
+      // one), and resolution (enum 480p/720p only, NO 1080p) — there is
+      // NO prompt field and NO duration field at all in the real schema.
+      // Our runAtlasCloud() video branch sends image/prompt/duration/
+      // resolution and never sends audio_url, so every real generation
+      // would 400. Setting comingSoon:true as an immediate safety
+      // stopgap rather than shipping a broken model live. Revisit as a
+      // lipsync-category model (needs a bespoke request shape) later.
       id: "veed/fabric-1.0/image-to-video",
       name: "Fabric 1.0 (VEED)",
       provider: "atlascloud",
       atlasCloudType: "video",
+      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -779,7 +823,7 @@ export const MODELS = {
     // everyone — this restriction is specific to the priciest variant.
     {
       id: "kwaivgi/kling-v2.0-i2v-master",
-      name: "Kling V2.0 Master (Atlas Cloud)",
+      name: "Kling V2.0 Master",
       provider: "atlascloud",
       atlasCloudType: "video",
       nsfw: false,
@@ -794,7 +838,7 @@ export const MODELS = {
     },
     {
       id: "bytedance/seedance-v1-pro-i2v-720p",
-      name: "Seedance 1 Pro 720p (Atlas Cloud)",
+      name: "Seedance 1 Pro 720p",
       provider: "atlascloud",
       atlasCloudType: "video",
       nsfw: false,
@@ -901,7 +945,7 @@ export const MODELS = {
     // per-second pricing above.
     {
       id: "wavespeed-ai/wan-2.2-spicy/image-to-video",
-      name: "Wan 2.2 Spicy I2V (WaveSpeed)",
+      name: "Wan 2.2 Spicy I2V",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -914,7 +958,7 @@ export const MODELS = {
     },
     {
       id: "wavespeed-ai/wan-2.2-spicy/video-extend",
-      name: "Wan 2.2 Spicy Video Extend (WaveSpeed)",
+      name: "Wan 2.2 Spicy Video Extend",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -928,7 +972,7 @@ export const MODELS = {
     },
     {
       id: "wavespeed-ai/wan-2.2-spicy/image-to-video-lora",
-      name: "Wan 2.2 Spicy I2V LoRA (WaveSpeed)",
+      name: "Wan 2.2 Spicy I2V LoRA",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -941,7 +985,7 @@ export const MODELS = {
     },
     {
       id: "wavespeed-ai/wan-2.2-spicy/video-extend-lora",
-      name: "Wan 2.2 Spicy Video Extend LoRA (WaveSpeed)",
+      name: "Wan 2.2 Spicy Video Extend LoRA",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -955,7 +999,7 @@ export const MODELS = {
     },
     {
       id: "wavespeed-ai/ltx-2.3-spicy/image-to-video",
-      name: "LTX 2.3 Spicy I2V (WaveSpeed)",
+      name: "LTX 2.3 Spicy I2V",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -968,7 +1012,7 @@ export const MODELS = {
     },
     {
       id: "wavespeed-ai/ltx-2.3-spicy/image-to-video-lora",
-      name: "LTX 2.3 Spicy I2V LoRA (WaveSpeed)",
+      name: "LTX 2.3 Spicy I2V LoRA",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -981,7 +1025,7 @@ export const MODELS = {
     },
     {
       id: "alibaba/wan-2.7/image-to-video-spicy",
-      name: "Wan 2.7 Spicy I2V (WaveSpeed)",
+      name: "Wan 2.7 Spicy I2V",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -994,7 +1038,7 @@ export const MODELS = {
     },
     {
       id: "alibaba/wan-2.6/image-to-video-spicy",
-      name: "Wan 2.6 Spicy I2V (WaveSpeed)",
+      name: "Wan 2.6 Spicy I2V",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -1007,7 +1051,7 @@ export const MODELS = {
     },
     {
       id: "vidu/q3/image-to-video-spicy",
-      name: "Vidu Q3 Spicy I2V (WaveSpeed)",
+      name: "Vidu Q3 Spicy I2V",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -1020,7 +1064,7 @@ export const MODELS = {
     },
     {
       id: "bytedance/seedance-v1.5-pro/image-to-video-spicy",
-      name: "Seedance 1.5 Pro Spicy I2V (WaveSpeed)",
+      name: "Seedance 1.5 Pro Spicy I2V",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -1033,7 +1077,7 @@ export const MODELS = {
     },
     {
       id: "bytedance/seedance-2.0-fast/image-to-video-spicy",
-      name: "Seedance 2.0 Fast Spicy I2V (WaveSpeed)",
+      name: "Seedance 2.0 Fast Spicy I2V",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -1046,7 +1090,7 @@ export const MODELS = {
     },
     {
       id: "bytedance/seedance-2.0-mini/image-to-video-spicy",
-      name: "Seedance 2.0 Mini Spicy I2V (WaveSpeed)",
+      name: "Seedance 2.0 Mini Spicy I2V",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -1059,7 +1103,7 @@ export const MODELS = {
     },
     {
       id: "bytedance/seedance-2.0/image-to-video-spicy",
-      name: "Seedance 2.0 Spicy I2V (WaveSpeed)",
+      name: "Seedance 2.0 Spicy I2V",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -1072,7 +1116,7 @@ export const MODELS = {
     },
     {
       id: "bytedance/seedance-2.5/image-to-video-spicy",
-      name: "Seedance 2.5 Spicy I2V (WaveSpeed)",
+      name: "Seedance 2.5 Spicy I2V",
       provider: "wavespeed",
       nsfw: true,
       locked: true,
@@ -1237,7 +1281,7 @@ export const MODELS = {
       // LIVE [Aug 2026]: WaveSpeed is now funded ($50) — comingSoon
       // removed from all 7 InfiniteTalk entries below.
       id: "wavespeed-ai/infinitetalk",
-      name: "InfiniteTalk 720p (WaveSpeed)",
+      name: "InfiniteTalk 720p",
       provider: "wavespeed",
       nsfw: false,
       locked: false,
@@ -1250,7 +1294,7 @@ export const MODELS = {
     },
     {
       id: "wavespeed-ai/infinitetalk-480p",
-      name: "InfiniteTalk 480p (WaveSpeed)",
+      name: "InfiniteTalk 480p",
       provider: "wavespeed",
       nsfw: false,
       locked: false,
@@ -1263,7 +1307,7 @@ export const MODELS = {
     },
     {
       id: "wavespeed-ai/infinitetalk-v2v",
-      name: "InfiniteTalk Video-to-Video (WaveSpeed)",
+      name: "InfiniteTalk Video-to-Video",
       provider: "wavespeed",
       nsfw: false,
       locked: false,
@@ -1277,7 +1321,7 @@ export const MODELS = {
     },
     {
       id: "wavespeed-ai/infinitetalk-v2v-480p",
-      name: "InfiniteTalk Video-to-Video 480p (WaveSpeed)",
+      name: "InfiniteTalk Video-to-Video 480p",
       provider: "wavespeed",
       nsfw: false,
       locked: false,
@@ -1305,7 +1349,7 @@ export const MODELS = {
       // credits charged on failure — see runModelAsync.js) until the
       // WaveSpeed account is reinstated.
       id: "wavespeed-ai/infinitetalk-multi",
-      name: "InfiniteTalk Multi 720p (WaveSpeed)",
+      name: "InfiniteTalk Multi 720p",
       provider: "wavespeed",
       nsfw: false,
       locked: false,
@@ -1319,7 +1363,7 @@ export const MODELS = {
     },
     {
       id: "wavespeed-ai/infinitetalk-multi-480p",
-      name: "InfiniteTalk Multi 480p (WaveSpeed)",
+      name: "InfiniteTalk Multi 480p",
       provider: "wavespeed",
       nsfw: false,
       locked: false,
@@ -1335,7 +1379,7 @@ export const MODELS = {
       // Video-to-video variant: user already has an animated/existing
       // clip and just needs lip sync dubbed onto up to 2 people in it.
       id: "wavespeed-ai/infinitetalk-multi-v2v",
-      name: "InfiniteTalk Multi Video-to-Video (WaveSpeed)",
+      name: "InfiniteTalk Multi Video-to-Video",
       provider: "wavespeed",
       nsfw: false,
       locked: false,

@@ -31,6 +31,22 @@ export default function ModelSelector({ category, nsfwEnabled, userTier, onSelec
 
   const selectedModel = models.find((m) => m.id === selectedId);
 
+  // Models billed per-duration (creditsByDuration) keep a flat `credits`
+  // field too, but that's deliberately the LONGEST/most-expensive
+  // duration's price — a safety fallback for generate.js, not meant for
+  // display (see models/index.js's per-second pricing comments). Showing
+  // that number in the dropdown made every one of these models look like
+  // its most expensive option was the only option. Shows the cheapest
+  // (shortest-duration) price instead — durations are always written
+  // shortest-first, so durations[0] is the entry price.
+  function startingCredits(model) {
+    if (model.creditsByDuration && model.durations?.length) {
+      const cheapest = model.creditsByDuration[model.durations[0]];
+      if (cheapest != null) return cheapest;
+    }
+    return model.credits;
+  }
+
   function handleChange(e) {
     const id = e.target.value;
     setSelectedId(id);
@@ -47,9 +63,9 @@ export default function ModelSelector({ category, nsfwEnabled, userTier, onSelec
             {model.name}
             {model.comingSoon
               ? " — Coming Soon"
-              : model.credits === 0
+              : startingCredits(model) === 0
               ? " — FREE"
-              : ` — ${model.credits} credit${model.credits === 1 ? "" : "s"}`}
+              : ` — from ${startingCredits(model)} credit${startingCredits(model) === 1 ? "" : "s"}`}
             {!model.comingSoon && model.premium ? " ★" : ""}
           </option>
         ))}
@@ -63,7 +79,7 @@ export default function ModelSelector({ category, nsfwEnabled, userTier, onSelec
               : "Unlock NSFW mode to use this model."
             : selectedModel.comingSoon
             ? "🔜 Coming soon — will be available once funding is restored. Select a free model to generate now."
-            : selectedModel.credits === 0
+            : startingCredits(selectedModel) === 0
             ? `✅ FREE — ${selectedModel.description}`
             : selectedModel.description}
         </p>
