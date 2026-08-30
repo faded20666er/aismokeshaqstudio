@@ -54,6 +54,7 @@ import { createJob, generateJobId } from "../../middleware/jobStore.js";
 import { startJobInBackground } from "../../utils/runModelAsync.js";
 import { runModel } from "../../utils/runModel.js";
 import { generateMaskFromBoxes, getImageDimensions } from "../../utils/generateMask.js";
+import { mergeCharacterAudio } from "../../utils/mergeCharacterAudio.js";
 import { getByokKey } from "../../middleware/byokStore.js";
 import { getUserSettings } from "../../middleware/userSettingsStore.js";
 import { hasTierAccess } from "../../middleware/tierCheck.js";
@@ -71,15 +72,13 @@ export const config = {
 
 export const maxDuration = 60;
 
-async function resolveCharacterAudio(character, blocks, userId) {
-  const characterBlocks = blocks
-    .filter((b) => b.characterId === character.id)
-    .sort((a, b) => a.startTime - b.startTime);
-
-  if (characterBlocks.length === 0) return null;
-
-  const block = characterBlocks[0];
-
+// Resolves ONE dialogue block into a real audio URL — either the
+// user's uploaded file, or freshly synthesized TTS (ElevenLabs direct
+// with the character's chosen voice, falling back to the Replicate TTS
+// model on a 402 or any other ElevenLabs failure). Pulled out as its
+// own function so resolveCharacterAudio below can call it once per
+// block instead of only ever looking at a character's first line.
+async function resolveBlockAudio(block, character, userId) {
   if (block.audioSource === "upload" && block.audioUrl) {
     return block.audioUrl;
   }
@@ -145,6 +144,39 @@ async function resolveCharacterAudio(character, blocks, userId) {
   }
 
   return null;
+}
+
+// BUG FIX [Aug 30 2026]: this used to resolve ONLY characterBlocks[0]
+// and hand that single line straight to the generation model — every
+// dialogue line after a character's first one in the Timeline was
+// silently thrown away. A real customer hit exactly this: a 15-second
+// timeline produced a 2-3 second clip containing only the first
+// line's audio, because that line was, in fact, the entirety of what
+// got sent. DialogueTimeline.jsx's own file comment says gaps between
+// blocks are a supported, deliberate feature — this now resolves
+// EVERY block belonging to the character and merges them into one
+// audio track with each line placed at its real startTime (see
+// utils/mergeCharacterAudio.js), because WaveSpeed's InfiniteTalk
+// models take exactly one audio file per speaker — there's no
+// "several timed clips" input on their side.
+async function resolveCharacterAudio(character, blocks, userId) {
+  const characterBlocks = blocks
+    .filter((b) => b.characterId === character.id)
+    .sort((a, b) => a.startTime - b.startTime);
+
+  if (characterBlocks.length === 0) return null;
+
+  const resolvedClips = [];
+  for (const block of characterBlocks) {
+    const url = await resolveBlockAudio(block, character, userId);
+    if (url) {
+      resolvedClips.push({ url, startTimeMs: Math.max(0, Math.round((block.startTime || 0) * 1000)) });
+    }
+  }
+
+  if (resolvedClips.length === 0) return null;
+
+  return mergeCharacterAudio(resolvedClips);
 }
 
 // The full multi-pass generation logic, run as a single customRunner
