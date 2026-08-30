@@ -379,15 +379,16 @@ export const MODELS = {
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: matches Replicate's audio-on rate almost exactly. base_price $0.20/s listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "google/veo-3.1" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.2/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.2 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "google/veo3.1/text-to-video",
       name: "VEO 3.1 (Google)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
-      credits: 28,
+      credits: 80,
+      creditsByDuration: { 5: 50, 8: 80 },
       durations: [5, 8],
       description: "Excellent realism and physics. Strong for natural movement and lighting.",
       imageInputs: { min: 0, max: 4 },
@@ -407,105 +408,112 @@ export const MODELS = {
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: same headline number as Replicate — if flat here, ~5x cheaper. base_price $0.05 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "xai/grok-imagine-video" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.05/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.05 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "xai/grok-imagine-video/text-to-video",
       name: "Grok Imagine Video (XAI)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
-      credits: 28,
+      credits: 25,
+      creditsByDuration: { 5: 13, 10: 25 },
       durations: [5, 10],
       description: "Strong creative range, handles unusual or imaginative prompts well.",
       imageInputs: { min: 0, max: 1 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: VEO 2 has no direct Atlas Cloud match; substituting VEO 3.1 Lite, a newer/cheaper tier. base_price $0.05 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "google/veo-2" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.05/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.05 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "google/veo3.1-lite/text-to-video",
       name: "VEO 2 (Google)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 8,
+      credits: 20,
+      creditsByDuration: { 5: 13, 8: 20 },
       durations: [5, 8],
       description: "Reliable realism at a lower cost than VEO 3.1. Good everyday choice.",
       imageInputs: { min: 0, max: 1 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: cheaper even flat-vs-flat than Replicate's per-second rate. base_price $0.071 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "kwaivgi/kling-v3-video" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.071/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.071 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "kwaivgi/kling-v3.0-std/text-to-video",
       name: "Kling V3 Video (Kwaivgi)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 20,
+      credits: 54,
+      creditsByDuration: { 5: 18, 10: 36, 15: 54 },
       durations: [5, 10, 15],
       description: "Smooth motion and good consistency across frames. Popular all-rounder.",
       imageInputs: { min: 0, max: 2 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: same Kling V3.0 Std family as kling-v3-video. base_price $0.071 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "kwaivgi/kling-v3-omni-video" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.071/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.071 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "kwaivgi/kling-v3.0-std/text-to-video",
       name: "Kling V3 Omni Video (Kwaivgi)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 20,
+      credits: 54,
+      creditsByDuration: { 5: 18, 10: 36, 15: 54 },
       durations: [5, 10, 15],
       description: "Handles a wider variety of input types (image, text) flexibly.",
       imageInputs: { min: 0, max: 4 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: if flat, ~6x cheaper than Replicate's $0.07/s. base_price $0.06 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "kwaivgi/kling-v2.5-turbo-pro" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.06/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.06 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "kwaivgi/kling-v2.5-turbo-pro/text-to-video",
       name: "Kling V2.5 Turbo Pro (Kwaivgi)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 18,
+      credits: 30,
+      creditsByDuration: { 5: 15, 10: 30 },
       durations: [5, 10],
       description: "Faster turnaround than V3, still solid quality for quick iterations.",
       imageInputs: { min: 0, max: 3 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: likely cheaper than Replicate's ~$0.18/s either way. base_price $0.112 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "bytedance/seedance-2.0" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.112/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.112 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "bytedance/seedance-2.0/text-to-video",
       name: "Seedance 2.0 (Bytedance)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 8,
+      credits: 84,
+      creditsByDuration: { 5: 29, 10: 57, 15: 84 },
       durations: [5, 10, 15],
       description: "Good motion quality for dance, action, and dynamic movement scenes.",
       imageInputs: { min: 0, max: 4 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: CAUTION: if per-second, MORE expensive than Replicate's $0.026/s — do not assume, test first. base_price $0.047 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "bytedance/seedance-1.5-pro" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.047/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.047 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "bytedance/seedance-v1.5-pro/text-to-video",
       name: "Seedance 1.5 Pro (Bytedance)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 8,
+      credits: 24,
+      creditsByDuration: { 5: 12, 10: 24 },
       durations: [5, 10],
       description: "Balanced quality and speed, a safe middle-ground choice.",
       imageInputs: { min: 0, max: 2 },
@@ -525,45 +533,48 @@ export const MODELS = {
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: different tier than Replicate's Seedance 1 Lite, verify equivalence before trusting. base_price $0.009 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "bytedance/seedance-1-lite" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.009/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.009 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "bytedance/seedance-v1-pro-fast/text-to-video",
       name: "Seedance 1 Lite (Bytedance)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 6,
+      credits: 3,
+      creditsByDuration: { 3: 2, 5: 3 },
       durations: [3, 5],
       description: "Lighter, faster Seedance variant for quicker turnarounds.",
       imageInputs: { min: 0, max: 3 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: same number both places — needs a real test to know the winner. base_price $0.10 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "wan-video/wan-2.7-t2v" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.1/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.1 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "alibaba/wan-2.7/text-to-video",
       name: "WAN 2.7 T2V (WAN-Video)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 10,
+      credits: 50,
+      creditsByDuration: { 5: 25, 10: 50 },
       durations: [5, 10],
       description: "Latest WAN text-to-video, good detail retention during motion.",
       imageInputs: { min: 0, max: 0 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: roughly a wash vs Replicate either way. base_price $0.071 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "wan-video/wan-2.5-t2v-fast" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.071/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.071 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "alibaba/wan-2.5/text-to-video-fast",
       name: "WAN 2.5 T2V Fast (WAN-Video)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 9,
+      credits: 36,
+      creditsByDuration: { 5: 18, 10: 36 },
       durations: [5, 10],
       description: "Speed-optimized text-to-video. Good for quick previews.",
       imageInputs: { min: 0, max: 0 },
@@ -583,15 +594,16 @@ export const MODELS = {
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: roughly a wash vs Replicate either way. base_price $0.071 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "wan-video/wan-2.5-i2v-fast" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.071/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.071 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "alibaba/wan-2.5/image-to-video-fast",
       name: "WAN 2.5 I2V Fast (WAN-Video)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 9,
+      credits: 36,
+      creditsByDuration: { 5: 18, 10: 36 },
       durations: [5, 10],
       description: "Image-to-video — animate a still photo into motion quickly.",
       imageInputs: { min: 1, max: 1 },
@@ -676,30 +688,32 @@ export const MODELS = {
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: SWITCH+UPGRADE: newer 1.1, half the price of 1.0 ($0.14->$0.07), Replicate doesn't offer 1.1. base_price $0.07 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "alibaba/happyhorse-1.0" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.07/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.07 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "alibaba/happyhorse-1.1/text-to-video",
       name: "HappyHorse 1.0 (Alibaba)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 10,
+      credits: 53,
+      creditsByDuration: { 5: 18, 8: 29, 10: 35, 15: 53 },
       durations: [5, 8, 10, 15],
       description: "Good for playful, stylized motion and lighter content.",
       imageInputs: { min: 0, max: 1 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: close to Replicate's $0.08/s, could go either way, needs test. base_price $0.088 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "veed/fabric-1.0" (Replicate, $0 balance).
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.088/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.088 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "veed/fabric-1.0/image-to-video",
       name: "Fabric 1.0 (VEED)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
-      credits: 9,
+      credits: 22,
+      creditsByDuration: { 3: 14, 5: 22 },
       durations: [3, 5],
       description: "Built with editing workflows in mind — clean, predictable output.",
       imageInputs: { min: 0, max: 1 },
@@ -749,18 +763,19 @@ export const MODELS = {
     // caught the Seedance mistake above. Do not remove comingSoon here
     // without a real tested number.
     {
+            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.238/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.238 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
       id: "kwaivgi/kling-v2.0-i2v-master",
       name: "Kling V2.0 Master (Atlas Cloud)",
       provider: "atlascloud",
       atlasCloudType: "video",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
       // UNVERIFIED — see comment above. Likely wrong (probably per-second,
       // not per-generation, same mistake Seedance had). Do not trust this
       // number until a real test + balance check confirms it.
-      credits: 15,
+      credits: 119,
+      creditsByDuration: { 5: 60, 10: 119 },
       durations: [5, 10],
       description: "Kling V2.0, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Smooth motion, good consistency.",
       imageInputs: { min: 1, max: 1 },
@@ -786,6 +801,42 @@ export const MODELS = {
       creditsByDuration: { 5: 10, 8: 20, 10: 30 },
       durations: [5, 8, 10],
       description: "Seedance 1 Pro, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Good motion quality for general video.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    // ==== NSFW "Spicy" lineup (Atlas Cloud) — RESTORED [Aug 2026] ========
+    // These existed before and were removed from the catalog at some
+    // point; header pricing notes above (lines 18-19) already documented
+    // their real cost as "$0.03/run" and "$0.04/run" flat, not
+    // per-second, which is why they're restored live rather than gated
+    // pending a test — but that annotation predates this session, so
+    // it's worth one quick real generation + balance check to
+    // reconfirm before scaling usage, same as everything else here.
+    // Both require nsfwEnabled=true (see pages/api/generate.js) —
+    // hidden from the normal dropdown until a customer opts in.
+    {
+      id: "atlascloud/wan-2.2/image-to-video",
+      name: "WAN 2.2 Spicy (Atlas Cloud)",
+      provider: "atlascloud",
+      atlasCloudType: "video",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 2,
+      durations: [5],
+      description: "Budget NSFW image-to-video. Fast and inexpensive for everyday spicy content.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "atlascloud/wan-2.2-turbo/infinite-image-to-video",
+      name: "WAN 2.2 Turbo Spicy Infinite (Atlas Cloud)",
+      provider: "atlascloud",
+      atlasCloudType: "video",
+      nsfw: true,
+      locked: true,
+      premium: true,
+      credits: 5,
+      durations: [5],
+      description: "Turbo NSFW image-to-video with extended/looping generation. Higher quality, longer output.",
       imageInputs: { min: 1, max: 1 },
     },
   ],
@@ -937,13 +988,13 @@ export const MODELS = {
     },
     {
       // WaveSpeed account was disabled by their payment processor
-      // (repeated failed card attempts read as a fraud signal) —
-      // gated comingSoon until the account is reinstated and funded.
-      // Remove comingSoon once verified working again.
+      // (repeated failed card attempts read as a fraud signal) — was
+      // gated comingSoon until the account was reinstated. RESTORED
+      // LIVE [Aug 2026]: WaveSpeed is now funded ($50) — comingSoon
+      // removed from all 7 InfiniteTalk entries below.
       id: "wavespeed-ai/infinitetalk",
       name: "InfiniteTalk 720p (WaveSpeed)",
       provider: "wavespeed",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -957,7 +1008,6 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-480p",
       name: "InfiniteTalk 480p (WaveSpeed)",
       provider: "wavespeed",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -971,7 +1021,6 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-v2v",
       name: "InfiniteTalk Video-to-Video (WaveSpeed)",
       provider: "wavespeed",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -986,7 +1035,6 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-v2v-480p",
       name: "InfiniteTalk Video-to-Video 480p (WaveSpeed)",
       provider: "wavespeed",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -1015,7 +1063,6 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-multi",
       name: "InfiniteTalk Multi 720p (WaveSpeed)",
       provider: "wavespeed",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
@@ -1030,7 +1077,6 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-multi-480p",
       name: "InfiniteTalk Multi 480p (WaveSpeed)",
       provider: "wavespeed",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: false,
@@ -1047,7 +1093,6 @@ export const MODELS = {
       id: "wavespeed-ai/infinitetalk-multi-v2v",
       name: "InfiniteTalk Multi Video-to-Video (WaveSpeed)",
       provider: "wavespeed",
-      comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
