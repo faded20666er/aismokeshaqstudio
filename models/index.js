@@ -908,41 +908,60 @@ export const MODELS = {
     // 2 known false-positive keyword matches (wavespeed-ai/chroma,
     // wavespeed-ai/scail — not actually NSFW models) excluded.
     //
-    // DURATION [Aug 30 2026 — corrected after a real failure]: every
-    // entry below now offers ONLY 5s, not [5, 8] as originally shipped.
-    // Real reason, not just caution: a live test on
-    // alibaba/wan-2.7/image-to-video-spicy came back
-    // `400 invalid request body field, duration must be one of 5, 10,
-    // or 15, got number 8` — the [5, 8] durations guessed for every one
-    // of these 14 entries were never confirmed against each model's
-    // real accepted values, and at least one was flat-out wrong (8
-    // isn't even in that model's valid set). Rather than guess a
-    // second value per model and risk 13 more of these one at a time
-    // as the owner tests each one, every entry was pulled back to just
-    // 5s — the one duration virtually every video-gen API on any
-    // provider accepts, and (per the timeout math below) the one
-    // that's safely under the Vercel ceiling regardless of which
-    // model's real max turns out to be.
+    // DURATION [re-audited Aug 30 2026]: every entry below got pulled
+    // back to ONLY 5s after a live test on
+    // alibaba/wan-2.7/image-to-video-spicy came back `400 invalid
+    // request body field, duration must be one of 5, 10, or 15, got
+    // number 8` — that [5, 8] guess had never been confirmed against
+    // any of these 14 models' real schemas. Owner flagged this as an
+    // over-correction (specifically noting Seedance used to offer
+    // richer options before the blanket 5s fallback), so every model
+    // was individually re-verified this pass against WaveSpeed's own
+    // per-model docs pages — real schema tables at
+    // wavespeed.ai/docs/docs-api/<vendor>/<slug>, slugs confirmed via
+    // wavespeed.ai/docs/sitemap.xml (several don't match the model id's
+    // own slug pattern — e.g. the alibaba/bytedance pages repeat the
+    // vendor name in the slug: "alibaba-wan-2.7-image-to-video-spicy").
+    // Real, per-model results:
+    //   - wan-2.2-spicy family (all 4 variants): real enum is [5, 8].
+    //   - ltx-2.3-spicy family (both variants): real range is 3-20
+    //     (a continuous range, not an enum).
+    //   - alibaba/wan-2.7 and alibaba/wan-2.6 spicy: real enum is
+    //     [5, 10, 15] — wan-2.7's value independently corroborated by
+    //     the original live 400 error above, which matches exactly.
+    //   - vidu/q3-spicy: real range is 1-16 (continuous).
+    //   - all 5 Seedance spicy tiers: real ranges are continuous
+    //     (v1.5-pro: 4-12; 2.0-fast / 2.0-mini / 2.0: 4-15; 2.5: the
+    //     docs are internally inconsistent — the schema table says
+    //     4-30 but the page's own prose says 4-15. Treating 2.5 as
+    //     4-15 until a live test resolves the discrepancy).
+    //   - All 5 Seedance spicy tiers ALSO take an optional `last_image`
+    //     (end frame) alongside the required `image` (start frame) —
+    //     a real second upload slot that was missing here
+    //     (imageInputs.max was 1 for all 5; corrected to 2 below).
+    //     This is very likely exactly what the owner meant by "number
+    //     of uploads you can add" being wrong.
     //
-    // Original 300s-timeout reasoning still applies to WHICH durations
-    // are safe to re-add once each model's real accepted values are
-    // known: tied directly to the real 300s Vercel timeout that killed
-    // the Kling V2.0 test (see utils/runModelAsync.js's honest
-    // limitation comment: waitUntil doesn't extend past Fluid Compute's
-    // hard ceiling, and there's no multi-invocation continuation chain
-    // built yet, so a job that runs past ~300s just dies silently and
-    // sits "processing" in Redis forever). WaveSpeed's own docs (cited
-    // in utils/runModel.js's runWaveSpeed()) put worst-case wall time
-    // at ~30s per 1s of video — at 8s that's 240s (60s buffer), at 10s
-    // it's 300s (right at the wall), at 15s it's 450s (would just fail).
-    // So even for wan-2.7-spicy, now confirmed to accept 10 and 15
-    // server-side, only 5s is offered here — 10s sits at the timeout
-    // wall with zero margin, 15s would exceed it outright. Widening any
-    // of these needs a real timed test confirming both (a) the model's
-    // true accepted duration values (test each one — do not assume
-    // family-mates share a schema) and (b) real wall-clock time, not
-    // just the documented worst case — same discipline as the
-    // per-second pricing above.
+    // What's actually offered below, despite several models' real
+    // schemas supporting durations well past 8s: the binding
+    // constraint isn't WaveSpeed's schema anymore, it's OUR OWN Vercel
+    // 300s Fluid Compute ceiling (see utils/runModelAsync.js's "HONEST
+    // LIMITATION" comment — no multi-invocation continuation chain
+    // exists yet, so a job that runs past ~300s just dies silently and
+    // sits "processing" forever). WaveSpeed's own docs put worst-case
+    // wall time at ~30s per 1s of video: at 8s that's 240s (60s
+    // buffer, safe), at 10s it's 300s (right at the wall, NOT safe),
+    // at 15s it's 450s (fails outright). So:
+    //   - Every model whose real schema allows 8s now offers [5, 8].
+    //   - alibaba/wan-2.7 and alibaba/wan-2.6 (real enum [5, 10, 15],
+    //     no 8 option in between) stay at [5] only — their next real
+    //     value, 10s, sits right at the timeout wall with zero margin.
+    //     Raising them needs either a real timed test proving 10s
+    //     finishes with margin, or the async continuation work that
+    //     removes the 300s ceiling entirely — not something to guess
+    //     past a second time.
+    // Same discipline as before: this is the SAFE ceiling given the
+    // (still real) 300s limit, not necessarily each model's true max.
     {
       id: "wavespeed-ai/wan-2.2-spicy/image-to-video",
       name: "Wan 2.2 Spicy I2V",
@@ -950,9 +969,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 8, // $0.03/s -> 5s only, see note above
-      creditsByDuration: { 5: 8 },
-      durations: [5],
+      credits: 8, // $0.03/s. Real enum confirmed [5, 8] — both offered.
+      creditsByDuration: { 5: 8, 8: 12 },
+      durations: [5, 8],
       description: "NSFW image-to-video. Animates your image into a cinematic clip. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -963,9 +982,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 8, // $0.03/s -> 5s only, see note above
-      creditsByDuration: { 5: 8 },
-      durations: [5],
+      credits: 8, // $0.03/s. Real enum confirmed [5, 8] — both offered.
+      creditsByDuration: { 5: 8, 8: 12 },
+      durations: [5, 8],
       inputType: "video",
       description: "NSFW video extension — continues an existing clip further. Unlock NSFW mode to use.",
       imageInputs: { min: 0, max: 0 },
@@ -977,9 +996,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 10, // $0.04/s -> 5s only, see note above
-      creditsByDuration: { 5: 10 },
-      durations: [5],
+      credits: 10, // $0.04/s. Real enum confirmed [5, 8] — both offered.
+      creditsByDuration: { 5: 10, 8: 16 },
+      durations: [5, 8],
       description: "NSFW image-to-video with LoRA styling support. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -990,9 +1009,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 10, // $0.04/s -> 5s only, see note above
-      creditsByDuration: { 5: 10 },
-      durations: [5],
+      credits: 10, // $0.04/s. Real enum confirmed [5, 8] — both offered.
+      creditsByDuration: { 5: 10, 8: 16 },
+      durations: [5, 8],
       inputType: "video",
       description: "NSFW video extension with LoRA styling support. Unlock NSFW mode to use.",
       imageInputs: { min: 0, max: 0 },
@@ -1004,9 +1023,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 5, // $0.02/s -> 5s only, see note above
-      creditsByDuration: { 5: 5 },
-      durations: [5],
+      credits: 5, // $0.02/s. Real range confirmed 3-20s — offering 5/8, our safe ceiling.
+      creditsByDuration: { 5: 5, 8: 8 },
+      durations: [5, 8],
       description: "Cheapest NSFW video model in the lineup. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -1017,9 +1036,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 8, // $0.03/s -> 5s only, see note above
-      creditsByDuration: { 5: 8 },
-      durations: [5],
+      credits: 8, // $0.03/s. Real range confirmed 3-20s — offering 5/8, our safe ceiling.
+      creditsByDuration: { 5: 8, 8: 12 },
+      durations: [5, 8],
       description: "Budget NSFW video with LoRA styling support. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -1030,7 +1049,13 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 25, // $0.10/s -> 5s only, see note above
+      // $0.10/s. Real enum confirmed [5, 10, 15] (this is the model
+      // whose live 400 error first caught the old [5, 8] guess). No 8
+      // option exists here, and 10/15 sit at/past our Vercel 300s
+      // ceiling — see the file-level note above. Staying at 5 only
+      // until either a real timed 10s test or async continuation work
+      // makes 10 provably safe.
+      credits: 25,
       creditsByDuration: { 5: 25 },
       durations: [5],
       description: "NSFW image-to-video on Wan 2.7's newer, sharper model. Unlock NSFW mode to use.",
@@ -1043,7 +1068,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 25, // $0.10/s -> 5s only, see note above
+      // $0.10/s. Real enum confirmed [5, 10, 15], same shape and same
+      // reasoning as wan-2.7 above — staying at 5 only.
+      credits: 25,
       creditsByDuration: { 5: 25 },
       durations: [5],
       description: "NSFW image-to-video on Wan 2.6. Unlock NSFW mode to use.",
@@ -1056,9 +1083,9 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: true,
-      credits: 18, // $0.07/s -> 5s only, see note above
-      creditsByDuration: { 5: 18 },
-      durations: [5],
+      credits: 18, // $0.07/s. Real range confirmed 1-16s — offering 5/8, our safe ceiling.
+      creditsByDuration: { 5: 18, 8: 28 },
+      durations: [5, 8],
       description: "NSFW image-to-video on Vidu Q3 — stronger prompt adherence, higher tier. Unlock NSFW mode to use.",
       imageInputs: { min: 1, max: 1 },
     },
@@ -1069,11 +1096,14 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: true,
-      credits: 13, // $0.052/s -> 5s only, see note above
-      creditsByDuration: { 5: 13 },
-      durations: [5],
-      description: "NSFW image-to-video on Seedance 1.5 Pro — smooth motion, strong subject coherence. Unlock NSFW mode to use.",
-      imageInputs: { min: 1, max: 1 },
+      credits: 13, // $0.052/s. Real range confirmed 4-12s — offering 5/8, our safe ceiling.
+      creditsByDuration: { 5: 13, 8: 21 },
+      durations: [5, 8],
+      description: "NSFW image-to-video on Seedance 1.5 Pro — smooth motion, strong subject coherence. Optional end-frame image supported. Unlock NSFW mode to use.",
+      // Real schema takes a required start `image` PLUS an optional
+      // `last_image` (end frame) — a second upload slot that was
+      // missing here (was max:1 for all 5 Seedance tiers).
+      imageInputs: { min: 1, max: 2 },
     },
     {
       id: "bytedance/seedance-2.0-fast/image-to-video-spicy",
@@ -1082,11 +1112,11 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 20, // $0.08/s -> 5s only, see note above
-      creditsByDuration: { 5: 20 },
-      durations: [5],
-      description: "Faster, cheaper NSFW Seedance 2.0 tier. Unlock NSFW mode to use.",
-      imageInputs: { min: 1, max: 1 },
+      credits: 20, // $0.08/s. Real range confirmed 4-15s — offering 5/8, our safe ceiling.
+      creditsByDuration: { 5: 20, 8: 32 },
+      durations: [5, 8],
+      description: "Faster, cheaper NSFW Seedance 2.0 tier. Optional end-frame image supported. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 2 },
     },
     {
       id: "bytedance/seedance-2.0-mini/image-to-video-spicy",
@@ -1095,11 +1125,11 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: false,
-      credits: 18, // $0.072/s -> 5s only, see note above
-      creditsByDuration: { 5: 18 },
-      durations: [5],
-      description: "Budget NSFW Seedance 2.0 tier. Unlock NSFW mode to use.",
-      imageInputs: { min: 1, max: 1 },
+      credits: 18, // $0.072/s. Real range confirmed 4-15s — offering 5/8, our safe ceiling.
+      creditsByDuration: { 5: 18, 8: 29 },
+      durations: [5, 8],
+      description: "Budget NSFW Seedance 2.0 tier. Optional end-frame image supported. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 2 },
     },
     {
       id: "bytedance/seedance-2.0/image-to-video-spicy",
@@ -1108,11 +1138,11 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: true,
-      credits: 27, // $0.108/s -> 5s only, see note above
-      creditsByDuration: { 5: 27 },
-      durations: [5],
-      description: "Full-quality NSFW Seedance 2.0 tier. Unlock NSFW mode to use.",
-      imageInputs: { min: 1, max: 1 },
+      credits: 27, // $0.108/s. Real range confirmed 4-15s — offering 5/8, our safe ceiling.
+      creditsByDuration: { 5: 27, 8: 44 },
+      durations: [5, 8],
+      description: "Full-quality NSFW Seedance 2.0 tier. Optional end-frame image supported. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 2 },
     },
     {
       id: "bytedance/seedance-2.5/image-to-video-spicy",
@@ -1121,11 +1151,14 @@ export const MODELS = {
       nsfw: true,
       locked: true,
       premium: true,
-      credits: 41, // $0.162/s -> 5s only, see note above
-      creditsByDuration: { 5: 41 },
-      durations: [5],
-      description: "Top-tier NSFW video model — newest Seedance generation, best quality in the spicy lineup. Unlock NSFW mode to use.",
-      imageInputs: { min: 1, max: 1 },
+      // $0.162/s. Docs are internally inconsistent for THIS model
+      // (schema table says 4-30s, page prose says 4-15s) — offering
+      // 5/8 sidesteps the discrepancy since both are valid either way.
+      credits: 41,
+      creditsByDuration: { 5: 41, 8: 65 },
+      durations: [5, 8],
+      description: "Top-tier NSFW video model — newest Seedance generation, best quality in the spicy lineup. Optional end-frame image supported. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 2 },
     },
   ],
 

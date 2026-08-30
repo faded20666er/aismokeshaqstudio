@@ -419,6 +419,19 @@ async function runWaveSpeed(modelId, inputs) {
       duration: inputs.duration || 5,
       seed: typeof inputs.seed === "number" ? inputs.seed : -1,
     };
+
+    // ADDED [re-audit, Aug 30 2026]: the 5 Seedance spicy tiers
+    // (models/index.js) really do take an optional `last_image` end
+    // frame alongside the required starting `image` — confirmed
+    // against WaveSpeed's own per-model docs schema, not guessed.
+    // imageInputs.max was raised to 2 for exactly those 5 models, and
+    // StudioPanel.jsx's upload UI already caps uploadedFiles at
+    // imageInputs.max, so inputs.images[1] only ever shows up here for
+    // a model that actually declared room for it — safe to forward
+    // unconditionally rather than re-checking the model id twice.
+    if (Array.isArray(inputs.images) && inputs.images[1]) {
+      body.last_image = inputs.images[1];
+    }
   }
 
   const submitRes = await fetch(`https://api.wavespeed.ai/api/v3/${realModelSlug}`, {
