@@ -803,43 +803,32 @@ export const MODELS = {
       description: "Seedance 1 Pro, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Good motion quality for general video.",
       imageInputs: { min: 1, max: 1 },
     },
-    // ==== NSFW "Spicy" lineup (Atlas Cloud) — RESTORED [Aug 2026] ========
-    // These existed before and were removed from the catalog at some
-    // point; header pricing notes above (lines 18-19) already documented
-    // their real cost as "$0.03/run" and "$0.04/run" flat, not
-    // per-second, which is why they're restored live rather than gated
-    // pending a test — but that annotation predates this session, so
-    // it's worth one quick real generation + balance check to
-    // reconfirm before scaling usage, same as everything else here.
-    // Both require nsfwEnabled=true (see pages/api/generate.js) —
-    // hidden from the normal dropdown until a customer opts in.
-    {
-      id: "atlascloud/wan-2.2/image-to-video",
-      name: "WAN 2.2 Spicy (Atlas Cloud)",
-      provider: "atlascloud",
-      atlasCloudType: "video",
-      nsfw: true,
-      locked: true,
-      premium: false,
-      credits: 2,
-      durations: [5],
-      description: "Budget NSFW image-to-video. Fast and inexpensive for everyday spicy content.",
-      imageInputs: { min: 1, max: 1 },
-    },
-    {
-      id: "atlascloud/wan-2.2-turbo/infinite-image-to-video",
-      name: "WAN 2.2 Turbo Spicy Infinite (Atlas Cloud)",
-      provider: "atlascloud",
-      atlasCloudType: "video",
-      nsfw: true,
-      locked: true,
-      premium: true,
-      credits: 5,
-      durations: [5],
-      description: "Turbo NSFW image-to-video with extended/looping generation. Higher quality, longer output.",
-      imageInputs: { min: 1, max: 1 },
-    },
   ],
+  // NOTE on "Spicy" NSFW models [Aug 2026]: I added 2 entries here
+  // earlier in this session and then found real reasons to pull them
+  // back out before this ever reached a customer — see the removal
+  // note this replaced, and the chat explanation, for the full story.
+  // Two separate real problems, not just caution:
+  //   1. Atlas Cloud itself discontinued their NSFW-branded model
+  //      lineup 3 days before this (commit 4c965da9, Aug 26) — the old
+  //      "Spicy" model ids were returning 400 "not found". The plain
+  //      "atlascloud/wan-2.2/image-to-video" id I pointed these at
+  //      still exists in their catalog today, but there's no
+  //      confirmation it's still permitted for adult content there —
+  //      restoring this needs that confirmed with Atlas Cloud first,
+  //      not assumed from an old header comment.
+  //   2. That same commit also removed the NSFW toggle / age-gate UI
+  //      from StudioPanel entirely — nsfwEnabled never gets set to
+  //      true from the UI anymore. Any model with nsfw:true, locked:
+  //      true is therefore unreachable: it would show up in the
+  //      dropdown (getSortedModels doesn't filter on nsfw), a customer
+  //      could select it, and every single generation attempt would
+  //      403 with no way to ever unlock it — a guaranteed-broken menu
+  //      item, not just an inactive one.
+  // Properly bringing this back needs: confirming with Atlas Cloud
+  // that adult content is still allowed on whichever model id gets
+  // used, AND rebuilding the toggle/age-gate UI in StudioPanel. Real
+  // scope, owner's call — not re-added here.
 
   // =====================================================================
   // TTS MODELS
