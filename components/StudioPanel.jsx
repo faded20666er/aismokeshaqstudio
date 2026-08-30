@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import ModelSelector from "./ModelSelector";
 import VoicePicker from "./VoicePicker";
 import ByokKeyManager from "./ByokKeyManager";
+import AgeGate from "./AgeGate";
 
 // Full voice list for Kokoro-82M (jaaari/kokoro-82m on Replicate).
 // These 46 voices are baked into the model weights — no API call needed.
@@ -158,6 +159,21 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
   const [durationSeconds, setDurationSeconds] = useState(30);
   const [videoDuration, setVideoDuration] = useState(null); // selected clip length for video models
   const [usingOwnKey, setUsingOwnKey] = useState(false);
+  const [nsfwEnabled, setNsfwEnabled] = useState(false);
+  const [nsfwAgeVerified, setNsfwAgeVerified] = useState(false);
+  const [showNsfwAgeGate, setShowNsfwAgeGate] = useState(false);
+
+  // Check if user has already completed NSFW age verification on this browser
+  // (runs once on mount — skips the gate for returning users who already agreed)
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("smokeshaq_nsfw_age_verified") === "true") {
+        setNsfwAgeVerified(true);
+      }
+    } catch {
+      // localStorage unavailable — gate will show every session, which is the safe default
+    }
+  }, []);
 
   // Reset video duration selection whenever the model changes so the pill
   // defaults to the model's first supported duration, not a stale value.
@@ -199,6 +215,29 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
       };
       img.src = objectUrl;
     });
+  }
+
+  function handleNsfwToggle(enabling) {
+    if (enabling && !nsfwAgeVerified) {
+      // User wants to turn on NSFW but hasn't verified age yet — show the gate
+      setShowNsfwAgeGate(true);
+      return;
+    }
+    setNsfwEnabled(enabling);
+  }
+
+  function handleNsfwVerified() {
+    try {
+      window.localStorage.setItem("smokeshaq_nsfw_age_verified", "true");
+    } catch {}
+    setNsfwAgeVerified(true);
+    setNsfwEnabled(true);
+    setShowNsfwAgeGate(false);
+  }
+
+  function handleNsfwDeclined() {
+    setShowNsfwAgeGate(false);
+    // Don't change nsfwEnabled — if it was off, it stays off
   }
 
   async function handleGenerateClick() {
@@ -246,6 +285,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
     await onGenerate({
       category,
       modelId: selectedModel.id,
+      nsfwEnabled,
       inputs,
     });
   }
@@ -308,6 +348,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
         </div>
         <ModelSelector
           category={category}
+          nsfwEnabled={nsfwEnabled}
           onSelect={(m) => setSelectedModel(m)}
         />
       </div>
@@ -515,6 +556,21 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
         </div>
       )}
 
+      {/* NSFW TOGGLE — moved to bottom; hidden for TTS (no NSFW voice models exist) */}
+      {category !== "tts" && (
+        <div className="nsfw-row">
+          <label className="nsfw-toggle">
+            <input
+              type="checkbox"
+              checked={nsfwEnabled}
+              onChange={(e) => handleNsfwToggle(e.target.checked)}
+            />
+            <span className="nsfw-label text-silver-red">Enable NSFW Models</span>
+          </label>
+          <span className="nsfw-note">Locked models show a 🔒 until NSFW is enabled. You must be 18+ to use this feature, and you are solely responsible for any content you upload or generate.</span>
+        </div>
+      )}
+
       {/* CREDITS */}
       {typeof credits === "number" && (
         <div className="section-block">
@@ -557,6 +613,11 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
             <OutputPreview item={output} category={category} />
           )}
         </div>
+      )}
+
+      {/* NSFW Age Gate — only shown when user tries to enable NSFW without prior verification */}
+      {showNsfwAgeGate && (
+        <AgeGate onConfirm={handleNsfwVerified} onDecline={handleNsfwDeclined} />
       )}
 
       <style jsx>{`
@@ -635,6 +696,30 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
         .category-subtitle {
           font-size: 0.85rem;
           opacity: 0.85;
+        }
+
+        .nsfw-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+          font-size: 0.8rem;
+        }
+
+        .nsfw-toggle {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+        }
+
+        .nsfw-toggle input {
+          accent-color: #ff2a2a;
+        }
+
+        .nsfw-note {
+          opacity: 0.7;
+          font-size: 0.75rem;
         }
 
         .section-block {
@@ -909,6 +994,11 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
           }
 
           .category-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .nsfw-row {
             flex-direction: column;
             align-items: flex-start;
           }

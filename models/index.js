@@ -803,32 +803,239 @@ export const MODELS = {
       description: "Seedance 1 Pro, sourced via Atlas Cloud instead of Replicate — same model family, verified far cheaper. Good motion quality for general video.",
       imageInputs: { min: 1, max: 1 },
     },
+
+    // =====================================================================
+    // NSFW "SPICY" LINEUP — WaveSpeed [restored Aug 30 2026]
+    // =====================================================================
+    // History, so nobody re-litigates this from scratch:
+    //   - Original NSFW I2V ran on a HuggingFace community model
+    //     (imb101/I2V-WAN2.2-POVFaceSitting), then got forced onto HF's
+    //     "wavespeed" INFERENCE PROVIDER routing (commit b127ff0) because
+    //     the default fal-ai route rejects NSFW community models. That is
+    //     NOT the same thing as WaveSpeed's own native API used below —
+    //     it was HuggingFace calling WaveSpeed as a backend.
+    //   - Commit 9bfba25 replaced that HF path entirely with Atlas
+    //     Cloud's own "alibaba/wan-2.2-spicy/image-to-video" model
+    //     ($0.03/run flat, verified on Atlas Cloud's model page).
+    //   - Commit 4c965da9 (Aug 26) ripped the whole feature out — Atlas
+    //     Cloud discontinued their NSFW-branded lineup — and also
+    //     stripped the toggle/age-gate UI from StudioPanel.
+    //   - I (Claude) re-added 2 Atlas Cloud spicy entries earlier this
+    //     session pointed at the plain (non-discontinued-named) Atlas
+    //     Cloud id, then found and self-reverted that — no toggle UI
+    //     existed to ever unlock them, guaranteed dead menu items.
+    //   - Owner confirmed (chat, prior session) the real fix: Atlas
+    //     Cloud's NSFW lineup is gone for good, but WaveSpeed — now
+    //     funded ($50) — has its OWN native "-spicy" tagged catalog,
+    //     confirmed live via https://wavespeed.ai/api/models. It even
+    //     includes a direct namesake successor,
+    //     "wavespeed-ai/wan-2.2-spicy/image-to-video", to the old Atlas
+    //     Cloud model. This is that lineup, added for real this time,
+    //     via WaveSpeed's own submit-then-poll API (utils/runModel.js
+    //     runWaveSpeed(), generalized below to handle these in addition
+    //     to InfiniteTalk) — NOT the old HF inference-provider path.
+    //
+    // Pricing: WaveSpeed's public catalog gives {base_price, discount_rate}
+    // per model, no explicit per-second/flat unit flag. Calibrated the
+    // scale against WaveSpeed's own Seedance v1-Pro entries, whose real
+    // $/s price is already independently verified in pricing-audit.md
+    // (480p $0.03/s <-> base_price 150000; 720p $0.06/s <-> base_price
+    // 300000 — exactly double, confirming a clean linear scale):
+    //   real $/second = (base_price / 5,000,000) * (discount_rate / 100)
+    // pricing-audit.md also independently confirms WAN-family models on
+    // WaveSpeed bill per-second (WAN 3.0: 480p $0.05/s, 720p $0.10/s), so
+    // per-second is used for every model below, not just Seedance — the
+    // same defensive convention as the Atlas Cloud video re-pointing
+    // earlier in this file (assume the worse-case billing so credits
+    // charged can never fall short of real cost). credits = ceil(real
+    // cost x 2.5 markup / $0.05 per credit) = ceil(real $/s x duration x 50).
+    // 2 known false-positive keyword matches (wavespeed-ai/chroma,
+    // wavespeed-ai/scail — not actually NSFW models) excluded.
+    {
+      id: "wavespeed-ai/wan-2.2-spicy/image-to-video",
+      name: "Wan 2.2 Spicy I2V (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 12, // $0.03/s -> 5s:8cr, 8s:12cr
+      creditsByDuration: { 5: 8, 8: 12 },
+      durations: [5, 8],
+      description: "NSFW image-to-video. Animates your image into a cinematic clip. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "wavespeed-ai/wan-2.2-spicy/video-extend",
+      name: "Wan 2.2 Spicy Video Extend (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 12, // $0.03/s -> 5s:8cr, 8s:12cr
+      creditsByDuration: { 5: 8, 8: 12 },
+      durations: [5, 8],
+      inputType: "video",
+      description: "NSFW video extension — continues an existing clip further. Unlock NSFW mode to use.",
+      imageInputs: { min: 0, max: 0 },
+    },
+    {
+      id: "wavespeed-ai/wan-2.2-spicy/image-to-video-lora",
+      name: "Wan 2.2 Spicy I2V LoRA (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 16, // $0.04/s -> 5s:10cr, 8s:16cr
+      creditsByDuration: { 5: 10, 8: 16 },
+      durations: [5, 8],
+      description: "NSFW image-to-video with LoRA styling support. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "wavespeed-ai/wan-2.2-spicy/video-extend-lora",
+      name: "Wan 2.2 Spicy Video Extend LoRA (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 16, // $0.04/s -> 5s:10cr, 8s:16cr
+      creditsByDuration: { 5: 10, 8: 16 },
+      durations: [5, 8],
+      inputType: "video",
+      description: "NSFW video extension with LoRA styling support. Unlock NSFW mode to use.",
+      imageInputs: { min: 0, max: 0 },
+    },
+    {
+      id: "wavespeed-ai/ltx-2.3-spicy/image-to-video",
+      name: "LTX 2.3 Spicy I2V (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 8, // $0.02/s -> 5s:5cr, 8s:8cr
+      creditsByDuration: { 5: 5, 8: 8 },
+      durations: [5, 8],
+      description: "Cheapest NSFW video model in the lineup. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "wavespeed-ai/ltx-2.3-spicy/image-to-video-lora",
+      name: "LTX 2.3 Spicy I2V LoRA (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 12, // $0.03/s -> 5s:8cr, 8s:12cr
+      creditsByDuration: { 5: 8, 8: 12 },
+      durations: [5, 8],
+      description: "Budget NSFW video with LoRA styling support. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "alibaba/wan-2.7/image-to-video-spicy",
+      name: "Wan 2.7 Spicy I2V (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 40, // $0.10/s -> 5s:25cr, 8s:40cr
+      creditsByDuration: { 5: 25, 8: 40 },
+      durations: [5, 8],
+      description: "NSFW image-to-video on Wan 2.7's newer, sharper model. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "alibaba/wan-2.6/image-to-video-spicy",
+      name: "Wan 2.6 Spicy I2V (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 40, // $0.10/s -> 5s:25cr, 8s:40cr
+      creditsByDuration: { 5: 25, 8: 40 },
+      durations: [5, 8],
+      description: "NSFW image-to-video on Wan 2.6. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "vidu/q3/image-to-video-spicy",
+      name: "Vidu Q3 Spicy I2V (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: true,
+      credits: 28, // $0.07/s -> 5s:18cr, 8s:28cr
+      creditsByDuration: { 5: 18, 8: 28 },
+      durations: [5, 8],
+      description: "NSFW image-to-video on Vidu Q3 — stronger prompt adherence, higher tier. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "bytedance/seedance-v1.5-pro/image-to-video-spicy",
+      name: "Seedance 1.5 Pro Spicy I2V (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: true,
+      credits: 21, // $0.052/s -> 5s:13cr, 8s:21cr
+      creditsByDuration: { 5: 13, 8: 21 },
+      durations: [5, 8],
+      description: "NSFW image-to-video on Seedance 1.5 Pro — smooth motion, strong subject coherence. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "bytedance/seedance-2.0-fast/image-to-video-spicy",
+      name: "Seedance 2.0 Fast Spicy I2V (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 32, // $0.08/s -> 5s:20cr, 8s:32cr
+      creditsByDuration: { 5: 20, 8: 32 },
+      durations: [5, 8],
+      description: "Faster, cheaper NSFW Seedance 2.0 tier. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "bytedance/seedance-2.0-mini/image-to-video-spicy",
+      name: "Seedance 2.0 Mini Spicy I2V (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 29, // $0.072/s -> 5s:18cr, 8s:29cr
+      creditsByDuration: { 5: 18, 8: 29 },
+      durations: [5, 8],
+      description: "Budget NSFW Seedance 2.0 tier. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "bytedance/seedance-2.0/image-to-video-spicy",
+      name: "Seedance 2.0 Spicy I2V (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: true,
+      credits: 44, // $0.108/s -> 5s:27cr, 8s:44cr
+      creditsByDuration: { 5: 27, 8: 44 },
+      durations: [5, 8],
+      description: "Full-quality NSFW Seedance 2.0 tier. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
+    {
+      id: "bytedance/seedance-2.5/image-to-video-spicy",
+      name: "Seedance 2.5 Spicy I2V (WaveSpeed)",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: true,
+      credits: 65, // $0.162/s -> 5s:41cr, 8s:65cr
+      creditsByDuration: { 5: 41, 8: 65 },
+      durations: [5, 8],
+      description: "Top-tier NSFW video model — newest Seedance generation, best quality in the spicy lineup. Unlock NSFW mode to use.",
+      imageInputs: { min: 1, max: 1 },
+    },
   ],
-  // NOTE on "Spicy" NSFW models [Aug 2026]: I added 2 entries here
-  // earlier in this session and then found real reasons to pull them
-  // back out before this ever reached a customer — see the removal
-  // note this replaced, and the chat explanation, for the full story.
-  // Two separate real problems, not just caution:
-  //   1. Atlas Cloud itself discontinued their NSFW-branded model
-  //      lineup 3 days before this (commit 4c965da9, Aug 26) — the old
-  //      "Spicy" model ids were returning 400 "not found". The plain
-  //      "atlascloud/wan-2.2/image-to-video" id I pointed these at
-  //      still exists in their catalog today, but there's no
-  //      confirmation it's still permitted for adult content there —
-  //      restoring this needs that confirmed with Atlas Cloud first,
-  //      not assumed from an old header comment.
-  //   2. That same commit also removed the NSFW toggle / age-gate UI
-  //      from StudioPanel entirely — nsfwEnabled never gets set to
-  //      true from the UI anymore. Any model with nsfw:true, locked:
-  //      true is therefore unreachable: it would show up in the
-  //      dropdown (getSortedModels doesn't filter on nsfw), a customer
-  //      could select it, and every single generation attempt would
-  //      403 with no way to ever unlock it — a guaranteed-broken menu
-  //      item, not just an inactive one.
-  // Properly bringing this back needs: confirming with Atlas Cloud
-  // that adult content is still allowed on whichever model id gets
-  // used, AND rebuilding the toggle/age-gate UI in StudioPanel. Real
-  // scope, owner's call — not re-added here.
 
   // =====================================================================
   // TTS MODELS

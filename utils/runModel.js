@@ -331,49 +331,79 @@ async function runReplicate(model, inputs) {
 // WaveSpeed's live API docs — do not change these field names without
 // re-checking the docs, they are NOT the same shape as the single
 // endpoint.
+//
+// GENERALIZED [Aug 30 2026] to also handle the NSFW "spicy" video
+// lineup (models/index.js, video category, provider: "wavespeed",
+// nsfw: true) — those are plain image-to-video / video-extend models,
+// a completely different shape than InfiniteTalk's talking-avatar
+// params (no audio, no resolution baked into the id). Unlike
+// InfiniteTalk, model.id for these IS already the exact real WaveSpeed
+// catalog slug (confirmed against https://wavespeed.ai/api/models —
+// no id-to-slug remapping needed), so they're submitted as-is.
 async function runWaveSpeed(modelId, inputs) {
-  const isMulti = modelId.includes("-multi");
-  const isV2V = modelId.includes("-v2v");
-  const resolution = modelId.endsWith("-480p") ? "480p" : "720p";
+  const isInfiniteTalk = modelId.startsWith("wavespeed-ai/infinitetalk");
 
   let realModelSlug;
   let body;
 
-  if (isMulti) {
-    realModelSlug = isV2V
-      ? "wavespeed-ai/infinitetalk/video-to-video-multi"
-      : "wavespeed-ai/infinitetalk/multi";
+  if (isInfiniteTalk) {
+    const isMulti = modelId.includes("-multi");
+    const isV2V = modelId.includes("-v2v");
+    const resolution = modelId.endsWith("-480p") ? "480p" : "720p";
 
-    body = {
-      [isV2V ? "video" : "image"]: inputs.face || inputs.image || inputs.video,
-      left_audio: inputs.leftAudio,
-      right_audio: inputs.rightAudio,
-      order: inputs.order || "meanwhile", // "meanwhile" | "left_right" | "right_left"
-      prompt: inputs.prompt || "",
-      resolution,
-      seed: -1,
-    };
-  } else {
-    realModelSlug = isV2V
-      ? "wavespeed-ai/infinitetalk/video-to-video"
-      : "wavespeed-ai/infinitetalk";
+    if (isMulti) {
+      realModelSlug = isV2V
+        ? "wavespeed-ai/infinitetalk/video-to-video-multi"
+        : "wavespeed-ai/infinitetalk/multi";
 
-    body = {
-      [isV2V ? "video" : "image"]: inputs.face || inputs.image || inputs.video,
-      audio: inputs.audio,
-      prompt: inputs.prompt || "",
-      resolution,
-      seed: -1,
-    };
+      body = {
+        [isV2V ? "video" : "image"]: inputs.face || inputs.image || inputs.video,
+        left_audio: inputs.leftAudio,
+        right_audio: inputs.rightAudio,
+        order: inputs.order || "meanwhile", // "meanwhile" | "left_right" | "right_left"
+        prompt: inputs.prompt || "",
+        resolution,
+        seed: -1,
+      };
+    } else {
+      realModelSlug = isV2V
+        ? "wavespeed-ai/infinitetalk/video-to-video"
+        : "wavespeed-ai/infinitetalk";
 
-    // mask_image only applies to the video-to-video endpoint — it
-    // restricts which region of the frame is allowed to animate. Used
-    // by the Multi-Character Timeline to protect already-synced faces
-    // when layering a 3rd character's dialogue onto a clip that
-    // already has characters 1 & 2 talking.
-    if (isV2V && inputs.maskImage) {
-      body.mask_image = inputs.maskImage;
+      body = {
+        [isV2V ? "video" : "image"]: inputs.face || inputs.image || inputs.video,
+        audio: inputs.audio,
+        prompt: inputs.prompt || "",
+        resolution,
+        seed: -1,
+      };
+
+      // mask_image only applies to the video-to-video endpoint — it
+      // restricts which region of the frame is allowed to animate. Used
+      // by the Multi-Character Timeline to protect already-synced faces
+      // when layering a 3rd character's dialogue onto a clip that
+      // already has characters 1 & 2 talking.
+      if (isV2V && inputs.maskImage) {
+        body.mask_image = inputs.maskImage;
+      }
     }
+  } else {
+    // Generic WaveSpeed image-to-video / video-extend model (the
+    // "spicy" lineup and anything else added the same way in future).
+    // Standard WaveSpeed i2v shape: image + prompt + duration + seed.
+    // "video-extend" variants take an existing video instead of a
+    // starting image.
+    realModelSlug = modelId;
+    const isVideoExtend = modelId.includes("video-extend");
+
+    body = {
+      [isVideoExtend ? "video" : "image"]: isVideoExtend
+        ? inputs.video || inputs.face || inputs.image
+        : inputs.face || inputs.image,
+      prompt: inputs.prompt || "",
+      duration: inputs.duration || 5,
+      seed: typeof inputs.seed === "number" ? inputs.seed : -1,
+    };
   }
 
   const submitRes = await fetch(`https://api.wavespeed.ai/api/v3/${realModelSlug}`, {
