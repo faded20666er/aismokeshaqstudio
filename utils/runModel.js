@@ -365,12 +365,29 @@ async function runWaveSpeed(model, inputs) {
   const category = model.category;
   const isImageGen = category === "image";
   const isTTS = category === "tts";
+  const isMusic = category === "music";
   const isInfiniteTalk = modelId.startsWith("wavespeed-ai/infinitetalk");
 
   let realModelSlug;
   let body;
 
-  if (isTTS) {
+  if (isMusic) {
+    // ACE-Step song generation — confirmed real schema via WaveSpeed's
+    // own docs (wavespeed.ai/docs/docs-api/wavespeed-ai/ace-step):
+    // {tags, lyrics, duration, seed}, no image/audio/video input at
+    // all. "lyrics" left unset/empty is fine (instrumental) — the
+    // frontend sends "[inst]" explicitly when the user checks
+    // Instrumental (see models/index.js's comment on why), but an
+    // empty string is also accepted per the docs. duration defaults to
+    // 60 server-side if the caller doesn't pass one.
+    realModelSlug = modelId;
+    body = {
+      tags: inputs.tags || "",
+      lyrics: inputs.lyrics || "",
+      duration: inputs.duration || 60,
+      seed: typeof inputs.seed === "number" ? inputs.seed : -1,
+    };
+  } else if (isTTS) {
     // Real WaveSpeed-hosted TTS models (ElevenLabs eleven-v3, MiniMax
     // Speech 2.6 Turbo, etc.) — confirmed via each model's own docs
     // page: {text, voice_id, ...}, no duration/image/size params at

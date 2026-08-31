@@ -12,6 +12,7 @@ const ENDPOINT_BY_CATEGORY = {
   video: '/api/generate',
   lipsync: '/api/lipsync',
   tts: '/api/voice',
+  music: '/api/music',
 };
 
 export default function StudioPage() {

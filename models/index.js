@@ -17,6 +17,9 @@
 //   NSFW image         -> 5 credits   (HF-hosted, slightly higher infra cost)
 //   NSFW I2V (budget)  -> 2 credits   (Atlas Cloud Wan 2.2 Spicy, real cost $0.03/run)
 //   NSFW I2V (turbo)   -> 5+ credits  (Atlas Cloud Wan 2.2 Turbo Spicy Infinite)
+//   Music / song       -> ~1-3 credits (real cost $0.0002/sec, billed per
+//                          second like lipsync's per-second models — see
+//                          the "music" category below)
 //
 // Every model has a short "description" field describing its strengths
 // in plain language — shown in the dropdown so customers can pick the
@@ -1626,6 +1629,57 @@ export const MODELS = {
       premium: false,
       credits: 12,
       description: "Reliable, affordable short-clip lip sync for most face/audio pairs.",
+    },
+  ],
+
+  // =====================================================================
+  // MUSIC / SONG GENERATION — NEW CATEGORY [Aug 31 2026]
+  //
+  // Found while researching free options: WaveSpeed's public catalog
+  // (api.wavespeed.ai/api/models) lists 5 "ACE-Step" audio-generation
+  // models. IMPORTANT CORRECTION to an earlier read of these as "free":
+  // the catalog's base_price/discount_rate combo for this model computes
+  // to a near-$0 number under the FLAT per-generation formula this file
+  // uses for image/video — but ACE-Step is billed PER SECOND, confirmed
+  // directly against its own docs page
+  // (wavespeed.ai/docs/docs-api/wavespeed-ai/ace-step): "Billed per
+  // second at $0.0002" ($0.012 for a 60s song, $0.048 for the max 240s).
+  // Genuinely cheap, not free — same billing-formula-doesn't-fit-every-
+  // model trap this project has hit before (see Seedance duration
+  // billing history), caught this time before shipping instead of after.
+  // =====================================================================
+  music: [
+    {
+      // Real params confirmed against WaveSpeed's own docs page (same
+      // URL as above): tags (required string, comma-separated genre
+      // tags), lyrics (optional — use "[inst]" or "[instrumental]" for
+      // no vocals), duration (5-240s, default 60), seed. Billed like
+      // this project's other per-second models (lipsync's DomoAI/
+      // WaveSpeed entries) via creditsPerSecond + maxDurationSeconds —
+      // StudioPanel.jsx's existing per-second duration slider pattern
+      // is reused for this, not reinvented.
+      // credits/sec: $0.0002 real cost × 2.5 markup / $0.05 per credit
+      // = 0.01 credits/sec (e.g. ~1 credit for a full 60s song, ~3
+      // credits for the max 240s).
+      //
+      // SCOPE NOTE: WaveSpeed has 4 more ACE-Step variants —
+      // prompt-to-audio (auto-generates tags/lyrics from a single
+      // simple prompt), audio-to-audio, audio-inpaint, audio-outpaint
+      // (the last 3 all take an EXISTING audio file to remix/edit/
+      // extend, needing a new "upload audio" UI control this pass
+      // doesn't add). Shipping just this core tags+lyrics+duration
+      // model first — same "ship one thing correctly" discipline used
+      // for the TTS fix — rather than half-wiring all 5 at once.
+      id: "wavespeed-ai/ace-step",
+      name: "ACE-Step Song Generator",
+      provider: "wavespeed",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      creditsPerSecond: 0.01,
+      maxDurationSeconds: 240,
+      credits: 1, // fallback/display estimate only — real charge is computed from duration, see pages/api/music.js
+      description: "Generate a full song with lyrics and vocals from genre tags — or instrumental-only. Up to 4 minutes, 50+ languages.",
     },
   ],
 };

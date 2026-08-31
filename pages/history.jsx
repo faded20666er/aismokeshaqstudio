@@ -17,6 +17,7 @@ const CATEGORY_TABS = [
   { value: "image-nsfw", label: "Image (NSFW)" },
   { value: "video", label: "Video" },
   { value: "tts", label: "TTS" },
+  { value: "music", label: "Music" },
   { value: "lipsync", label: "Talking Photo" },
   { value: "timeline", label: "Timeline" },
 ];
@@ -76,7 +77,7 @@ export default function HistoryPage() {
   }
 
   function isAudio(item) {
-    return item.category === "tts";
+    return item.category === "tts" || item.category === "music";
   }
 
   return (

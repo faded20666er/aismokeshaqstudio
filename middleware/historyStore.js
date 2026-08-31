@@ -25,7 +25,7 @@ const redis = new Redis({
 const HISTORY_KEY = (userId) => `history:${userId}`;
 const MAX_HISTORY_ITEMS = 200;
 
-// category: "image" | "video" | "tts" | "lipsync" | "timeline"
+// category: "image" | "video" | "tts" | "music" | "lipsync" | "timeline"
 export async function recordGeneration(userId, { category, modelId, modelName, output, creditsUsed, prompt }) {
   if (!userId || !output) return; // don't fail the whole generation over a logging step
 

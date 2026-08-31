@@ -9,7 +9,7 @@
 import { getSortedModels } from "../models/index.js";
 import { hasTierAccess } from "../middleware/tierCheck.js";
 
-const CATEGORIES = ["image", "video", "lipsync", "tts"];
+const CATEGORIES = ["image", "video", "lipsync", "tts", "music"];
 
 // userTier: the signed-in user's current subscription tier key
 // ("starter" | "pro" | "premium" | null) — see

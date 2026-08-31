@@ -100,7 +100,7 @@ function OutputPreview({ item, category }) {
     const ext =
       category === "video" || category === "lipsync"
         ? "mp4"
-        : category === "tts"
+        : category === "tts" || category === "music"
         ? "mp3"
         : "jpg";
     const filename = `smokeshaq-${Date.now()}.${ext}`;
@@ -131,7 +131,7 @@ function OutputPreview({ item, category }) {
   let media;
   if (category === "video" || category === "lipsync") {
     media = <video src={item} controls style={{ width: "100%", height: "auto", display: "block", borderRadius: 12 }} />;
-  } else if (category === "tts") {
+  } else if (category === "tts" || category === "music") {
     media = <audio src={item} controls style={{ width: "100%" }} />;
   } else {
     media = <img src={item} alt="output" style={{ width: "100%", height: "auto", display: "block", borderRadius: 12, boxShadow: "0 0 18px rgba(0,0,0,0.7)" }} />;
@@ -158,6 +158,10 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
   const [kokoroVoice, setKokoroVoice] = useState("af_bella"); // default Kokoro voice
   const [durationSeconds, setDurationSeconds] = useState(30);
   const [videoDuration, setVideoDuration] = useState(null); // selected clip length for video models
+  const [musicTags, setMusicTags] = useState(""); // comma-separated genre tags (ACE-Step)
+  const [musicLyrics, setMusicLyrics] = useState("");
+  const [musicInstrumental, setMusicInstrumental] = useState(false);
+  const [musicDuration, setMusicDuration] = useState(60);
   const [usingOwnKey, setUsingOwnKey] = useState(false);
   const [nsfwEnabled, setNsfwEnabled] = useState(false);
   const [nsfwAgeVerified, setNsfwAgeVerified] = useState(false);
@@ -278,6 +282,18 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
       // `prompt` first, then lipsyncing that — handled server-side.
     }
 
+    if (category === "music") {
+      if (!musicTags.trim()) return; // require genre tags before allowing generate
+      inputs.tags = musicTags;
+      // Empty string is also accepted server-side as instrumental, but
+      // sending the explicit "[inst]" tag matches ACE-Step's own real
+      // convention (see models/index.js) and reads clearly in history.
+      inputs.lyrics = musicInstrumental ? "[inst]" : musicLyrics;
+      if (selectedModel?.creditsPerSecond) {
+        inputs.duration = musicDuration;
+      }
+    }
+
     // category determines which endpoint the parent should call —
     // image/video both use /api/generate, lipsync and tts have their
     // own endpoints since they take different inputs (audio files,
@@ -295,6 +311,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
     video: "Video / Animation",
     lipsync: "Talking Photo",
     tts: "Voice / TTS",
+    music: "Music Generation",
   }[category];
 
   return (
@@ -309,6 +326,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
             { key: "video", label: "VIDEO" },
             { key: "lipsync", label: "TALKING PHOTO" },
             { key: "tts", label: "TTS" },
+            { key: "music", label: "MUSIC" },
           ].map(({ key: cat, label }) => (
             <button
               key={cat}
@@ -320,6 +338,10 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
                   prev.forEach((f) => URL.revokeObjectURL(f.previewUrl));
                   return [];
                 });
+                setMusicTags("");
+                setMusicLyrics("");
+                setMusicInstrumental(false);
+                setMusicDuration(60);
               }}
             >
               {label}
@@ -440,6 +462,75 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
         </>
       )}
 
+      {/* MUSIC-SPECIFIC INPUTS (ACE-Step: genre tags + optional lyrics + duration) */}
+      {category === "music" && (
+        <>
+          <div className="section-block">
+            <div className="section-header">
+              <span className="section-label text-silver-red">Genre tags</span>
+              <span className="section-meta">Required · comma-separated</span>
+            </div>
+            <input
+              type="text"
+              className="music-tags-input"
+              placeholder="e.g. lofi hip hop, chill, female vocals"
+              value={musicTags}
+              onChange={(e) => setMusicTags(e.target.value)}
+            />
+          </div>
+
+          <div className="section-block">
+            <label className="music-instrumental-toggle">
+              <input
+                type="checkbox"
+                checked={musicInstrumental}
+                onChange={(e) => setMusicInstrumental(e.target.checked)}
+              />
+              <span className="text-silver-red">Instrumental (no vocals)</span>
+            </label>
+          </div>
+
+          {!musicInstrumental && (
+            <div className="section-block">
+              <div className="section-header">
+                <span className="section-label text-silver-red">Lyrics</span>
+                <span className="section-meta">Optional — leave blank for auto-generated lyrics</span>
+              </div>
+              <textarea
+                className="prompt-box"
+                placeholder="Type your own lyrics, or leave blank..."
+                value={musicLyrics}
+                onChange={(e) => setMusicLyrics(e.target.value)}
+              />
+            </div>
+          )}
+
+          {selectedModel?.creditsPerSecond && (
+            <div className="section-block">
+              <div className="section-header">
+                <span className="section-label text-silver-red">Duration</span>
+                <span className="section-meta">
+                  Up to {Math.floor((selectedModel.maxDurationSeconds || 240) / 60)} min — cost scales with length
+                </span>
+              </div>
+              <input
+                type="range"
+                min={5}
+                max={selectedModel.maxDurationSeconds || 240}
+                step={5}
+                value={musicDuration}
+                onChange={(e) => setMusicDuration(Number(e.target.value))}
+                className="duration-slider"
+              />
+              <p className="duration-readout">
+                {musicDuration}s ≈{" "}
+                {Math.max(1, Math.ceil(musicDuration * selectedModel.creditsPerSecond))} credits
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
       {/* VOICE PICKER (ElevenLabs only — live search of their real library) */}
       {category === "tts" && selectedModel?.id?.startsWith("elevenlabs/") && (
         <div className="section-block">
@@ -479,27 +570,31 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
         </div>
       )}
 
-      {/* PROMPT / SCRIPT INPUT */}
-      <div className="section-block">
-        <div className="section-header">
-          <span className="section-label text-silver-red">
-            {category === "tts" || category === "lipsync" ? "Text to speak" : "Prompt"}
-          </span>
-          {category === "lipsync" && (
-            <span className="section-meta">Used if no audio file is uploaded above</span>
-          )}
+      {/* PROMPT / SCRIPT INPUT — music has its own dedicated tags/lyrics
+          inputs above instead (ACE-Step's real params aren't a single
+          free-text prompt), so this is hidden for that category. */}
+      {category !== "music" && (
+        <div className="section-block">
+          <div className="section-header">
+            <span className="section-label text-silver-red">
+              {category === "tts" || category === "lipsync" ? "Text to speak" : "Prompt"}
+            </span>
+            {category === "lipsync" && (
+              <span className="section-meta">Used if no audio file is uploaded above</span>
+            )}
+          </div>
+          <textarea
+            className="prompt-box"
+            placeholder={
+              category === "tts" || category === "lipsync"
+                ? "Type the script or line you want spoken..."
+                : "Describe the scene, style, mood, or script you want to create..."
+            }
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
         </div>
-        <textarea
-          className="prompt-box"
-          placeholder={
-            category === "tts" || category === "lipsync"
-              ? "Type the script or line you want spoken..."
-              : "Describe the scene, style, mood, or script you want to create..."
-          }
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-        />
-      </div>
+      )}
 
       {/* FILE UPLOAD (image / video reference only — lipsync has its own inputs above) */}
       {(category === "image" || category === "video") && selectedModel?.imageInputs?.max > 0 && (
@@ -557,8 +652,8 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
         </div>
       )}
 
-      {/* NSFW TOGGLE — moved to bottom; hidden for TTS (no NSFW voice models exist) */}
-      {category !== "tts" && (
+      {/* NSFW TOGGLE — moved to bottom; hidden for TTS/Music (no NSFW voice or music models exist) */}
+      {category !== "tts" && category !== "music" && (
         <div className="nsfw-row">
           <label className="nsfw-toggle">
             <input
@@ -868,6 +963,36 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
         .kokoro-voice-select option {
           background: #0d0d10;
           color: #d9d9d9;
+        }
+
+        .music-tags-input {
+          width: 100%;
+          padding: 9px 12px;
+          border-radius: 10px;
+          background: rgba(5, 5, 8, 0.95);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          color: #d9d9d9;
+          font-size: 0.9rem;
+          outline: none;
+          transition: 0.18s ease;
+          box-sizing: border-box;
+        }
+
+        .music-tags-input:focus {
+          border-color: rgba(255, 0, 0, 0.6);
+          box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
+        }
+
+        .music-instrumental-toggle {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          font-size: 0.85rem;
+        }
+
+        .music-instrumental-toggle input {
+          accent-color: #ff2a2a;
         }
 
         .generate-btn {
