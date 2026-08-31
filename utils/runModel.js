@@ -349,13 +349,39 @@ async function runReplicate(model, inputs) {
 // InfiniteTalk, model.id for these IS already the exact real WaveSpeed
 // catalog slug (confirmed against https://wavespeed.ai/api/models —
 // no id-to-slug remapping needed), so they're submitted as-is.
-async function runWaveSpeed(modelId, inputs) {
+//
+// ADDED [Aug 31 2026]: category param, needed for the new spicy IMAGE
+// lineup (currently just wavespeed-ai/chroma, models/index.js image
+// category) — a completely different request shape than the video
+// models below (no duration/seed-only video params; takes a size
+// string instead). Callers not passing category (none currently need
+// to — every existing caller is a video model) fall through to the
+// pre-existing video-shaped branches unchanged.
+async function runWaveSpeed(modelId, inputs, category) {
+  const isImageGen = category === "image";
   const isInfiniteTalk = modelId.startsWith("wavespeed-ai/infinitetalk");
 
   let realModelSlug;
   let body;
 
-  if (isInfiniteTalk) {
+  if (isImageGen) {
+    // Generic WaveSpeed text-to-image model. Real schema confirmed
+    // against wavespeed-ai/chroma's own docs page
+    // (wavespeed.ai/docs/docs-api/wavespeed-ai/chroma): prompt
+    // (required), size as a free-form "WIDTH*HEIGHT" string (not an
+    // enum, default 1024*1024, documented max 1536x1536), seed
+    // (-1 = random), output_format. No reference-image input exists
+    // for this model — it's text-to-image only.
+    realModelSlug = modelId;
+    const width = inputs.width || 1024;
+    const height = inputs.height || 1024;
+    body = {
+      prompt: inputs.prompt || "",
+      size: `${width}*${height}`,
+      seed: typeof inputs.seed === "number" ? inputs.seed : -1,
+      output_format: "jpeg",
+    };
+  } else if (isInfiniteTalk) {
     const isMulti = modelId.includes("-multi");
     const isV2V = modelId.includes("-v2v");
     const resolution = modelId.endsWith("-480p") ? "480p" : "720p";
@@ -715,7 +741,7 @@ export async function runModel(model, inputs) {
   }
 
   if (model.provider === "wavespeed") {
-    return runWaveSpeed(model.id, inputs);
+    return runWaveSpeed(model.id, inputs, model.category);
   }
 
   if (model.provider === "atlascloud") {

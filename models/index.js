@@ -276,6 +276,59 @@ export const MODELS = {
       description: "Lightweight and fast. Good for quick drafts and iteration.",
       imageInputs: { min: 0, max: 1 },
     },
+
+    // =====================================================================
+    // NSFW "SPICY" IMAGE LINEUP — WaveSpeed [Aug 31 2026]
+    // =====================================================================
+    // Owner asked to add spicy IMAGE generators to match the 14-model
+    // spicy VIDEO lineup already live (same file, video category,
+    // provider: "wavespeed", nsfw: true). Real answer, not what was
+    // hoped for: WaveSpeed does NOT have a matching "spicy"-branded
+    // image lineup. Checked their full public catalog
+    // (wavespeed.ai/api/models, ~1,007 entries, 269 of them
+    // text-to-image / image-to-image) plus their docs sitemap for
+    // every "-spicy"/"nsfw"/"uncensored" hit — that naming convention
+    // only exists on their image-to-video, video-extend, and video
+    // LoRA entries. There is exactly ONE real image-generation model
+    // on WaveSpeed whose own catalog description claims NSFW capability:
+    //   "Chroma enables fully uncensored image generation for creative
+    //   expression and artistic freedom."
+    // Confirmed via its real docs page
+    // (wavespeed.ai/docs/docs-api/wavespeed-ai/chroma): text-to-image
+    // ONLY (no image-to-image counterpart exists for it anywhere in
+    // the catalog), single output per call, free-form "WIDTH*HEIGHT"
+    // size string (not an enum) up to 1536x1536, real price $0.015/image
+    // (catalog base_price 15000 / discount_rate 100, matching the exact
+    // per-second-price formula already used for the spicy video lineup
+    // a few hundred lines down: real $ = (base_price / 5,000,000) *
+    // (discount_rate / 100)). A handful of other WaveSpeed image models
+    // have suggestive names ("ai-breast-expansion", "ai-clothes-changer",
+    // "ai-girl-filter", etc.) but their own catalog descriptions frame
+    // them as playful portrait "filter" effects, not NSFW content, and
+    // none self-describe as spicy/uncensored/adult — deliberately NOT
+    // added here; that would be exactly the kind of unverified stretch
+    // this project's spicy-lineup mistakes (see the video section's
+    // comment block) have already burned real money and real user
+    // trust on once. If WaveSpeed adds a real spicy image-to-image
+    // model later, re-run this same research pass rather than assuming
+    // this one model's schema generalizes.
+    //
+    // Separately, still true and NOT this: WaveSpeed's full (non-NSFW)
+    // image catalog has ~269 general text-to-image/image-to-image
+    // models totally unintegrated here — a real, larger opportunity,
+    // but a different task than "spicy image generators" and not
+    // started in this pass.
+    {
+      id: "wavespeed-ai/chroma",
+      name: "Chroma Spicy T2I",
+      provider: "wavespeed",
+      nsfw: true,
+      locked: true,
+      premium: false,
+      credits: 1, // $0.015/image x 2.5 markup / $0.05 per credit = 0.75 -> 1
+      description: "NSFW text-to-image. Fully uncensored generation for creative and artistic freedom. Unlock NSFW mode to use.",
+      imageInputs: { min: 0, max: 0 },
+    },
       ],
 
   // =====================================================================
