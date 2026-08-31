@@ -60,7 +60,16 @@ import { getUserSettings } from "../../middleware/userSettingsStore.js";
 import { hasTierAccess } from "../../middleware/tierCheck.js";
 
 const MAX_CHARACTERS = 4;
-const FALLBACK_TTS_MODEL_ID = "elevenlabs/v3";
+// UPDATED [Aug 31 2026]: the fake Replicate/comingSoon "elevenlabs/v3"
+// catalog entry this pointed at was replaced by a real, WaveSpeed-routed
+// "elevenlabs/eleven-v3" entry (see models/index.js) — this fallback id
+// must match it exactly, or findModelById() below silently returns
+// undefined and per-character dialogue audio generation breaks. Note:
+// this internal TTS pre-step is NOT separately billed here (matches
+// the pre-existing behavior from before this rename — totalCost below
+// is driven entirely by the video model's own perSegment cost, same as
+// always), so no billing-formula change was needed alongside this id fix.
+const FALLBACK_TTS_MODEL_ID = "elevenlabs/eleven-v3";
 
 export const config = {
   api: {

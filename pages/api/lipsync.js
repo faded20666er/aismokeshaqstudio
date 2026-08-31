@@ -18,7 +18,12 @@ import { runModel } from "../../utils/runModel.js";
 import { getUserSettings } from "../../middleware/userSettingsStore.js";
 import { hasTierAccess } from "../../middleware/tierCheck.js";
 
-const FALLBACK_TTS_MODEL_ID = "elevenlabs/v3";
+// UPDATED [Aug 31 2026]: the fake Replicate/comingSoon "elevenlabs/v3"
+// catalog entry this pointed at was replaced by a real, WaveSpeed-routed
+// "elevenlabs/eleven-v3" entry (see models/index.js) — this fallback id
+// must match it exactly, or findModelById() below silently returns
+// undefined and this whole script-to-speech pre-step breaks.
+const FALLBACK_TTS_MODEL_ID = "elevenlabs/eleven-v3";
 
 export const config = {
   api: {
@@ -101,7 +106,19 @@ export default async function handler(req, res) {
       modelCost = Math.ceil(cappedSeconds * model.creditsPerSecond);
     }
 
-    const totalCost = modelCost + (ttsModel ? ttsModel.credits : 0);
+    // Same per-character billing fix as pages/api/voice.js: the real
+    // TTS model behind this pre-step (elevenlabs/eleven-v3, WaveSpeed)
+    // is billed per character now, not a flat fake credits number — a
+    // flat charge would undercharge on a long script the same way a
+    // flat charge undercharges on long text in the standalone TTS
+    // studio. Falls back to the flat ttsModel.credits for the rare case
+    // a future fallback TTS model doesn't set creditsPerChar.
+    const ttsCost = ttsModel
+      ? ttsModel.creditsPerChar
+        ? Math.max(1, Math.ceil((inputs.prompt?.length || 0) * ttsModel.creditsPerChar))
+        : ttsModel.credits
+      : 0;
+    const totalCost = modelCost + ttsCost;
 
     const hasCredits = await checkCredits(userId, totalCost);
     if (!hasCredits) {

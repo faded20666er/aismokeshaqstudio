@@ -350,37 +350,70 @@ async function runReplicate(model, inputs) {
 // catalog slug (confirmed against https://wavespeed.ai/api/models —
 // no id-to-slug remapping needed), so they're submitted as-is.
 //
-// ADDED [Aug 31 2026]: category param, needed for the new spicy IMAGE
-// lineup (currently just wavespeed-ai/chroma, models/index.js image
-// category) — a completely different request shape than the video
-// models below (no duration/seed-only video params; takes a size
-// string instead). Callers not passing category (none currently need
-// to — every existing caller is a video model) fall through to the
-// pre-existing video-shaped branches unchanged.
-async function runWaveSpeed(modelId, inputs, category) {
+// ADDED [Aug 31 2026]: takes the FULL model object now (was just
+// modelId + a bolted-on category param) — needed for the new real
+// image lineup (models/index.js image category: chroma, and now the
+// re-pointed nano-banana-2/seedream-v4/seedream-v4.5, each of which
+// has its own separate "-edit" endpoint slug for reference-image
+// requests, same two-endpoint split Atlas Cloud already uses via
+// atlasImageEditId — see model.wavespeedImageEditId below) and for
+// the new WaveSpeed-hosted TTS lineup (models/index.js tts category —
+// real ElevenLabs/MiniMax reseller models, billed per character, a
+// totally different shape than every other branch here).
+async function runWaveSpeed(model, inputs) {
+  const modelId = model.id;
+  const category = model.category;
   const isImageGen = category === "image";
+  const isTTS = category === "tts";
   const isInfiniteTalk = modelId.startsWith("wavespeed-ai/infinitetalk");
 
   let realModelSlug;
   let body;
 
-  if (isImageGen) {
-    // Generic WaveSpeed text-to-image model. Real schema confirmed
-    // against wavespeed-ai/chroma's own docs page
-    // (wavespeed.ai/docs/docs-api/wavespeed-ai/chroma): prompt
-    // (required), size as a free-form "WIDTH*HEIGHT" string (not an
-    // enum, default 1024*1024, documented max 1536x1536), seed
-    // (-1 = random), output_format. No reference-image input exists
-    // for this model — it's text-to-image only.
+  if (isTTS) {
+    // Real WaveSpeed-hosted TTS models (ElevenLabs eleven-v3, MiniMax
+    // Speech 2.6 Turbo, etc.) — confirmed via each model's own docs
+    // page: {text, voice_id, ...}, no duration/image/size params at
+    // all. Billed per character (see models/index.js's creditsPerChar
+    // field and pages/api/voice.js, which computes real credits from
+    // inputs.text.length instead of a flat model.credits — a flat
+    // charge would undercharge on long text exactly the way the old
+    // per-second-vs-flat Seedance bug overcharged/undercharged on
+    // duration).
     realModelSlug = modelId;
+    body = {
+      text: inputs.text || inputs.prompt || "",
+      voice_id: inputs.voiceId || inputs.voice || undefined,
+    };
+  } else if (isImageGen) {
+    // Generic WaveSpeed text-to-image model, real schema confirmed per
+    // model against its own WaveSpeed docs page (chroma; also
+    // nano-banana-2-text-to-image, seedream-v4/-v4.5-text-to-image):
+    // prompt (required), size as a free-form "WIDTH*HEIGHT" string,
+    // seed (-1 = random), output_format. The plain (non-edit) slug is
+    // text-only — no reference-image field exists on it at all, which
+    // is WHY a separate "-edit" slug + endpoint exists (below).
+    const hasRefImages = Array.isArray(inputs.images) && inputs.images.length > 0;
+    const useEditEndpoint = hasRefImages && model.wavespeedImageEditId;
+    realModelSlug = useEditEndpoint ? model.wavespeedImageEditId : modelId;
     const width = inputs.width || 1024;
     const height = inputs.height || 1024;
     body = {
       prompt: inputs.prompt || "",
-      size: `${width}*${height}`,
       seed: typeof inputs.seed === "number" ? inputs.seed : -1,
       output_format: "jpeg",
     };
+    if (useEditEndpoint) {
+      // Real per-model max image counts (verified individually, NOT
+      // assumed to match across the family — see models/index.js
+      // comments): nano-banana-2-edit 14, seedream-v4-edit 10,
+      // seedream-v4.5-edit 10. StudioPanel.jsx's upload UI already
+      // caps uploadedFiles at model.imageInputs.max, so trust the
+      // array length here rather than re-slicing it.
+      body.images = inputs.images;
+    } else {
+      body.size = `${width}*${height}`;
+    }
   } else if (isInfiniteTalk) {
     const isMulti = modelId.includes("-multi");
     const isV2V = modelId.includes("-v2v");
@@ -741,7 +774,7 @@ export async function runModel(model, inputs) {
   }
 
   if (model.provider === "wavespeed") {
-    return runWaveSpeed(model.id, inputs, model.category);
+    return runWaveSpeed(model, inputs);
   }
 
   if (model.provider === "atlascloud") {

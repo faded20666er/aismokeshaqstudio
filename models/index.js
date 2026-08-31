@@ -44,13 +44,43 @@ export const MODELS = {
       imageInputs: { min: 0, max: 0 },
     },
     {
-      // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate charges
-      // $0.015/run + $0.015/MP in + $0.015/MP out (variable, can exceed
-      // $0.03 easily on larger images). Atlas Cloud lists this exact model
-      // at a flat $0.03/image, no per-megapixel surcharge, no "unit" field
-      // (confirmed flat, not per-second/duration-billed — images are safe
-      // from the per-second trap that bit Seedance). Atlas Cloud is also
-      // the only funded, working provider right now (Replicate is at $0).
+      // ADDED [free-options research, Aug 31 2026]: found via Atlas
+      // Cloud's public catalog (api.atlascloud.ai/api/v1/models),
+      // tagged "FREE" — confirmed genuinely free, not just cheap:
+      // price.actual is an empty object (no $ amount at all), unlike
+      // every paid entry which has a real actual.base_price. Verified
+      // directly against its own schema
+      // (static.atlascloud.ai/model/schema/baidu-ernie-image-turbo-text-to-image.json):
+      // text-to-image only, no reference-image/edit variant exists for
+      // this model on Atlas Cloud (so imageInputs stays 0 — this isn't
+      // a capability gap, the model just doesn't do image editing at
+      // all). Real API takes `size` as a single enum string like
+      // "1024x1024" rather than separate width/height fields — our
+      // runAtlasCloud() only forwards inputs.width/height today, so
+      // this always generates at the schema's 1024x1024 default for
+      // now; wiring up size selection is a follow-up, not a blocker
+      // for offering the model.
+      id: "baidu/ERNIE-Image-Turbo/text-to-image",
+      name: "ERNIE Image Turbo (Baidu) — Free",
+      provider: "atlascloud",
+      atlasCloudType: "image",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      credits: 0,
+      description: "Free for all members. Fast Baidu text-to-image model, good for quick everyday prompts and readable in-image text.",
+      imageInputs: { min: 0, max: 0 },
+    },
+    {
+      // KEPT on Atlas Cloud [cross-platform audit, Aug 31 2026]:
+      // WaveSpeed has this exact model too (wavespeed-ai/flux-2-pro),
+      // at $0.006/image vs Atlas Cloud's $0.03 — 5x cheaper. NOT
+      // switched: WaveSpeed's edit endpoint
+      // (wavespeed.ai/docs/docs-api/wavespeed-ai/flux-2-pro-edit) caps
+      // reference images at 3, vs Atlas Cloud's real 8 — a real
+      // capability loss, not just a price change. Flagged to the owner
+      // rather than silently downgrading; switch only if that tradeoff
+      // is explicitly accepted for the margin.
       id: "black-forest-labs/flux-2-pro/text-to-image",
       atlasImageEditId: "black-forest-labs/flux-2-pro/edit",
       name: "FLUX-2 Pro (Black-Forest-Labs)",
@@ -64,23 +94,24 @@ export const MODELS = {
       imageInputs: { min: 0, max: 8 },
     },
     {
-      // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate real
-      // cost was $0.067-0.151/image depending on resolution. Atlas Cloud's
-      // equivalent runs $0.04-0.08/image flat, no "unit" field (confirmed
-      // flat, not duration-billed) — same margin logic, lower real cost,
-      // same credits charged to the customer = pure margin improvement.
-      // FIXED [Aug 30 2026, schema audit]: was pointed at
-      // ".../reference-to-image", which turns out to be a DIFFERENT real
-      // feature (generates from a source VIDEO clip — its schema requires
-      // a "video_clips" field we never sent) — every reference-image
-      // request here would have 400'd on a required-field miss. The real
-      // plain-photo-reference-editing endpoint is ".../edit" (confirmed
-      // via its schema: images array, no video_clips requirement).
+      // RE-POINTED to WaveSpeed [cross-platform pricing audit, Aug 31
+      // 2026]: this exact model id (google/nano-banana-2/text-to-image)
+      // exists identically on BOTH Atlas Cloud and WaveSpeed. Real,
+      // verified prices: Atlas Cloud $0.08/image vs WaveSpeed
+      // $0.0126/image — WaveSpeed is ~6.3x cheaper for the IDENTICAL
+      // model. Capability double-checked before switching (not just
+      // price): WaveSpeed's real edit-endpoint schema
+      // (wavespeed.ai/docs/docs-api/google/google-nano-banana-2-edit)
+      // confirms `images` array, max 14 — matches Atlas Cloud's real
+      // limit exactly, so this is a genuine like-for-like swap, not a
+      // capability downgrade disguised as a price win. Credits charged
+      // to the customer are unchanged (pure margin improvement) — an
+      // explicit business call, not something to silently pass through
+      // as a price cut.
       id: "google/nano-banana-2/text-to-image",
-      atlasImageEditId: "google/nano-banana-2/edit",
+      wavespeedImageEditId: "google/nano-banana-2/edit",
       name: "Nano Banana 2 (Google)",
-      provider: "atlascloud",
-      atlasCloudType: "image",
+      provider: "wavespeed",
       nsfw: false,
       locked: false,
       premium: true,
@@ -106,9 +137,11 @@ export const MODELS = {
       imageInputs: { min: 0, max: 0 },
     },
     {
-      // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate
-      // charges $0.06/MP in + $0.06/MP out (variable). Atlas Cloud: flat
-      // $0.05/image, confirmed no "unit" field (not duration-billed).
+      // KEPT on Atlas Cloud [cross-platform audit, Aug 31 2026]: same
+      // situation as FLUX-2 Pro above — WaveSpeed has this exact model
+      // at $0.012/image vs Atlas Cloud's $0.05 (~4x cheaper), but
+      // WaveSpeed's edit endpoint caps reference images at 3 vs Atlas
+      // Cloud's real 8. NOT switched for the same reason.
       id: "black-forest-labs/flux-2-flex/text-to-image",
       atlasImageEditId: "black-forest-labs/flux-2-flex/edit",
       name: "FLUX-2 Flex (Black-Forest-Labs)",
@@ -122,12 +155,18 @@ export const MODELS = {
       imageInputs: { min: 0, max: 8 },
     },
     {
-      // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate
-      // $0.035/image vs Atlas Cloud's Seedream v5.0 Lite at $0.032/image
-      // flat (near tie, but Atlas Cloud is the funded/working provider).
-      // FIXED [real schema audit, Aug 2026]: bytedance/seedream-v5.0-lite/edit's
-      // real Atlas Cloud schema shows images maxItems:14, not 4 — this
-      // was under-declared (not a bug, just a missed capability).
+      // KEPT on Atlas Cloud [cross-platform audit, Aug 31 2026]:
+      // WaveSpeed has this exact model too, at $0.007/image vs Atlas
+      // Cloud's $0.032 — ~4.6x cheaper. NOT switched despite that,
+      // because the real capability isn't equal: WaveSpeed's edit
+      // endpoint (bytedance-seedream-v5.0-lite-edit) caps reference
+      // images at 10, while Atlas Cloud's real schema allows 14 — a
+      // genuine capability loss (14 -> 10), not just a price change.
+      // Flagged to the owner rather than silently downgrading a
+      // feature the site has been actively promoting (multi-image
+      // fusion) — same discipline as the Multi-Character Timeline
+      // cap conversation. Switch only if the owner explicitly accepts
+      // that tradeoff for the margin.
       id: "bytedance/seedream-v5.0-lite",
       atlasImageEditId: "bytedance/seedream-v5.0-lite/edit",
       name: "Seedream 5 Lite (Bytedance)",
@@ -141,16 +180,19 @@ export const MODELS = {
       imageInputs: { min: 0, max: 14 },
     },
     {
-      // SWITCHED to Atlas Cloud [pricing audit, Aug 2026]: Replicate
-      // $0.04/image vs Atlas Cloud $0.036/image flat.
-      // FIXED [real schema audit, Aug 2026]: bytedance/seedream-v4.5/edit's
-      // real Atlas Cloud schema shows images maxItems:10, not 15 — this
-      // was OVER-declared, meaning 11-15 reference images would 400.
+      // RE-POINTED to WaveSpeed [cross-platform pricing audit, Aug 31
+      // 2026]: exact same model id on both platforms. Real prices:
+      // Atlas Cloud $0.036/image vs WaveSpeed $0.008/image — ~4.5x
+      // cheaper. Capability verified equal before switching: WaveSpeed's
+      // real edit-endpoint schema
+      // (wavespeed.ai/docs/docs-api/bytedance/bytedance-seedream-v4.5-edit)
+      // confirms `images` array, max 10 — matches Atlas Cloud's real
+      // limit exactly (10). Credits charged to the customer unchanged
+      // (pure margin improvement).
       id: "bytedance/seedream-v4.5",
-      atlasImageEditId: "bytedance/seedream-v4.5/edit",
+      wavespeedImageEditId: "bytedance/seedream-v4.5/edit",
       name: "Seedream 4.5 (Bytedance)",
-      provider: "atlascloud",
-      atlasCloudType: "image",
+      provider: "wavespeed",
       nsfw: false,
       locked: false,
       premium: false,
@@ -159,21 +201,19 @@ export const MODELS = {
       imageInputs: { min: 0, max: 10 },
     },
     {
-      // SWITCHED + UPGRADED to Atlas Cloud [pricing audit, Aug 2026]:
-      // Replicate's old Seedream 3 ($0.03/image) has no Atlas Cloud
-      // equivalent — Atlas Cloud only carries the newer Seedream v4
-      // ($0.027/image flat), which is both newer AND cheaper, so this
-      // slot now points at v4 instead of the discontinued v3.
-      // FIXED [real schema audit, Aug 2026]: imageInputs was left at
-      // max:0 even though atlasImageEditId already points at a real,
-      // working bytedance/seedream-v4/edit endpoint (images array,
-      // maxItems:10, minItems:1, required) — the reference-image upload
-      // control was never shown for this model. Raised to match.
+      // RE-POINTED to WaveSpeed [cross-platform pricing audit, Aug 31
+      // 2026]: exact same model id on both platforms. Real prices:
+      // Atlas Cloud $0.027/image vs WaveSpeed $0.0054/image — 5x
+      // cheaper. Capability verified equal before switching: WaveSpeed's
+      // real edit-endpoint schema
+      // (wavespeed.ai/docs/docs-api/bytedance/bytedance-seedream-v4-edit)
+      // confirms `images` array, max 10 — matches Atlas Cloud's real
+      // limit exactly (10). Credits charged to the customer unchanged
+      // (pure margin improvement).
       id: "bytedance/seedream-v4",
-      atlasImageEditId: "bytedance/seedream-v4/edit",
+      wavespeedImageEditId: "bytedance/seedream-v4/edit",
       name: "Seedream 4 (Bytedance)",
-      provider: "atlascloud",
-      atlasCloudType: "image",
+      provider: "wavespeed",
       nsfw: false,
       locked: false,
       premium: false,
@@ -532,22 +572,6 @@ export const MODELS = {
       durations: [5, 10, 15],
       description: "Smooth motion and good consistency across frames. Popular all-rounder.",
       imageInputs: { min: 0, max: 2 },
-    },
-    {
-      // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: same Kling V3.0 Std family as kling-v3-video. base_price $0.071 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "kwaivgi/kling-v3-omni-video" (Replicate, $0 balance).
-            // DEFENSIVE per-second pricing [Aug 2026]: Atlas Cloud lists this model at $0.071/generation with NO "unit" field — same missing-unit shape that turned out to be per-second for Seedance (real bug, real money lost) and again for Kling V2.0 (still unverified, see comment near that entry). Treating $0.071 as PER-SECOND until a real test proves otherwise — safe direction to guess wrong in (worst case: overcharge slightly, fixable anytime; the other way round loses real money silently). credits is the longest-duration price as a fallback.
-      id: "kwaivgi/kling-v3.0-std/text-to-video",
-      name: "Kling V3 Omni Video (Kwaivgi)",
-      provider: "atlascloud",
-      atlasCloudType: "video",
-      nsfw: false,
-      locked: false,
-      premium: false,
-      credits: 54,
-      creditsByDuration: { 5: 18, 10: 36, 15: 54 },
-      durations: [5, 10, 15],
-      description: "Handles a wider variety of input types (image, text) flexibly.",
-      imageInputs: { min: 0, max: 4 },
     },
     {
       // RE-POINTED to Atlas Cloud [pricing audit, Aug 2026]: if flat, ~6x cheaper than Replicate's $0.07/s. base_price $0.06 listed but Atlas Cloud does not tag a "unit" field here (same ambiguity that caused the real Seedance per-second billing bug) — STILL GATED until a real test + balance check confirms whether this is flat or per-second, exactly like the Seedance verification. Was: "kwaivgi/kling-v2.5-turbo-pro" (Replicate, $0 balance).
@@ -1263,15 +1287,52 @@ export const MODELS = {
       description: "Open-source TTS, ranked #1 on TTS Arena. 46 voices across 6 languages. Fastest and most cost-effective option.",
     },
     {
-      id: "elevenlabs/v3",
+      // REAL, LIVE model — replaces the old fake `elevenlabs/v3`
+      // Replicate/comingSoon placeholder. Root cause this fixes: the
+      // ONLY way TTS ever actually generated real audio before this was
+      // a user's own BYOK ElevenLabs key (see pages/api/voice.js's
+      // customRunner, only set when byokKey && inputs.voiceId) — every
+      // platform/free-tier user had literally no working TTS model,
+      // since every other catalog entry here is comingSoon or points at
+      // a $0-balance provider. Routing through WaveSpeed (a real
+      // ElevenLabs reseller, NOT our own small/possibly-free-tier direct
+      // ElevenLabs account) avoids risking our shared ElevenLabs quota
+      // on production traffic.
+      //
+      // id kept as "elevenlabs/eleven-v3" (not the old "elevenlabs/v3")
+      // — deliberately still starts with "elevenlabs/" so it reuses the
+      // existing StudioPanel.jsx VoicePicker gate and the existing
+      // /api/elevenlabs-voices premade-voice-list endpoint with zero
+      // frontend changes.
+      //
+      // Billing verified directly via WaveSpeed's own docs
+      // (wavespeed.ai/docs/docs-api/elevenlabs/elevenlabs-eleven-v3):
+      // "$0.20 per 1,000 characters ($200 per 1M characters)", explicitly
+      // "no rounding up to 1,000" — i.e. real prorated per-character
+      // billing, not a flat per-generation charge. A flat model.credits
+      // charge would undercharge on long text the same way a flat
+      // per-generation price previously undercharged on long video
+      // durations (see models/index.js's creditsByDuration precedent) —
+      // so this uses creditsPerChar instead, consumed by
+      // pages/api/voice.js to compute the real charge from
+      // inputs.text.length. Formula: $0.20/1000 chars = $0.0002/char;
+      // credits/char = $0.0002 * 2.5 markup / $0.05 per credit = 0.01
+      // credits/char (1 credit per 100 characters).
+      //
+      // maxChars 10000 matches the real WaveSpeed/ElevenLabs `text`
+      // field cap (confirmed in the same docs page). `credits` is kept
+      // as a fallback/display estimate only (100 chars) — the real
+      // per-request charge is always computed from creditsPerChar.
+      id: "elevenlabs/eleven-v3",
       name: "ElevenLabs v3",
-      provider: "replicate",
-      comingSoon: true,
+      provider: "wavespeed",
       nsfw: false,
       locked: false,
       premium: true,
+      creditsPerChar: 0.01,
+      maxChars: 10000,
       credits: 1,
-      description: "Most natural, expressive voices. Best for narration and emotional delivery.",
+      description: "Most natural, expressive voices — supports emotion tags like [excited], [whispers], [laughs]. Best for narration and emotional delivery. Billed per character.",
     },
     {
       id: "minimax/speech-2.8-hd",

@@ -107,14 +107,28 @@ export default async function handler(req, res) {
     const byokKey = await getByokKey(userId, "elevenlabs");
     const usingOwnKey = !!byokKey && !!inputs?.voiceId;
 
+    const text = inputs?.text || inputs?.prompt;
+
+    // Real per-character billing for models that carry creditsPerChar
+    // (currently: elevenlabs/eleven-v3, routed through WaveSpeed's
+    // metered ElevenLabs reseller — see models/index.js for the full
+    // rationale). Mirrors the model.creditsByDuration precedent already
+    // established in pages/api/generate.js for duration-billed video —
+    // same problem, different axis: a flat model.credits charge would
+    // undercharge on long text exactly the way a flat per-generation
+    // price previously undercharged on long video durations. Falls back
+    // to the flat model.credits for every other (non-per-character) TTS
+    // model, same as before this change.
+    const creditsToCharge = model.creditsPerChar
+      ? Math.max(1, Math.ceil((text?.length || 0) * model.creditsPerChar))
+      : model.credits;
+
     if (!usingOwnKey) {
-      const hasCredits = await checkCredits(userId, model.credits);
+      const hasCredits = await checkCredits(userId, creditsToCharge);
       if (!hasCredits) {
         return res.status(402).json({ error: "Not enough credits" });
       }
     }
-
-    const text = inputs?.text || inputs?.prompt;
 
     const jobId = generateJobId();
     await createJob(jobId, { modelId: model.id });
@@ -137,7 +151,7 @@ export default async function handler(req, res) {
 
     startJobInBackground(jobId, model, inputs, {
       userId,
-      creditsToCharge: usingOwnKey ? 0 : model.credits,
+      creditsToCharge: usingOwnKey ? 0 : creditsToCharge,
       recordHistory: true,
       category: "tts",
       prompt: text,
