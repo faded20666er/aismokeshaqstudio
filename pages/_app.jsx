@@ -16,6 +16,7 @@
 
 import "../styles/globals.css";
 import { ClerkProvider, useUser, useClerk } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import NavBar from "../components/NavBar";
@@ -70,6 +71,18 @@ export default function App({ Component, pageProps }) {
   return (
     <ClerkProvider {...pageProps}>
       <AppShell Component={Component} pageProps={pageProps} />
+      {/* ADDED [Sep 1 2026]: the site had ZERO visitor tracking of any
+          kind before this — no @vercel/analytics, no Google Analytics,
+          nothing (confirmed by grepping the codebase and by Vercel's
+          own Web Analytics API returning 404 "Web Analytics not found"
+          for this project). This <Analytics /> script is what actually
+          records pageviews going forward. IMPORTANT: shipping this
+          code alone isn't enough — Web Analytics also has to be turned
+          ON for this project in the Vercel dashboard (Project →
+          Analytics tab → Enable) before any data starts recording.
+          Safe to ship either way: if it's off, this script just no-ops
+          silently instead of erroring. */}
+      <Analytics />
     </ClerkProvider>
   );
 }
