@@ -12,7 +12,7 @@
 // pixel dimensions the actual source image/video frame turns out to be
 // when sent to the backend for cropping.
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 // Capped at 4 for launch, not higher. The underlying model
 // (InfiniteTalk) only natively supports 2 simultaneous speakers per
@@ -29,9 +29,52 @@ import { useRef, useState } from "react";
 const MAX_CHARACTERS = 4;
 const BOX_COLORS = ["#ff8a2a", "#f3d98b", "#7dd3fc", "#86efac", "#f9a8d4"];
 
-export default function CharacterTagger({ scene, characters, onChange }) {
+export default function CharacterTagger({ scene, characters, onChange, onFieldsUpdate, userId }) {
   const containerRef = useRef(null);
   const [drawing, setDrawing] = useState(null); // { startX, startY, x, y } in percent
+
+  // Character Library — saved {name, voice} pairs from past timelines
+  // (see middleware/characterStore.js). Lets a recurring character get
+  // re-applied to a freshly-drawn box in one click instead of retyping
+  // the name and re-picking the voice every time a new scene is built.
+  const [library, setLibrary] = useState([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [showManageLibrary, setShowManageLibrary] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    setLibraryLoading(true);
+    fetch(`/api/characters?userId=${encodeURIComponent(userId)}`)
+      .then((res) => res.json())
+      .then((data) => setLibrary(data.characters || []))
+      .catch(() => {}) // non-critical — the tagger still works without a library
+      .finally(() => setLibraryLoading(false));
+  }, [userId]);
+
+  function handleLoadFromLibrary(characterId, libraryEntryId) {
+    if (!libraryEntryId) return;
+    const entry = library.find((l) => l.id === libraryEntryId);
+    if (!entry) return;
+    onFieldsUpdate?.(characterId, {
+      name: entry.name,
+      voice: entry.voice || null,
+      libraryId: entry.id,
+    });
+  }
+
+  async function handleDeleteFromLibrary(libraryEntryId) {
+    if (!userId) return;
+    setLibrary((prev) => prev.filter((l) => l.id !== libraryEntryId)); // optimistic
+    try {
+      await fetch("/api/characters", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, characterId: libraryEntryId }),
+      });
+    } catch {
+      // Non-critical — worst case a deleted entry reappears next reload
+    }
+  }
 
   const canAddMore = characters.length < MAX_CHARACTERS;
   const mediaUrl = scene?.previewUrl;
@@ -105,6 +148,38 @@ export default function CharacterTagger({ scene, characters, onChange }) {
         </span>
       </div>
 
+      {userId && library.length > 0 && (
+        <div className="tagger-library-row">
+          <button
+            type="button"
+            className="tagger-library-toggle"
+            onClick={() => setShowManageLibrary((v) => !v)}
+          >
+            {showManageLibrary ? "Hide" : "Manage"} saved characters ({library.length})
+          </button>
+          {showManageLibrary && (
+            <div className="tagger-library-list">
+              {library.map((entry) => (
+                <div key={entry.id} className="tagger-library-chip">
+                  <span>
+                    {entry.name}
+                    {entry.voice ? ` · ${entry.voice.name}` : " · no voice saved"}
+                  </span>
+                  <button
+                    type="button"
+                    className="tagger-library-delete"
+                    onClick={() => handleDeleteFromLibrary(entry.id)}
+                    title="Delete from library"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {!mediaUrl && (
         <p className="tagger-hint">Upload a scene above to start tagging characters.</p>
       )}
@@ -177,6 +252,29 @@ export default function CharacterTagger({ scene, characters, onChange }) {
                 onChange={(e) => updateCharacter(char.id, { name: e.target.value })}
                 placeholder="Character name"
               />
+              {library.length > 0 && (
+                <select
+                  className="tagger-load-select"
+                  value=""
+                  onChange={(e) => handleLoadFromLibrary(char.id, e.target.value)}
+                  title="Load a saved character's name + voice onto this box"
+                >
+                  <option value="">
+                    {libraryLoading ? "Loading…" : "Load saved character…"}
+                  </option>
+                  {library.map((entry) => (
+                    <option key={entry.id} value={entry.id}>
+                      {entry.name}
+                      {entry.voice ? ` · ${entry.voice.name}` : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {char.libraryId && (
+                <span className="tagger-library-badge" title="Linked to a saved character">
+                  🔗
+                </span>
+              )}
               <button
                 className="tagger-remove-btn"
                 onClick={() => removeCharacter(char.id)}
@@ -262,6 +360,65 @@ export default function CharacterTagger({ scene, characters, onChange }) {
           font-size: 0.75rem;
           border-radius: 8px;
           padding: 6px 0;
+        }
+
+        .tagger-library-row {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .tagger-library-toggle {
+          align-self: flex-start;
+          background: none;
+          border: none;
+          color: #f3d98b;
+          text-decoration: underline;
+          cursor: pointer;
+          font-size: 0.75rem;
+          padding: 0;
+        }
+
+        .tagger-library-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .tagger-library-chip {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 999px;
+          padding: 4px 10px;
+          font-size: 0.72rem;
+          opacity: 0.85;
+        }
+
+        .tagger-library-delete {
+          background: transparent;
+          border: none;
+          color: #fca5a5;
+          cursor: pointer;
+          font-size: 0.7rem;
+          padding: 0;
+        }
+
+        .tagger-load-select {
+          background: rgba(5, 5, 8, 0.95);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          border-radius: 8px;
+          padding: 5px 6px;
+          color: #d9d9d9;
+          font-size: 0.75rem;
+          max-width: 160px;
+        }
+
+        .tagger-library-badge {
+          font-size: 0.75rem;
+          opacity: 0.8;
         }
 
         .tagger-list {

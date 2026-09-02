@@ -47,6 +47,19 @@ export default function TimelinePage() {
     );
   }
 
+  // Generic field patcher shared by two Character Library flows:
+  //   - CharacterTagger's "load saved character" dropdown applies
+  //     {name, voice, libraryId} onto a freshly-drawn box in one shot.
+  //   - DialogueTimeline's "Save to Library" button stamps the
+  //     returned {libraryId} back onto the character after a save, so
+  //     a second save updates that same library entry instead of
+  //     creating a duplicate.
+  function handleCharacterFieldsUpdate(characterId, updates) {
+    setCharacters((prev) =>
+      prev.map((c) => (c.id === characterId ? { ...c, ...updates } : c))
+    );
+  }
+
   // Live credit estimate — mirrors the backend's real charging logic
   // exactly (see pages/api/timeline-generate.js) so the number shown
   // here before generating is what actually gets charged.
@@ -164,7 +177,13 @@ export default function TimelinePage() {
 
           <div className="panel-row">
             <div className="panel-full">
-              <CharacterTagger scene={scene} characters={characters} onChange={setCharacters} />
+              <CharacterTagger
+                scene={scene}
+                characters={characters}
+                onChange={setCharacters}
+                onFieldsUpdate={handleCharacterFieldsUpdate}
+                userId={userId}
+              />
             </div>
           </div>
 
@@ -175,6 +194,7 @@ export default function TimelinePage() {
                 blocks={blocks}
                 onChange={setBlocks}
                 onCharacterVoiceChange={handleCharacterVoiceChange}
+                onCharacterFieldsUpdate={handleCharacterFieldsUpdate}
                 userId={userId}
                 clipSeconds={clipSeconds}
                 onClipSecondsChange={setClipSeconds}

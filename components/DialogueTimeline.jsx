@@ -10,22 +10,47 @@
 // Gaps are supported: startTime is independently editable, so blocks
 // don't have to butt up against each other — silence between lines is
 // just an unfilled span on the timeline.
+//
+// ADDED [Sep 2 2026]: a BYOK ElevenLabs key manager (same one already
+// used on the standalone TTS tab) so a Pro/Premium customer's own key
+// — and with it, ElevenLabs' full 10,000+ voice community library
+// instead of the ~20 premade voices a free platform key is limited to
+// — now also works here, not just in TTS (pages/api/elevenlabs-voices.js
+// was already userId-keyed, so this was the only piece missing). Also
+// added "Save to Library" per character (see middleware/characterStore.js)
+// so a recurring character's {name, voice} survives across different
+// scenes/timelines instead of having to be re-picked from scratch every
+// time — CharacterTagger.jsx's "Load saved character" dropdown is the
+// other half of this.
 
 import { useState, useEffect } from "react";
 import VoicePicker from "./VoicePicker";
 import TimelineEditor from "./TimelineEditor";
+import ByokKeyManager from "./ByokKeyManager";
 
 export default function DialogueTimeline({
   characters,
   blocks,
   onChange,
   onCharacterVoiceChange,
+  onCharacterFieldsUpdate,
   userId,
   clipSeconds,
   onClipSecondsChange,
   maxClipSeconds,
 }) {
   const [draftCharacterId, setDraftCharacterId] = useState(characters[0]?.id || "");
+  // Tracks in-flight "Save to Library" calls, for a "Saving…" state.
+  const [savingCharacterId, setSavingCharacterId] = useState(null);
+  // A character id lands here the moment its voice is RE-picked via
+  // VoicePicker (not when loaded from the library, which arrives
+  // already in sync — see handleVoicePick). Drives the Save button:
+  // char.libraryId set AND not dirty = "Saved ✓"; otherwise "💾 Save".
+  // This intentionally does NOT track "loaded from library" as its own
+  // state — a fresh load already sets voice + libraryId together in
+  // one update from CharacterTagger, so it's correctly in sync with no
+  // extra bookkeeping needed here.
+  const [dirtyCharacterIds, setDirtyCharacterIds] = useState({});
 
   // useState's initial value only runs once, at first mount — but
   // characters is almost always EMPTY at that moment (users tag
@@ -59,6 +84,48 @@ export default function DialogueTimeline({
   function handleVoicePick(characterId, voice) {
     onCharacterVoiceChange(characterId, voice);
     setVoicePickerOpenFor(null);
+    // A re-pick invalidates the "Saved ✓" state — it now differs from
+    // whatever was last saved to the library until Save is hit again.
+    setDirtyCharacterIds((prev) => ({ ...prev, [characterId]: true }));
+  }
+
+  // Character Library — see middleware/characterStore.js. Saves this
+  // character's current {name, voice} so the NEXT scene/timeline can
+  // recall it instantly via CharacterTagger's "Load saved character"
+  // dropdown instead of re-picking a voice from scratch. Upserts by
+  // char.libraryId when this character was already linked to a saved
+  // entry (loaded from the library, or saved once before), so repeat
+  // saves update that same entry rather than creating duplicates.
+  async function handleSaveToLibrary(character) {
+    if (!userId || !character.voice) return;
+    try {
+      setSavingCharacterId(character.id);
+      const res = await fetch("/api/characters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          character: {
+            id: character.libraryId || undefined,
+            name: character.name,
+            voice: character.voice,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save character");
+
+      onCharacterFieldsUpdate?.(character.id, { libraryId: data.character.id });
+      setDirtyCharacterIds((prev) => {
+        const next = { ...prev };
+        delete next[character.id];
+        return next;
+      });
+    } catch (err) {
+      alert(err.message || "Failed to save character"); // simple inline failure, matches addBlock's audio-upload error handling
+    } finally {
+      setSavingCharacterId(null);
+    }
   }
 
   async function addBlock() {
@@ -116,6 +183,19 @@ export default function DialogueTimeline({
 
   return (
     <div className="dialogue-timeline">
+      {/* BYOK ElevenLabs key — unlocks the FULL searchable community
+          voice library (10,000+ voices, including any custom/cloned
+          ones) in the VoicePicker below, instead of just the ~20
+          premade voices every free platform key is limited to. Was
+          already available on the standalone TTS tab (StudioPanel.jsx)
+          but missing here — same userId, same /api/byok-key store, so
+          adding it here is what actually turns it on for Timeline too. */}
+      {userId && (
+        <div className="byok-wrapper">
+          <ByokKeyManager userId={userId} />
+        </div>
+      )}
+
       {/* PER-CHARACTER VOICE ASSIGNMENT (for TTS lines) */}
       <div className="voice-assign-row">
         {characters.map((char) => (
@@ -130,6 +210,21 @@ export default function DialogueTimeline({
             >
               {char.voice ? char.voice.name : "Pick voice"}
             </button>
+            {char.voice && userId && (
+              <button
+                type="button"
+                className="voice-assign-save-btn"
+                onClick={() => handleSaveToLibrary(char)}
+                disabled={savingCharacterId === char.id}
+                title="Save this character's name + voice for reuse in future scenes"
+              >
+                {savingCharacterId === char.id
+                  ? "Saving…"
+                  : char.libraryId && !dirtyCharacterIds[char.id]
+                  ? "Saved ✓"
+                  : "💾 Save"}
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -245,6 +340,10 @@ export default function DialogueTimeline({
           gap: 14px;
         }
 
+        .byok-wrapper {
+          margin-bottom: 4px;
+        }
+
         .voice-assign-row {
           display: flex;
           flex-wrap: wrap;
@@ -273,6 +372,22 @@ export default function DialogueTimeline({
           font-size: 0.75rem;
           font-weight: 600;
           cursor: pointer;
+        }
+
+        .voice-assign-save-btn {
+          background: transparent;
+          border: none;
+          border-left: 1px solid rgba(255, 255, 255, 0.15);
+          color: #86efac;
+          font-size: 0.72rem;
+          font-weight: 600;
+          cursor: pointer;
+          padding-left: 6px;
+        }
+
+        .voice-assign-save-btn:disabled {
+          opacity: 0.6;
+          cursor: default;
         }
 
         .voice-picker-popover {
