@@ -90,7 +90,10 @@ export default function VoicePicker({ onSelect, userId }) {
                 className={`voice-card ${selectedVoiceId === voice.id ? "selected" : ""}`}
                 onClick={() => handleSelect(voice)}
               >
-                <span className="voice-name">{voice.name}</span>
+                <span className="voice-name">
+                  {voice.mine && <span className="voice-mine-badge">⭐ Your Voice</span>}
+                  {voice.name}
+                </span>
                 <span className="voice-tags">
                   {voice.gender}
                   {voice.accent ? ` · ${voice.accent}` : ""}
@@ -194,6 +197,17 @@ export default function VoicePicker({ onSelect, userId }) {
         .voice-name {
           font-size: 0.9rem;
           font-weight: 600;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .voice-mine-badge {
+          font-size: 0.65rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          color: #f3d98b;
         }
 
         .voice-tags {

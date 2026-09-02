@@ -109,7 +109,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // --- Path 1: BYOK key -- full community library search ---
+    // --- Path 1: BYOK key -- account's own voices (My Voices: premade +
+    // any custom/cloned voices) PLUS the full public community library
+    // search.
+    //
+    // BUG FIX [Sep 2 2026]: this used to call /v1/shared-voices only.
+    // That's ElevenLabs' public marketplace -- voices OTHER people have
+    // published. It does NOT include a user's own private "My Voices"
+    // list (custom clones, voices they designed/saved). So a BYOK user
+    // with their own cloned voice in ElevenLabs would never see it in
+    // our picker, only the public catalog. Fix: fetch both endpoints in
+    // parallel and merge, with the account's own voices listed first
+    // and flagged `mine: true` so the picker can badge them.
     const params = new URLSearchParams({
       page_size: String(page_size),
       page: String(page),
@@ -123,21 +134,53 @@ export default async function handler(req, res) {
     if (language) params.set("language", language);
     if (category) params.set("category", category);
 
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/shared-voices?${params.toString()}`,
-      {
-        headers: {
-          "xi-api-key": apiKey,
-        },
-      }
-    );
+    const [ownResult, sharedResult] = await Promise.allSettled([
+      fetch("https://api.elevenlabs.io/v1/voices", {
+        headers: { "xi-api-key": apiKey },
+      }),
+      fetch(`https://api.elevenlabs.io/v1/shared-voices?${params.toString()}`, {
+        headers: { "xi-api-key": apiKey },
+      }),
+    ]);
 
-    if (!response.ok) {
-      const text = await response.text().catch(() => "");
-      throw new Error(`ElevenLabs error (${response.status}): ${text || response.statusText}`);
+    // Own-voice-list failures degrade gracefully (community search still
+    // works) -- log it but don't kill the whole request over it.
+    let ownVoices = [];
+    if (ownResult.status === "fulfilled" && ownResult.value.ok) {
+      const ownData = await ownResult.value.json();
+      ownVoices = (ownData.voices || []).map((v) => ({
+        id: v.voice_id,
+        name: v.name,
+        gender: v.labels?.gender || "unspecified",
+        age: v.labels?.age || null,
+        accent: v.labels?.accent || null,
+        language: null,
+        useCase: v.labels?.use_case || null,
+        description: v.description || v.labels?.descriptive || null,
+        previewUrl: v.preview_url || null,
+        category: v.category || null,
+        freeUsersAllowed: true,
+        clonedByCount: 0,
+        mine: true,
+      }));
+    } else {
+      console.error(
+        "elevenlabs-voices.js: failed to load account's own voices (My Voices) --",
+        ownResult.status === "fulfilled" ? ownResult.value.status : ownResult.reason?.message
+      );
     }
 
-    const data = await response.json();
+    // The community search failing IS the thing that should error out --
+    // it's the main draw of BYOK.
+    if (sharedResult.status === "rejected") throw sharedResult.reason;
+    if (!sharedResult.value.ok) {
+      const text = await sharedResult.value.text().catch(() => "");
+      throw new Error(
+        `ElevenLabs error (${sharedResult.value.status}): ${text || sharedResult.value.statusText}`
+      );
+    }
+
+    const data = await sharedResult.value.json();
 
     // Normalize to just what the frontend needs. Note the shared-voices
     // response shape is different from /v1/voices -- fields like
@@ -145,7 +188,7 @@ export default async function handler(req, res) {
     // "labels" like the account-voices endpoint. free_users_allowed and
     // cloned_by_count are unique to this endpoint and useful for
     // sorting/filtering quality in the picker UI.
-    const voices = (data.voices || []).map((v) => ({
+    const sharedVoices = (data.voices || []).map((v) => ({
       id: v.voice_id,
       name: v.name,
       gender: v.gender || "unspecified",
@@ -158,14 +201,42 @@ export default async function handler(req, res) {
       category: v.category || null,
       freeUsersAllowed: v.free_users_allowed ?? true,
       clonedByCount: v.cloned_by_count || 0,
+      mine: false,
     }));
+
+    // /v1/voices (own list) doesn't support server-side search/gender/etc
+    // params the way /v1/shared-voices does, so apply the same filters
+    // here in JS -- same approach already used on the no-BYOK path above.
+    const searchLower = search.toLowerCase().trim();
+    let filteredOwn = ownVoices;
+    if (searchLower) {
+      filteredOwn = filteredOwn.filter(
+        (v) =>
+          v.name.toLowerCase().includes(searchLower) ||
+          (v.useCase || "").toLowerCase().includes(searchLower) ||
+          (v.description || "").toLowerCase().includes(searchLower)
+      );
+    }
+    if (gender) filteredOwn = filteredOwn.filter((v) => v.gender === gender);
+    if (age) filteredOwn = filteredOwn.filter((v) => v.age === age);
+    if (accent) filteredOwn = filteredOwn.filter((v) => v.accent === accent);
+    if (category) filteredOwn = filteredOwn.filter((v) => v.category === category);
+
+    // A voice the user added to their account FROM the shared library
+    // would otherwise show up twice (once via /v1/voices, once via the
+    // /v1/shared-voices search) -- own-list copy wins.
+    const ownIds = new Set(filteredOwn.map((v) => v.id));
+    const dedupedShared = sharedVoices.filter((v) => !ownIds.has(v.id));
+
+    const voices = [...filteredOwn, ...dedupedShared];
 
     return res.status(200).json({
       voices,
       hasMore: data.has_more || false,
-      totalCount: data.total_count || voices.length,
+      totalCount: (data.total_count || dedupedShared.length) + filteredOwn.length,
       usingOwnKey: true,
       source: "shared-library",
+      ownVoiceCount: filteredOwn.length,
     });
   } catch (err) {
     console.error("elevenlabs-voices.js error:", err);
