@@ -11,6 +11,7 @@
 
 import { getUserSettings } from "../../middleware/userSettingsStore.js";
 import { saveByokKey, deleteByokKey, hasByokKey } from "../../middleware/byokStore.js";
+import { isOwnerUser } from "../../middleware/creditsStore.js";
 
 const ALLOWED_TIERS = ["pro", "premium"];
 
@@ -28,9 +29,15 @@ export default async function handler(req, res) {
     }
 
     // POST and DELETE both require an active Pro/Premium subscription —
-    // this is the actual perk gate.
+    // this is the actual perk gate. BUG FIX [Sep 2 2026]: owner/testing
+    // accounts (OWNER_USER_IDS in env — see creditsStore.js) were being
+    // blocked here even though they already have every other perk
+    // unlocked (unlimited credits, etc). The tier check only ever looked
+    // at Redis-stored subscription tier, which owner accounts never have
+    // set since they don't go through Stripe checkout. Owners now bypass
+    // this gate the same way they bypass the credits gate.
     const settings = await getUserSettings(userId);
-    if (!ALLOWED_TIERS.includes(settings.tier)) {
+    if (!isOwnerUser(userId) && !ALLOWED_TIERS.includes(settings.tier)) {
       return res.status(403).json({
         error: "Bring-your-own-key voices are a Pro/Premium subscriber perk. Upgrade your plan to unlock this.",
       });
