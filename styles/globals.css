@@ -510,3 +510,18 @@ body {
 .home-contact a {
   color: #f3d98b;
 }
+
+.home-legal-links {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  opacity: 0.55;
+}
+
+.home-legal-links a {
+  color: #d9d9d9;
+  text-decoration: underline;
+}
+
+.home-legal-links a:hover {
+  color: #f3d98b;
+}

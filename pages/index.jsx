@@ -191,6 +191,11 @@ export default function Home() {
             Questions, concerns, or feedback?{" "}
             <a href="mailto:support@aismokeshaqstudio.shop">support@aismokeshaqstudio.shop</a>
           </p>
+          <p className="home-legal-links">
+            <a href="/privacy">Privacy Policy</a>
+            <span aria-hidden="true"> · </span>
+            <a href="/terms">Terms of Service</a>
+          </p>
         </footer>
       </div>
     </div>
