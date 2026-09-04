@@ -13,6 +13,7 @@
 
 import { handleUpload } from "@vercel/blob/client";
 import { verifyUserId } from "../../middleware/verifyUserId.js";
+import { checkRateLimit } from "../../middleware/rateLimit.js";
 
 export default async function handler(req, res) {
   try {
@@ -48,6 +49,14 @@ export default async function handler(req, res) {
         const auth = verifyUserId(req, payload.userId);
         if (!auth.ok) {
           throw new Error(auth.error);
+        }
+
+        // SECURITY [Sep 4 2026]: cap how fast one account can request
+        // upload tokens (each one authorizes up to a 500MB Blob upload)
+        // — see middleware/rateLimit.js.
+        const rl = await checkRateLimit("upload", payload.userId, { limit: 60, windowSeconds: 300 });
+        if (!rl.ok) {
+          throw new Error(`Too many uploads — please wait ${rl.retryAfterSeconds}s and try again.`);
         }
 
         // Restrict allowed file types to scene photos/videos only.

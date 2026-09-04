@@ -18,6 +18,7 @@ import { runModel } from "../../utils/runModel.js";
 import { getUserSettings } from "../../middleware/userSettingsStore.js";
 import { hasTierAccess } from "../../middleware/tierCheck.js";
 import { verifyUserId } from "../../middleware/verifyUserId.js";
+import { checkRateLimit } from "../../middleware/rateLimit.js";
 
 // UPDATED [Aug 31 2026]: the fake Replicate/comingSoon "elevenlabs/v3"
 // catalog entry this pointed at was replaced by a real, WaveSpeed-routed
@@ -64,6 +65,15 @@ export default async function handler(req, res) {
     const auth = verifyUserId(req, userId);
     if (!auth.ok) {
       return res.status(auth.status).json({ error: auth.error });
+    }
+
+    // SECURITY [Sep 4 2026]: cap how fast one account can spam generation
+    // submits — see middleware/rateLimit.js.
+    const rl = await checkRateLimit("generation", userId, { limit: 30, windowSeconds: 300 });
+    if (!rl.ok) {
+      return res.status(429).json({
+        error: `Too many requests — please wait ${rl.retryAfterSeconds}s and try again.`,
+      });
     }
 
     if (!modelId) {

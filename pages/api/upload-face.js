@@ -13,6 +13,7 @@
 
 import { put } from "@vercel/blob";
 import { verifyUserId } from "../../middleware/verifyUserId.js";
+import { checkRateLimit } from "../../middleware/rateLimit.js";
 
 export const config = {
   api: {
@@ -71,6 +72,15 @@ export default async function handler(req, res) {
     const auth = verifyUserId(req, userId);
     if (!auth.ok) {
       return res.status(auth.status).json({ error: auth.error });
+    }
+
+    // SECURITY [Sep 4 2026]: cap how fast one account can dump files
+    // into paid Blob storage — see middleware/rateLimit.js.
+    const rl = await checkRateLimit("upload", userId, { limit: 60, windowSeconds: 300 });
+    if (!rl.ok) {
+      return res.status(429).json({
+        error: `Too many uploads — please wait ${rl.retryAfterSeconds}s and try again.`,
+      });
     }
 
     const contentType = req.headers["content-type"];
