@@ -119,6 +119,7 @@ export default function StudioPage() {
           statusMessage={statusMessage}
           error={error}
           credits={credits}
+          onCreditsChange={setCredits}
           output={output}
           userId={userId}
           userTier={userTier}

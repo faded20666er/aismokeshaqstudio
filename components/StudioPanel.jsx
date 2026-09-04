@@ -161,7 +161,7 @@ function OutputPreview({ item, category }) {
   );
 }
 
-export default function StudioPanel({ onGenerate, loading, statusMessage, error, credits, output, userId, userTier }) {
+export default function StudioPanel({ onGenerate, loading, statusMessage, error, credits, onCreditsChange, output, userId, userTier }) {
   const [category, setCategory] = useState("image");
   const [selectedModel, setSelectedModel] = useState(null);
   const [prompt, setPrompt] = useState("");
@@ -171,6 +171,9 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [kokoroVoice, setKokoroVoice] = useState("af_bella"); // default Kokoro voice
   const [xaiVoice, setXaiVoice] = useState("eve"); // default Grok Voice (xai/tts-v1)
+  const [enhancing, setEnhancing] = useState(false);
+  const [enhanceError, setEnhanceError] = useState(null);
+  const [preEnhancePrompt, setPreEnhancePrompt] = useState(null); // for one-click Undo
   const [durationSeconds, setDurationSeconds] = useState(30);
   const [videoDuration, setVideoDuration] = useState(null); // selected clip length for video models
   const [musicTags, setMusicTags] = useState(""); // comma-separated genre tags (ACE-Step)
@@ -257,6 +260,46 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
   function handleNsfwDeclined() {
     setShowNsfwAgeGate(false);
     // Don't change nsfwEnabled — if it was off, it stays off
+  }
+
+  // "Prompt Pimp" — one-click prompt enhancement, image/video only (see
+  // pages/api/enhance-prompt.js). Rewrites `prompt` in place; keeps the
+  // pre-enhance text around so the customer can revert with one click
+  // if they don't like the rewrite, rather than having to retype it.
+  async function handleEnhancePrompt() {
+    if (!prompt.trim() || enhancing || !userId) return;
+
+    setEnhancing(true);
+    setEnhanceError(null);
+
+    try {
+      const res = await fetch("/api/enhance-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, prompt, category }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to enhance prompt");
+      }
+
+      setPreEnhancePrompt(prompt);
+      setPrompt(data.enhancedPrompt);
+      if (typeof data.creditsRemaining === "number") {
+        onCreditsChange?.(data.creditsRemaining);
+      }
+    } catch (err) {
+      setEnhanceError(err.message || "Failed to enhance prompt");
+    } finally {
+      setEnhancing(false);
+    }
+  }
+
+  function handleUndoEnhance() {
+    if (preEnhancePrompt === null) return;
+    setPrompt(preEnhancePrompt);
+    setPreEnhancePrompt(null);
   }
 
   async function handleGenerateClick() {
@@ -371,6 +414,8 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
                 setMusicLyrics("");
                 setMusicInstrumental(false);
                 setMusicDuration(60);
+                setPreEnhancePrompt(null);
+                setEnhanceError(null);
               }}
             >
               {label}
@@ -636,6 +681,24 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
             {category === "lipsync" && (
               <span className="section-meta">Used if no audio file is uploaded above</span>
             )}
+            {(category === "image" || category === "video") && (
+              <span className="section-meta enhance-controls">
+                {preEnhancePrompt !== null && (
+                  <button type="button" className="undo-enhance-btn" onClick={handleUndoEnhance}>
+                    Undo
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="enhance-btn"
+                  onClick={handleEnhancePrompt}
+                  disabled={enhancing || !prompt.trim()}
+                  title="Rewrite your prompt into a more detailed one (1 credit)"
+                >
+                  {enhancing ? "Enhancing…" : "✨ Enhance (1 credit)"}
+                </button>
+              </span>
+            )}
           </div>
           <textarea
             className="prompt-box"
@@ -645,8 +708,12 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
                 : "Describe the scene, style, mood, or script you want to create..."
             }
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => {
+              setPrompt(e.target.value);
+              setPreEnhancePrompt(null); // manual edit — old text no longer "undo-able" as a unit
+            }}
           />
+          {enhanceError && <p className="enhance-error">{enhanceError}</p>}
         </div>
       )}
 
@@ -992,6 +1059,56 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
           border-color: rgba(255, 138, 42, 0.7);
           background: rgba(255, 138, 42, 0.15);
           box-shadow: 0 0 10px rgba(255, 138, 42, 0.35);
+        }
+
+        .enhance-controls {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .enhance-btn {
+          padding: 4px 12px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.22);
+          background: rgba(255, 255, 255, 0.07);
+          color: #d9d9d9;
+          font-size: 0.75rem;
+          cursor: pointer;
+          transition: 0.15s ease;
+          white-space: nowrap;
+        }
+
+        .enhance-btn:hover:not(:disabled) {
+          border-color: rgba(255, 138, 42, 0.7);
+          background: rgba(255, 138, 42, 0.15);
+          box-shadow: 0 0 10px rgba(255, 138, 42, 0.35);
+        }
+
+        .enhance-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .undo-enhance-btn {
+          padding: 4px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: transparent;
+          color: #999;
+          font-size: 0.75rem;
+          cursor: pointer;
+        }
+
+        .undo-enhance-btn:hover {
+          color: #d9d9d9;
+          border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .enhance-error {
+          color: #fca5a5;
+          font-size: 0.8rem;
+          margin: 6px 0 0;
         }
 
         .kokoro-voice-select {
