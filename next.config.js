@@ -22,6 +22,64 @@ const nextConfig = {
       "/api/timeline-generate": ["./node_modules/ffmpeg-static/**"],
     },
   },
+
+  // SECURITY FIX [Sep 4 2026]: an outside security review (checked
+  // against securityheaders.com's own checklist) found none of these
+  // set anywhere. Without X-Frame-Options in particular, someone could
+  // embed this site inside an invisible iframe on a lookalike page and
+  // trick a signed-in visitor into clicking things on the REAL site
+  // without realizing it ("clickjacking") — a real risk for a site
+  // with paid checkout and account actions.
+  //
+  // Deliberately NOT adding a Content-Security-Policy here yet: a CSP
+  // strict enough to matter has to explicitly allow every real script/
+  // frame/connect source this site actually uses (Clerk's auth UI,
+  // Stripe Checkout, Vercel Analytics, Vercel Blob, the WaveSpeed/
+  // ElevenLabs/Replicate API calls, etc.) — get that wrong and it's
+  // the exact same "site broken for everyone, ads running" failure
+  // mode this project already lived through once this session with
+  // the Clerk production migration. Worth doing, but as its own
+  // carefully-tested change, not bundled in here.
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            // SAMEORIGIN (not DENY): still fully blocks the "embed the
+            // real site in a hidden iframe on a phishing page" attack
+            // above, without risking breaking any legitimate same-site
+            // embedding Clerk's own components might rely on.
+            key: "X-Frame-Options",
+            value: "SAMEORIGIN",
+          },
+          {
+            // Stops a browser from ever guessing/"sniffing" a file's
+            // type differently than the Content-Type this site actually
+            // sent — closes off a class of trick where a file crafted
+            // to look like one type gets executed as another.
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            // Don't leak this site's full URLs (which can include
+            // sensitive query params) to third-party sites a visitor
+            // clicks through to, while still sending the plain origin
+            // for same-site navigation and normal analytics.
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            // Explicitly turns off browser features this site has no
+            // legitimate use for, so an embedded/compromised third-party
+            // script couldn't invoke them even if it tried.
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
