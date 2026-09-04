@@ -80,6 +80,20 @@ const KOKORO_VOICES = [
   { id: "hm_omega", label: "Omega (HM · Hindi Male)" },
 ];
 
+// Preset voice ids for xai/tts-v1 (Grok Voice, via Atlas Cloud) —
+// confirmed directly against xAI's own docs (docs.x.ai/developers/
+// model-capabilities/audio/text-to-speech). No per-voice
+// gender/accent metadata is published the way Kokoro's is, just plain
+// names — "eve" is the model's own default. Custom cloned voices are
+// also supported by the model itself but aren't exposed in this
+// picker (no UI for recording/uploading a voice sample yet).
+const XAI_VOICES = [
+  "eve", "carina", "zagan", "helix", "orion", "luna", "iris", "altair",
+  "zenith", "perseus", "helios", "lux", "kepler", "rigel", "cosmo",
+  "celeste", "ursa", "sirius", "lumen", "castor", "naksh", "atlas",
+  "aurora", "liora", "ara", "leo", "rex", "sal",
+].map((id) => ({ id, label: id.charAt(0).toUpperCase() + id.slice(1) + (id === "eve" ? " ★ default" : "") }));
+
 // Renders generated output as the right media type — lipsync/video
 // produce video, TTS produces audio, image/NSFW-image produce images.
 // Falls back to raw JSON if the shape is unexpected, so nothing ever
@@ -156,6 +170,7 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
   const [audioFile, setAudioFile] = useState(null);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [kokoroVoice, setKokoroVoice] = useState("af_bella"); // default Kokoro voice
+  const [xaiVoice, setXaiVoice] = useState("eve"); // default Grok Voice (xai/tts-v1)
   const [durationSeconds, setDurationSeconds] = useState(30);
   const [videoDuration, setVideoDuration] = useState(null); // selected clip length for video models
   const [musicTags, setMusicTags] = useState(""); // comma-separated genre tags (ACE-Step)
@@ -254,7 +269,16 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
       inputs.image = inputs.images[0]; // backwards-compat for single-image models
     }
 
-    if (category === "tts" && selectedVoice) {
+    // BUG FIX [Sep 4 2026]: gated to the ElevenLabs model specifically —
+    // selectedVoice used to get attached whenever it was non-null,
+    // regardless of which TTS model was actually selected. Harmless
+    // while ElevenLabs was the only live TTS model (the picker that
+    // sets selectedVoice only renders for it anyway — see below), but
+    // now that xai/tts-v1 is live too, switching models without
+    // clearing selectedVoice would otherwise leak an ElevenLabs voice
+    // UUID into inputs.voiceId for a Grok request.
+    const isElevenLabs = selectedModel?.id?.startsWith("elevenlabs/");
+    if (category === "tts" && isElevenLabs && selectedVoice) {
       inputs.voiceId = selectedVoice.id;
     }
 
@@ -262,6 +286,11 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
     const isKokoro = selectedModel?.id === "jaaari/kokoro-82m" || selectedModel?.id === "hexgrad/Kokoro-82M";
     if (category === "tts" && isKokoro) {
       inputs.voice = kokoroVoice;
+    }
+
+    const isXaiTts = selectedModel?.id === "xai/tts-v1";
+    if (category === "tts" && isXaiTts) {
+      inputs.voiceId = xaiVoice;
     }
 
     if (category === "video" && selectedModel?.durations?.length) {
@@ -562,6 +591,31 @@ export default function StudioPanel({ onGenerate, loading, statusMessage, error,
             onChange={(e) => setKokoroVoice(e.target.value)}
           >
             {KOKORO_VOICES.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* GROK VOICE PICKER — xai/tts-v1 via Atlas Cloud. No BYOK key
+          needed; this is the cheapest built-in voice option (see
+          models/index.js for the pricing comparison). */}
+      {category === "tts" && selectedModel?.id === "xai/tts-v1" && (
+        <div className="section-block">
+          <div className="section-header">
+            <span className="section-label text-silver-red">Voice</span>
+            <span className="section-meta">
+              {XAI_VOICES.find((v) => v.id === xaiVoice)?.label.split(" ★")[0] ?? xaiVoice}
+            </span>
+          </div>
+          <select
+            className="kokoro-voice-select"
+            value={xaiVoice}
+            onChange={(e) => setXaiVoice(e.target.value)}
+          >
+            {XAI_VOICES.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.label}
               </option>

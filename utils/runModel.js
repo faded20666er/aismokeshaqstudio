@@ -628,14 +628,30 @@ async function runWaveSpeed(model, inputs) {
 // Atlas Cloud: submit-then-poll, same general shape as WaveSpeed but
 // with its own endpoints/response shape (confirmed against Atlas
 // Cloud's own published docs at atlascloud.ai — generateVideo /
-// generateImage to submit, then GET /prediction/{id} to poll, with
-// status values "processing" | "completed" | "succeeded" | "failed").
+// generateImage / generateAudio to submit, then GET /prediction/{id}
+// to poll, with status values "processing" | "completed" | "succeeded"
+// | "failed").
 //
-// model.atlasCloudType distinguishes "video" vs "image" generation
-// since they hit different submit endpoints.
+// model.atlasCloudType distinguishes "video" / "image" / "audio"
+// generation since they hit different submit endpoints.
+//
+// ADDED [Sep 4 2026]: "audio" — xai/tts-v1 (Grok Voice), a real second
+// TTS option alongside ElevenLabs, chosen after checking real per-
+// character pricing directly against WaveSpeed's MiniMax Speech 2.8 HD:
+// Atlas Cloud's xAI TTS v1 is $0.015/1,000 chars vs MiniMax's
+// $0.10/1,000 and ElevenLabs' $0.20/1,000 — confirmed via
+// atlascloud.ai/models/xai/tts-v1 and wavespeed.ai's own docs. 31
+// preset voices, 20 languages, no BYOK needed. Deliberately built on
+// Atlas Cloud (barely used so far) rather than adding more load to
+// WaveSpeed while still validating usage there — MiniMax stays
+// catalogued as comingSoon for now (see models/index.js) rather than
+// going live at the same time.
 async function runAtlasCloud(model, inputs) {
   const isVideo = model.atlasCloudType === "video";
-  const submitUrl = isVideo
+  const isAudio = model.atlasCloudType === "audio";
+  const submitUrl = isAudio
+    ? "https://api.atlascloud.ai/api/v1/model/generateAudio"
+    : isVideo
     ? "https://api.atlascloud.ai/api/v1/model/generateVideo"
     : "https://api.atlascloud.ai/api/v1/model/generateImage";
 
@@ -654,11 +670,19 @@ async function runAtlasCloud(model, inputs) {
     : inputs.image
     ? [inputs.image]
     : [];
-  const useEditEndpoint = !isVideo && refImages.length > 0 && model.atlasImageEditId;
+  const useEditEndpoint = !isVideo && !isAudio && refImages.length > 0 && model.atlasImageEditId;
 
   const body = { model: useEditEndpoint ? model.atlasImageEditId : model.id };
 
-  if (isVideo) {
+  if (isAudio) {
+    // xai/tts-v1 (Grok Voice) real schema, confirmed against Atlas
+    // Cloud's own docs: {model, text, voice_id, language}. voice_id
+    // defaults to "eve" on their side if omitted; language accepts a
+    // BCP-47 code or "auto" for detection (20 languages supported).
+    body.text = inputs.text || inputs.prompt || "";
+    body.voice_id = inputs.voiceId || inputs.voice || "eve";
+    body.language = inputs.language || "auto";
+  } else if (isVideo) {
     // Wan 2.2/2.7 Spicy and Seedance Spicy all take "image" (first
     // frame) + "prompt" + "duration" + "resolution". The "infinite"
     // variant's prompt field is a JSON ARRAY of per-segment prompts,
@@ -702,9 +726,10 @@ async function runAtlasCloud(model, inputs) {
     throw new Error("Atlas Cloud did not return a prediction id");
   }
 
-  // Video generation can take a while; images are fast but polling
-  // works the same way either way, so use one loop for both.
-  const maxAttempts = isVideo ? 120 : 30; // ~10min video / ~2.5min image
+  // Video generation can take a while; images and short TTS audio are
+  // both fast, so they share the shorter budget — polling works the
+  // same way for all three, just a different ceiling.
+  const maxAttempts = isVideo ? 120 : 30; // ~10min video / ~2.5min image or audio
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 

@@ -121,21 +121,33 @@ export default async function handler(req, res) {
       }
     }
 
-    const byokKey = await getByokKey(userId, "elevenlabs");
+    // BUG FIX [Sep 4 2026]: gated to the ElevenLabs model specifically.
+    // Before adding a second live TTS provider (xai/tts-v1, see
+    // models/index.js), this only checked "does the user have an
+    // ElevenLabs BYOK key AND a voiceId" — with zero regard for which
+    // model was actually selected. A customer with an ElevenLabs key
+    // saved who picked the new xAI model and a Grok voice would have
+    // been charged 0 credits (usingOwnKey wrongly true) and had their
+    // request misrouted into runElevenLabsDirect with a Grok voice_id
+    // instead of an ElevenLabs one. Harmless before now since
+    // ElevenLabs was the only live model this could ever apply to.
+    const isElevenLabsModel = model.id.startsWith("elevenlabs/");
+    const byokKey = isElevenLabsModel ? await getByokKey(userId, "elevenlabs") : null;
     const usingOwnKey = !!byokKey && !!inputs?.voiceId;
 
     const text = inputs?.text || inputs?.prompt;
 
     // Real per-character billing for models that carry creditsPerChar
-    // (currently: elevenlabs/eleven-v3, routed through WaveSpeed's
-    // metered ElevenLabs reseller — see models/index.js for the full
-    // rationale). Mirrors the model.creditsByDuration precedent already
-    // established in pages/api/generate.js for duration-billed video —
-    // same problem, different axis: a flat model.credits charge would
-    // undercharge on long text exactly the way a flat per-generation
-    // price previously undercharged on long video durations. Falls back
-    // to the flat model.credits for every other (non-per-character) TTS
-    // model, same as before this change.
+    // (elevenlabs/eleven-v3 via WaveSpeed's metered ElevenLabs reseller,
+    // and now xai/tts-v1 via Atlas Cloud — see models/index.js for the
+    // full rationale/pricing on each). Mirrors the
+    // model.creditsByDuration precedent already established in
+    // pages/api/generate.js for duration-billed video — same problem,
+    // different axis: a flat model.credits charge would undercharge on
+    // long text exactly the way a flat per-generation price previously
+    // undercharged on long video durations. Falls back to the flat
+    // model.credits for every other (non-per-character) TTS model, same
+    // as before this change.
     const creditsToCharge = model.creditsPerChar
       ? Math.max(1, Math.ceil((text?.length || 0) * model.creditsPerChar))
       : model.credits;
@@ -150,10 +162,12 @@ export default async function handler(req, res) {
     const jobId = generateJobId();
     await createJob(jobId, { modelId: model.id });
 
-    // When the user has a BYOK key + voiceId, try ElevenLabs direct.
-    // If that returns null (402 — free-tier key can't use library voices),
-    // fall back to the standard Replicate TTS model without voice selection
-    // rather than surfacing the 402 as a job failure.
+    // When the user has an ElevenLabs BYOK key + voiceId (and picked the
+    // ElevenLabs model — see isElevenLabsModel above), try ElevenLabs
+    // direct. If that returns null (402 — free-tier key can't use
+    // library voices), fall back to the standard WaveSpeed-hosted
+    // elevenlabs/eleven-v3 model without voice selection rather than
+    // surfacing the 402 as a job failure.
     const customRunner = (byokKey && inputs?.voiceId)
       ? async () => {
           const result = await runElevenLabsDirect(inputs.voiceId, text, byokKey);

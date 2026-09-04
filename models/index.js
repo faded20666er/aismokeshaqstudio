@@ -1338,15 +1338,68 @@ export const MODELS = {
       description: "Most natural, expressive voices — supports emotion tags like [excited], [whispers], [laughs]. Best for narration and emotional delivery. Billed per character.",
     },
     {
+      // REAL, LIVE model — a second built-in voice option alongside
+      // ElevenLabs, so customers without a BYOK ElevenLabs key (or who
+      // don't want to get one) still have more than one real provider
+      // to pick from, not just ElevenLabs' ~20 free premade voices.
+      //
+      // Chosen after directly comparing real per-character pricing
+      // across both providers we actually fund: WaveSpeed's MiniMax
+      // Speech 2.8 HD ($0.10/1,000 chars, see the entry below) vs Atlas
+      // Cloud's xAI TTS v1 (Grok Voice) at $0.015/1,000 chars — roughly
+      // 13x cheaper than ElevenLabs and ~7x cheaper than MiniMax.
+      // Confirmed directly against atlascloud.ai/models/xai/tts-v1 and
+      // xAI's own docs (docs.x.ai/developers/model-capabilities/audio/
+      // text-to-speech): 31 preset voices, 20 languages, custom voice
+      // cloning supported, no BYOK required. Also deliberately built on
+      // Atlas Cloud rather than WaveSpeed — WaveSpeed is already
+      // carrying real production traffic (ElevenLabs TTS + InfiniteTalk
+      // lipsync + Timeline) while Atlas Cloud is barely used yet.
+      //
+      // Formula matches the ElevenLabs entry above: $0.015/1000 chars =
+      // $0.000015/char; credits/char = $0.000015 × 2.5 markup / $0.05
+      // per credit = 0.00075 credits/char (≈1 credit per 1,333 chars).
+      // `credits` below is a flat display/fallback estimate only — the
+      // real per-request charge is computed from creditsPerChar in
+      // pages/api/voice.js, same as ElevenLabs.
+      id: "xai/tts-v1",
+      name: "Grok Voice (xAI)",
+      provider: "atlascloud",
+      atlasCloudType: "audio",
+      nsfw: false,
+      locked: false,
+      premium: false,
+      creditsPerChar: 0.00075,
+      maxChars: 15000,
+      credits: 1,
+      description: "31 voices across 20 languages — the most affordable option, and no BYOK key needed. Great default choice.",
+    },
+    {
+      // Confirmed real, live model on WaveSpeed (wavespeed.ai/docs/
+      // docs-api/minimax/minimax-speech-2.8-hd) — was previously
+      // miscatalogued as provider: "replicate", which we don't fund at
+      // all, so it could never have gone live as originally written.
+      // Fixed the provider so this is accurate and ready to flip on
+      // later, but deliberately left comingSoon: true for now — Jay
+      // wants to hold off adding more load to the WaveSpeed account
+      // (already carrying ElevenLabs TTS + InfiniteTalk + Timeline)
+      // until real customer volume through Atlas Cloud's xAI TTS v1
+      // (above) shows WaveSpeed has headroom to spare. $0.10/1,000
+      // chars, 17 preset voices, real per-character schema {text,
+      // voice_id} — same shape already implemented in
+      // buildWaveSpeedRequest's isTTS branch, so flipping comingSoon to
+      // false is the only change needed when that day comes.
       id: "minimax/speech-2.8-hd",
       name: "Speech 2.8 HD (MiniMax)",
-      provider: "replicate",
+      provider: "wavespeed",
       comingSoon: true,
       nsfw: false,
       locked: false,
       premium: true,
+      creditsPerChar: 0.005,
+      maxChars: 10000,
       credits: 1,
-      description: "High-fidelity audio quality, great for polished final output.",
+      description: "High-fidelity audio quality, great for polished final output. 17 voices.",
     },
     {
       id: "elevenlabs/turbo-v2.5",
