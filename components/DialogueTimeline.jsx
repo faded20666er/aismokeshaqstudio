@@ -301,7 +301,7 @@ export default function DialogueTimeline({
 
         <div className="dialogue-timing">
           <label>
-            Default length
+            Length for new line
             <input
               type="number"
               min={1}
@@ -311,7 +311,19 @@ export default function DialogueTimeline({
               onChange={(e) => setDraftDuration(e.target.value)}
             />
           </label>
-          <span className="dialogue-duration-label">sec — drag to adjust after adding</span>
+          {/* CLARIFIED [Sep 4 2026]: the old wording ("Default length
+              ... sec — drag to adjust after adding") read as if this
+              very number box updated when you dragged something,
+              which it never did -- it only sets the length for a NEW
+              line before you click "+ Add to Timeline". The actual
+              drag-to-resize happens on the colored bars in the
+              TimelineEditor canvas further down the page, and that
+              already worked correctly (see components/TimelineEditor.jsx
+              handleBlockMouseDown / clampBlock) -- only the label text
+              here was misleading, not the underlying behavior. */}
+          <span className="dialogue-duration-label">
+            sec — once added, drag a block's edges on the timeline below to resize it
+          </span>
         </div>
 
         <button className="dialogue-add-btn" onClick={addBlock} type="button">
