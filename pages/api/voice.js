@@ -19,6 +19,7 @@ import { startJobInBackground } from "../../utils/runModelAsync.js";
 import { runModel } from "../../utils/runModel.js";
 import { getUserSettings } from "../../middleware/userSettingsStore.js";
 import { hasTierAccess } from "../../middleware/tierCheck.js";
+import { verifyUserId } from "../../middleware/verifyUserId.js";
 
 export const maxDuration = 60;
 
@@ -76,6 +77,12 @@ export default async function handler(req, res) {
     if (!userId) {
       return res.status(400).json({ error: "Missing userId" });
     }
+
+    const auth = verifyUserId(req, userId);
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.error });
+    }
+
     if (!modelId) {
       return res.status(400).json({ error: "Missing modelId" });
     }

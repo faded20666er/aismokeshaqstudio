@@ -8,6 +8,7 @@
 // stored.
 
 import { saveCharacter, getCharacters, deleteCharacter } from "../../middleware/characterStore.js";
+import { verifyUserId } from "../../middleware/verifyUserId.js";
 
 export default async function handler(req, res) {
   try {
@@ -16,6 +17,11 @@ export default async function handler(req, res) {
 
       if (!userId) {
         return res.status(400).json({ error: "Missing userId" });
+      }
+
+      const auth = verifyUserId(req, userId);
+      if (!auth.ok) {
+        return res.status(auth.status).json({ error: auth.error });
       }
 
       const characters = await getCharacters(userId);
@@ -28,6 +34,12 @@ export default async function handler(req, res) {
       if (!userId) {
         return res.status(400).json({ error: "Missing userId" });
       }
+
+      const auth = verifyUserId(req, userId);
+      if (!auth.ok) {
+        return res.status(auth.status).json({ error: auth.error });
+      }
+
       if (!character?.name) {
         return res.status(400).json({ error: "Missing character name" });
       }
@@ -41,6 +53,11 @@ export default async function handler(req, res) {
 
       if (!userId || !characterId) {
         return res.status(400).json({ error: "Missing userId or characterId" });
+      }
+
+      const auth = verifyUserId(req, userId);
+      if (!auth.ok) {
+        return res.status(auth.status).json({ error: auth.error });
       }
 
       const deleted = await deleteCharacter(userId, characterId);

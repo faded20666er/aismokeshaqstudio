@@ -12,6 +12,7 @@
 import { getUserSettings } from "../../middleware/userSettingsStore.js";
 import { saveByokKey, deleteByokKey, hasByokKey } from "../../middleware/byokStore.js";
 import { isOwnerUser } from "../../middleware/creditsStore.js";
+import { verifyUserId } from "../../middleware/verifyUserId.js";
 
 const ALLOWED_TIERS = ["pro", "premium"];
 
@@ -21,6 +22,17 @@ export default async function handler(req, res) {
 
     if (!userId) {
       return res.status(400).json({ error: "Missing userId" });
+    }
+
+    // SECURITY FIX [Sep 4 2026]: without this, anyone could read WHETHER
+    // another customer has a BYOK key saved (GET), or — far worse —
+    // overwrite another customer's saved ElevenLabs key with their own
+    // (POST), silently routing that victim's future BYOK generations
+    // through the attacker's ElevenLabs account, or delete a paying
+    // customer's saved key outright (DELETE).
+    const auth = verifyUserId(req, userId);
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.error });
     }
 
     if (req.method === "GET") {

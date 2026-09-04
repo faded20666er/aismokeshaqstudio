@@ -5,6 +5,7 @@
 
 import Stripe from "stripe";
 import { getTierByKey } from "../../config/subscriptionTiers.js";
+import { verifyUserId } from "../../middleware/verifyUserId.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -18,6 +19,18 @@ export default async function handler(req, res) {
 
     if (!userId) {
       return res.status(400).json({ error: "Missing userId" });
+    }
+
+    // SECURITY FIX [Sep 4 2026]: without this, anyone could start a paid
+    // checkout with someone ELSE's real userId in client_reference_id —
+    // the subscription's credits would land on the victim's account
+    // when it's paid, not the person who actually started checkout.
+    // Low-severity on its own (an attacker would be paying money INTO
+    // someone else's account), but there's no legitimate reason this
+    // shouldn't always be the real, currently-signed-in person anyway.
+    const auth = verifyUserId(req, userId);
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.error });
     }
 
     if (!tier) {

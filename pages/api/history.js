@@ -5,6 +5,7 @@
 // middleware/historyStore.js for how entries get recorded.
 
 import { getHistory, deleteHistoryItem } from "../../middleware/historyStore.js";
+import { verifyUserId } from "../../middleware/verifyUserId.js";
 
 export default async function handler(req, res) {
   try {
@@ -13,6 +14,11 @@ export default async function handler(req, res) {
 
       if (!userId) {
         return res.status(400).json({ error: "Missing userId" });
+      }
+
+      const auth = verifyUserId(req, userId);
+      if (!auth.ok) {
+        return res.status(auth.status).json({ error: auth.error });
       }
 
       const result = await getHistory(userId, {
@@ -29,6 +35,11 @@ export default async function handler(req, res) {
 
       if (!userId || !itemId) {
         return res.status(400).json({ error: "Missing userId or itemId" });
+      }
+
+      const auth = verifyUserId(req, userId);
+      if (!auth.ok) {
+        return res.status(auth.status).json({ error: auth.error });
       }
 
       const deleted = await deleteHistoryItem(userId, itemId);

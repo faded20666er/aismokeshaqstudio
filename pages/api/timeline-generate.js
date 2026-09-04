@@ -61,6 +61,7 @@ import { submitWaveSpeed } from "../../utils/runModel.js";
 import { buildTimelineSteps, resolveStepModel, buildStepInputs } from "../../utils/timelinePipeline.js";
 import { getUserSettings } from "../../middleware/userSettingsStore.js";
 import { hasTierAccess } from "../../middleware/tierCheck.js";
+import { verifyUserId } from "../../middleware/verifyUserId.js";
 
 const MAX_CHARACTERS = 4;
 
@@ -105,6 +106,12 @@ export default async function handler(req, res) {
     if (!userId) {
       return res.status(400).json({ error: "Missing userId" });
     }
+
+    const auth = verifyUserId(req, userId);
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.error });
+    }
+
     if (!scene?.url) {
       return res.status(400).json({ error: "Missing scene image/video" });
     }

@@ -29,6 +29,7 @@
 // so for that path we fetch the full list once and filter in JS.
 
 import { getByokKey } from "../../middleware/byokStore.js";
+import { verifyUserId } from "../../middleware/verifyUserId.js";
 
 export default async function handler(req, res) {
   try {
@@ -48,6 +49,19 @@ export default async function handler(req, res) {
       page = "0",
       userId,
     } = req.query;
+
+    // SECURITY FIX [Sep 4 2026]: without this, anyone could pass another
+    // customer's userId here and have their voice search run through
+    // that customer's own saved ElevenLabs BYOK key — burning that
+    // victim's ElevenLabs quota/rate limit on their own paid account,
+    // and leaking whether they have a key saved at all via the
+    // `usingOwnKey` field in the response.
+    if (userId) {
+      const auth = verifyUserId(req, userId);
+      if (!auth.ok) {
+        return res.status(auth.status).json({ error: auth.error });
+      }
+    }
 
     const byokKey = userId ? await getByokKey(userId, "elevenlabs") : null;
     const apiKey = byokKey || process.env.ELEVENLABS_API_KEY;

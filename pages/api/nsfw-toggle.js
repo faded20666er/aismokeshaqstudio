@@ -4,6 +4,7 @@
 // /api folder.
 
 import { updateUserSettings } from "../../middleware/userSettingsStore.js";
+import { verifyUserId } from "../../middleware/verifyUserId.js";
 
 export default async function handler(req, res) {
   try {
@@ -15,6 +16,11 @@ export default async function handler(req, res) {
 
     if (!userId) {
       return res.status(400).json({ error: "Missing userId" });
+    }
+
+    const auth = verifyUserId(req, userId);
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.error });
     }
 
     if (typeof enabled !== "boolean") {
