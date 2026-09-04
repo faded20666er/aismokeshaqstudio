@@ -7,7 +7,16 @@
 // immediately instead of waiting inline for the full result.
 
 const POLL_INTERVAL_MS = 3000;
-const MAX_POLL_MINUTES = 12; // a bit longer than the longest real job we expect, so this doesn't give up before a genuinely slow video finishes
+// RAISED [Sep 4 2026] from 12 to 45: the Multi-Character Timeline's
+// generation can now legitimately take longer than 12 minutes on a long
+// clip with 2 passes (WaveSpeed's own docs cite ~10-30s of wall time per
+// 1s of video — a 60-second, 2-pass timeline can realistically take
+// 20-30+ real minutes) now that it survives past any single platform
+// duration ceiling (see utils/timelinePipeline.js). 45 minutes stays
+// safely under middleware/jobStore.js's 1-hour Redis TTL, so a job
+// record is never garbage-collected out from under a poll that's still
+// legitimately in progress.
+const MAX_POLL_MINUTES = 45;
 
 export async function pollJob(jobId, { onProgress } = {}) {
   const maxAttempts = Math.ceil((MAX_POLL_MINUTES * 60 * 1000) / POLL_INTERVAL_MS);

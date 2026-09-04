@@ -360,7 +360,12 @@ async function runReplicate(model, inputs) {
 // the new WaveSpeed-hosted TTS lineup (models/index.js tts category —
 // real ElevenLabs/MiniMax reseller models, billed per character, a
 // totally different shape than every other branch here).
-async function runWaveSpeed(model, inputs) {
+// Pure request-shape builder — no I/O. Split out [Sep 4 2026] so both
+// the blocking runWaveSpeed() below AND the non-blocking
+// submitWaveSpeed() (used by the Multi-Character Timeline's incremental
+// pipeline — see utils/timelinePipeline.js) share exactly ONE copy of
+// this schema logic instead of two hand-synced ones.
+function buildWaveSpeedRequest(model, inputs) {
   const modelId = model.id;
   const category = model.category;
   const isImageGen = category === "image";
@@ -510,6 +515,30 @@ async function runWaveSpeed(model, inputs) {
     }
   }
 
+  return { realModelSlug, body };
+}
+
+// Submits a WaveSpeed job and returns its requestId immediately — does
+// NOT wait for the video/audio/image to actually finish rendering.
+//
+// WHY THIS EXISTS [Sep 4 2026]: a real production job (a 4-character
+// Multi-Character Timeline) got killed by Vercel's Hobby-plan 300s
+// function ceiling because the old runWaveSpeed() below polled in a
+// tight loop for up to 10 minutes INSIDE one continuous function
+// invocation — the same invocation that was supposed to return quickly.
+// Researched how real competitors (confirmed against Replicate's own
+// official Next.js/Vercel integration guide, fal.ai's queue docs, and
+// HeyGen's webhook/poll docs) avoid this: none of them block a single
+// request for the full generation time. They submit, get an id back in
+// under a second, and let something else check in repeatedly — each
+// check-in fast, none of them long-running. This is that submit half;
+// pollWaveSpeedOnce() below is the check-in half. See
+// utils/timelinePipeline.js and pages/api/job-status.js for the
+// consumer that drives a multi-pass job this way, one poll at a time,
+// instead of one function blocking through every pass.
+export async function submitWaveSpeed(model, inputs) {
+  const { realModelSlug, body } = buildWaveSpeedRequest(model, inputs);
+
   const submitRes = await fetch(`https://api.wavespeed.ai/api/v3/${realModelSlug}`, {
     method: "POST",
     headers: {
@@ -531,32 +560,66 @@ async function runWaveSpeed(model, inputs) {
     throw new Error("WaveSpeed did not return a prediction id");
   }
 
+  return requestId;
+}
+
+// ONE status check against an already-submitted WaveSpeed job — no
+// looping, no waiting. Returns
+// { status: "processing" | "completed" | "failed", output?, error? }.
+// A transient fetch/HTTP error is reported back as "processing" (matches
+// the old blocking loop's "continue and try again" behavior on a bad
+// poll response) rather than failing the whole job over one flaky
+// check-in — the next poll just tries again.
+export async function pollWaveSpeedOnce(requestId) {
+  const pollRes = await fetch(
+    `https://api.wavespeed.ai/api/v3/predictions/${requestId}/result`,
+    { headers: { Authorization: `Bearer ${process.env.WAVESPEED_API_KEY}` } }
+  );
+
+  if (!pollRes.ok) {
+    return { status: "processing" };
+  }
+
+  const pollData = await pollRes.json();
+  const status = pollData?.data?.status;
+
+  if (status === "completed") {
+    return { status: "completed", output: pollData.data.outputs?.[0] };
+  }
+
+  if (status === "failed") {
+    return { status: "failed", error: pollData?.data?.error || "WaveSpeed generation failed" };
+  }
+
+  return { status: "processing" }; // "processing" or "queued"
+}
+
+// Blocking convenience wrapper — submits AND polls to completion inside
+// one call. Still fine for generate.js/lipsync.js/voice.js/music.js's
+// single-step generations, which comfortably finish inside one Vercel
+// invocation today. NOT used by the Multi-Character Timeline anymore —
+// see submitWaveSpeed()/pollWaveSpeedOnce() above and
+// utils/timelinePipeline.js for why a multi-pass job needs those two
+// kept separate instead of one all-in-one blocking loop.
+async function runWaveSpeed(model, inputs) {
+  const requestId = await submitWaveSpeed(model, inputs);
+
   // Poll until completed — WaveSpeed jobs can take a while for long
   // durations (their own docs cite ~10-30s of wall time per 1s of video).
   const maxAttempts = 120; // up to ~10 minutes of polling at 5s intervals
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    const pollRes = await fetch(
-      `https://api.wavespeed.ai/api/v3/predictions/${requestId}/result`,
-      {
-        headers: { Authorization: `Bearer ${process.env.WAVESPEED_API_KEY}` },
-      }
-    );
+    const result = await pollWaveSpeedOnce(requestId);
 
-    if (!pollRes.ok) continue; // transient error, keep polling
-
-    const pollData = await pollRes.json();
-    const status = pollData?.data?.status;
-
-    if (status === "completed") {
-      return pollData.data.outputs?.[0];
+    if (result.status === "completed") {
+      return result.output;
     }
 
-    if (status === "failed") {
-      throw new Error(pollData?.data?.error || "WaveSpeed generation failed");
+    if (result.status === "failed") {
+      throw new Error(result.error);
     }
-    // status is "processing" or "queued" — keep polling
+    // still "processing" — keep polling
   }
 
   throw new Error("WaveSpeed generation timed out after 10 minutes of polling");
