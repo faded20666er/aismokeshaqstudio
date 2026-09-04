@@ -139,7 +139,7 @@ export default function DialogueTimeline({
     if (audioMode === "upload" && draftAudioFile) {
       try {
         const res = await fetch(
-          `/api/upload-face?filename=${encodeURIComponent(draftAudioFile.name)}`,
+          `/api/upload-face?filename=${encodeURIComponent(draftAudioFile.name)}&userId=${encodeURIComponent(userId)}`,
           {
             method: "POST",
             headers: { "Content-Type": draftAudioFile.type || "application/octet-stream" },

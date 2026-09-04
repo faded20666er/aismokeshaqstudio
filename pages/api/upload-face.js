@@ -12,12 +12,35 @@
 // uploads instead (see Vercel Blob client-upload docs).
 
 import { put } from "@vercel/blob";
+import { verifyUserId } from "../../middleware/verifyUserId.js";
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+
+// SECURITY FIX [Sep 4 2026]: an outside security review flagged this
+// endpoint as reachable with zero identity attached and zero content-
+// type restriction — anyone could dump arbitrary files (any type, up
+// to 4.5MB, repeatedly) into this site's paid Blob storage. Its only
+// live caller today is DialogueTimeline.jsx's audio-clip upload, so the
+// allowlist below is audio-focused; add a type here (with a real
+// reason in a comment) before any new caller needs something else,
+// rather than opening this back up wholesale.
+const ALLOWED_CONTENT_TYPES = [
+  "audio/mpeg",
+  "audio/mp3",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/webm",
+  "audio/ogg",
+  "audio/mp4",
+  "audio/m4a",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
 
 function getRawBody(req) {
   return new Promise((resolve, reject) => {
@@ -35,9 +58,24 @@ export default async function handler(req, res) {
     }
 
     const filename = req.query.filename;
+    const userId = req.query.userId;
 
     if (!filename) {
       return res.status(400).json({ error: "Missing filename query param" });
+    }
+
+    if (!userId) {
+      return res.status(400).json({ error: "Missing userId query param" });
+    }
+
+    const auth = verifyUserId(req, userId);
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.error });
+    }
+
+    const contentType = req.headers["content-type"];
+    if (!contentType || !ALLOWED_CONTENT_TYPES.includes(contentType.split(";")[0].trim())) {
+      return res.status(415).json({ error: "Unsupported file type" });
     }
 
     const fileBuffer = await getRawBody(req);
@@ -48,7 +86,7 @@ export default async function handler(req, res) {
 
     if (fileBuffer.length > 4.5 * 1024 * 1024) {
       return res.status(413).json({
-        error: "File too large for server upload (max 4.5MB). Use a smaller image.",
+        error: "File too large for server upload (max 4.5MB). Use a smaller file.",
       });
     }
 

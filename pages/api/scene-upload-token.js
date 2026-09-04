@@ -12,6 +12,7 @@
 // here again once the upload completes via onUploadCompleted.
 
 import { handleUpload } from "@vercel/blob/client";
+import { verifyUserId } from "../../middleware/verifyUserId.js";
 
 export default async function handler(req, res) {
   try {
@@ -21,8 +22,34 @@ export default async function handler(req, res) {
       body,
       request: req,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
-        // No auth gate here beyond what the rest of the app already
-        // does client-side (sign-in required to reach the Timeline UI).
+        // SECURITY FIX [Sep 4 2026]: this used to hand out an upload
+        // token to ANYONE who could reach this endpoint directly — no
+        // sign-in was actually required server-side, "sign-in required
+        // to reach the Timeline UI" was only ever a client-side gate,
+        // and at up to 500MB per request that's a real storage-cost/
+        // abuse surface (an outside security review flagged this — see
+        // components/SceneUpload.jsx for the clientPayload this reads).
+        // Requires SOME identity (a real signed-in account OR an
+        // anonymous guest id — this endpoint intentionally still
+        // supports guests, same as the generation endpoints), and if it
+        // claims to be a real account, verifies that against the actual
+        // Clerk session rather than trusting the claim.
+        let payload;
+        try {
+          payload = clientPayload ? JSON.parse(clientPayload) : {};
+        } catch {
+          payload = {};
+        }
+
+        if (!payload.userId) {
+          throw new Error("Missing userId");
+        }
+
+        const auth = verifyUserId(req, payload.userId);
+        if (!auth.ok) {
+          throw new Error(auth.error);
+        }
+
         // Restrict allowed file types to scene photos/videos only.
         return {
           allowedContentTypes: [

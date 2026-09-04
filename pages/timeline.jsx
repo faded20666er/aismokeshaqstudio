@@ -171,7 +171,7 @@ export default function TimelinePage() {
 
           <div className="panel-row">
             <div className="panel-full">
-              <SceneUpload scene={scene} onChange={setScene} />
+              <SceneUpload scene={scene} onChange={setScene} userId={userId} />
             </div>
           </div>
 

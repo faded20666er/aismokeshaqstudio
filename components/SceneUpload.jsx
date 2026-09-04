@@ -13,7 +13,7 @@
 import { useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 
-export default function SceneUpload({ scene, onChange }) {
+export default function SceneUpload({ scene, onChange, userId }) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
@@ -63,6 +63,13 @@ export default function SceneUpload({ scene, onChange }) {
       const blob = await upload(file.name, file, {
         access: "public",
         handleUploadUrl: "/api/scene-upload-token",
+        // SECURITY FIX [Sep 4 2026]: this used to hand out an upload
+        // token to anyone who could reach this endpoint directly, with
+        // no identity attached at all — see scene-upload-token.js for
+        // why that mattered (up to 500MB per request, unauthenticated).
+        // clientPayload is the @vercel/blob/client-supported way to
+        // carry data through to that token-issuing step.
+        clientPayload: JSON.stringify({ userId }),
         onUploadProgress: ({ percentage }) => setProgress(percentage),
       });
 
